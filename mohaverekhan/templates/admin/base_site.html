@@ -3,10 +3,10 @@
 
 {% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
 
-{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'ippost/css/admin-extra.css' %}">{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'mohaverekhan/css/admin-extra.css' %}">{% endblock %}
 
 {% block branding %}
-<h1 id="site-name"><a href="{% url 'admin:index' %}">IPPOST Administration</a></h1>
+<h1 id="site-name"><a href="{% url 'admin:index' %}">Mohaverekhan Administration</a></h1>
 {% endblock %}
 
 {% block nav-global %}{% endblock %}

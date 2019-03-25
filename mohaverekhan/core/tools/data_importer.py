@@ -629,8 +629,8 @@ def import_refinement_patterns():
 
 def main():
     try:
-        # import_bijankhan_tag_set()
-        # import_normalizers()
+        import_bijankhan_tag_set()
+        import_normalizers()
         import_taggers()
         # import_text_equivalents()
         # import_word_equivalents()
