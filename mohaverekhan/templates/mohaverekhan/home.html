@@ -1,0 +1,41 @@
+{% extends "mohaverekhan/base_generic.html" %}
+
+{% block board %}
+    <p class="board-content">سیستم نرم افزاری برچسب زنی اجزای کلام در متون فارسی غیر رسمی</p>
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid h-100">
+        <div class="row mw-100">
+            <div class="text" id="input-text" contenteditable="true">من که خیلی خوشم اومد شما هم امتحان کنید. شما حالتون چطوره؟</div>
+        </div>
+        <div class="row">
+            <div class="col-md-1 text-center mr-5" ></div>
+            <div class="col-md-3 text-center make-vertical"> 
+                <!-- <button id="change-to-formal-button" class="btn btn-secondary change-button" type="button">تبدیل به رسمی</button> -->
+                <select class="selectpicker select-button" id='formalizers'>
+                    <option>no-formalizer</option>
+                </select>
+            </div>
+            <div class="col-md-3 text-center make-vertical"> 
+                <!-- <button id="convert_and_fpost-button" class="btn btn-secondary change-button" type="button">برچسب زنی غیر مستقیم</button> -->
+                <select class="selectpicker select-button" id='taggers'>
+                    <option>no-tagger</option>
+                </select>
+            </div>
+            <div class="col-md-3 text-center"> 
+                <button id="do-it-button" class="btn btn-secondary change-button" type="button">انجام بده</button>
+            </div>
+            <div class="col-md-1 text-center" ></div>
+
+        </div>
+        <div class="row w-100">
+            <div class="text" id="output-text"></div>
+        </div>
+        <div class="row w-100">
+            
+              
+        </div>
+    </div>
+    
+{% endblock %}

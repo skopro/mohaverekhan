@@ -1,0 +1,216 @@
+@font-face {
+    font-family: IRANSans;
+    font-style: normal;
+    font-weight: 900;
+    src: url('../fonts/IRANSansWeb_UltraLight.ttf');
+}
+
+* {
+    direction: rtl !important;
+    /* font-size: 1.5rem; */
+    font-family:IRANSans !important;
+    border-radius: 0px;
+    color: rgb(208, 208, 214);
+    background-color: #33333D;
+    -webkit-appearance: none;
+}
+
+
+html, body {
+    height: 100%;
+    background-color: #33333D;
+
+}
+
+.board {
+    border-radius: 0px;
+    background: rgb(46, 46, 54);
+
+}
+
+
+.board-content {
+    color: whitesmoke;
+    font-size: 4.5rem;
+    font-weight: bold;
+    text-align: center;
+    width: 100%;
+    /* right: 50%; */
+    /* margin-left: -50%; */
+    padding: 50px 0px 50px 0px;
+    margin: 0 0 0 0;
+}
+
+#block-content {
+    text-align: center
+}
+
+.content {
+    margin: 4vh 3vw 4vh 3vw;
+}
+
+.make-vertical {
+    display: table-cell !important;
+}
+
+.vertical-menu {
+    width: 100%; /* Set a width if you like */
+    height: 100%;
+    background: rgb(5, 81, 87);
+}
+
+.vertical-menu a {
+    background-color: #eee; /* Grey background color */
+    color: black; /* Black text color */
+    display: block; /* Make the links appear below each other */
+    padding: 12px; /* Add some padding */
+    text-decoration: none; /* Remove underline from links */
+    direction: rtl;
+    font-size: 1.8rem;
+    font-weight: bold;
+}
+
+.vertical-menu a:hover {
+    background-color: #ccc; /* Dark grey background on mouse-over */
+}
+
+.vertical-menu a.active {
+    background-color: #4CAF50; /* Add a green color to the "active/current" link */
+    color: white;
+}
+
+.zero-padding{
+    padding-right: 0;
+    padding-left: 0;
+}
+
+#input-text, #output-text {
+    width: 95%;
+    display: block;
+    background-color: #44444e;
+    margin-left: auto;
+    margin-right: auto;
+    height: 250px;
+    border-width: 0;
+    /* border: solid; */
+    /* border-color: blue; */
+    white-space: pre-wrap;
+    /* direction: rtl !important; */
+    direction: rtl !important;
+    /* text-align: right; */
+    text-align: right;
+    margin: 4vh 3vw 4vh 3vw;
+    font-size: 2rem;
+    font-weight: 500;
+    padding: 1.7vh 1.7vw 1.7vh 1.7vw;
+    word-wrap: break-word;
+    overflow: hidden;
+}
+
+
+.text * {
+    background-color: #44444e;
+    color: rgb(208, 208, 214);
+}
+
+.change-button {
+    width: 20vw;
+    height: 6vh;
+    font-size: 2.2rem;
+    font-weight: bold;
+    border-width: 0;
+    /* border-radius: 40px; */
+    margin: 1vh 3vw 1vh 3vw;
+    background-color: #045D56;
+    /* background-color: #FFCF44; */
+    /* color: black; */
+}
+
+
+.select-button {
+    top: 12% !important;
+    direction: ltr !important;
+    width: 20vw !important;
+    height: 6vh !important;
+    font-size: 2.0rem;
+    /* font-weight: bold; */
+    border-width: 0;
+    /* border-radius: 40px; */
+    /* margin: 1vh 3vw 1vh 3vw; */
+    background-color: #045D56;
+    /* background-color: #FFCF44; */
+    /* color: black; */
+    display: inline-block !important;
+    vertical-align: middle !important;
+    margin-top: auto !important;
+    margin-bottom: auto !important;
+    outline-color: rgb(134, 7, 13) !important;
+    border-radius: 4px !important;
+}
+
+.select-button * {
+    font-size: 2.0rem !important;
+    /* font-weight: bold; */
+    border-width: 0 !important;
+    border-image-width: 0 !important;
+    direction: ltr !important;
+    background-color: inherit !important;
+    margin: 0;
+    background-image: none;
+    text-align: center;  
+}
+
+.bootstrap-select .dropdown-toggle:focus, .bootstrap-select>select.mobile-device:focus+.dropdown-toggle {
+    outline-color: rgb(36, 138, 5) !important;
+
+}
+
+.dropdown>button, .dropdown>button:focus {
+    /* padding: 0 !important; */
+    height: inherit !important;
+    border-width: 0 !important;
+}
+
+.dropdown-menu {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.dropdown-menu>.active>a, .dropdown-menu>.active>a:hover, .dropdown-menu>.active>a:focus {
+    background-image: none !important;
+    background-color: rgb(236, 9, 85) !important;
+    /* padding-top: 0 !important;
+    padding-bottom: 0 !important; */
+}
+
+.dropdown-menu>li>a:hover, .dropdown-menu>li>a:focus {
+    background-image: none !important;
+    background-color: #4CAF50 !important;
+}
+.dropdown-menu>li>a:hover {
+    background-image: none !important;
+    background-color: rgb(235, 23, 189) !important;
+}
+
+.dropdown-menu>li>a>span {
+    background-image: none !important;
+    background-color: inherit !important;
+
+}
+
+.select-button *:active {
+    /* background:olive !important; */
+}
+.select-button *:focus {
+    /* background:olive !important; */
+}
+
+.row {
+    margin-right: 0;
+    margin-left: 0;
+}
+
+.container-fluid {
+    padding-right: 0;
+    padding-left: 0;
+}

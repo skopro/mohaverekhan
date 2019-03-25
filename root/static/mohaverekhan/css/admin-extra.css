@@ -1,0 +1,28 @@
+/* * { */
+    /* direction: rtl !important; */
+    /* text-align: right !important; */
+    /* float: right; */
+/* } */
+
+/* #text { 
+    direction: rtl !important;
+    text-align: right !important;
+    float: right;
+} */
+
+.color-outer {
+    position: relative;
+}
+.color-text {
+    padding-left: 25px;
+}
+
+.color-box {
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    background-color: #ccc;
+    position: absolute;
+    left: 5px;
+    top: 2px;
+}
