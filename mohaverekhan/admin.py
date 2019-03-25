@@ -253,7 +253,7 @@ class TaggedSentenceAdmin(admin.ModelAdmin):
     search_fields = ['id']
     list_filter = ['is_valid', 'tagger__name']
     ordering = ('-created',)
-    readonly_fields = ['created', 'id', 'sentence']
+    readonly_fields = ['created', 'id', 'sentence', 'get_sentence_content']
 
     fieldsets = (
         (None, {
