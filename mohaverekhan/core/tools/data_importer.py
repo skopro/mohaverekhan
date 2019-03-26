@@ -464,7 +464,7 @@ def read_bijankhan_xml_file(xml_file):
             tree = ET.ElementTree(ET.fromstring(xml_string))
             root = tree.getroot()
             for tagged_token_xml in root.findall('*'):
-                token_content = tagged_token_xml.find('w').text
+                token_content = tagged_token_xml.find('w').text.strip().replace(' ', '‌')
                 sentence_content += token_content + ' '
                 tag_name = tagged_token_xml.find('tag').text[0]
                 tag = generate_tag_dictionary(name=tag_name)
@@ -629,12 +629,12 @@ def import_refinement_patterns():
 
 def main():
     try:
-        import_bijankhan_tag_set()
-        import_normalizers()
-        import_taggers()
+        # import_bijankhan_tag_set()
+        # import_normalizers()
+        # import_taggers()
         # import_text_equivalents()
         # import_word_equivalents()
-        # import_bijankhan_data()
+        import_bijankhan_data()
 
 
         # import_tags()

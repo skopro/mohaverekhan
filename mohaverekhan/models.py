@@ -12,6 +12,7 @@ from django.db.models import Count
 import time
 import datetime
 import re
+from mohaverekhan.core.tools import cache
 
 logger = None
 
@@ -117,20 +118,21 @@ class RefinementNormalizer(Normalizer):
     translation_characters = {tc[0]:tc[1] for tc in translation_characters}
 
     punctuations = r'\.:!،؛؟»\]\)\}«\[\(\{\'\"…'
-    repetition_characters = r'یو'
+    repetition_characters = r'۰۱۲۳۴۵۶۷۸۹'
 
     refinement_patterns = (
         (r'([^\.]|^)(\.\.\.)([^\.]|$)', r'\1…\3', 'replace 3 dots with …', 0, 'bitianist', 'true'),
-        (rf'([^{repetition_characters}])\1{{1,}}', r'\1', 'remove repetitions except ی و', 0, 'bitianist', 'true'),
+        # (rf'([^{repetition_characters}])\1{{1,}}', r'\1', 'remove repetitions except ی و', 0, 'bitianist', 'true'),
         (r'[ـ\r]', r'', 'remove keshide', 0, 'hazm', 'true'),
         (r'[\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652]', r'', 'remove FATHATAN, DAMMATAN, KASRATAN, FATHA, DAMMA, KASRA, SHADDA, SUKUN', 0, 'hazm', 'true'),
+        (rf'([{punctuations}])\1{{1,}}', r'\1', 'remove punctuations repetitions', 0, 'bitianist', 'true'),
         (r'"([^\n"]+)"', r'«\1»', 'replace quotation with gyoome', 0, 'hazm', 'true'),
         (rf'([{punctuations}])', r' \1 ', 'add extra space before and after of punctuations', 0, 'bitianist', 'true'),
         (r' +', r' ', 'remove extra spaces', 0, 'hazm', 'true'),
         (r'\n+', r'\n', 'remove extra newlines', 0, 'bitianist', 'true'),
         (r'([^ ]ه) ی ', r'\1‌ی ', 'between ی and ه - replace space with non-joiner ', 0, 'hazm', 'true'),
         (r'(^| )(ن?می) ', r'\1\2‌', 'after می،نمی - replace space with non-joiner ', 0, 'hazm', 'true'),
-        (rf'(?<=[^\n\d {punctuations}]{2}) (تر(ین?)?|گری?|های?)(?=[ \n{punctuations}]|$)', r'‌\1', 'before تر, تری, ترین, گر, گری, ها, های - replace space with non-joiner', 0, 'hazm', 'true'),
+        (rf'(?<=[^\n\d {punctuations}]{{2}}) (تر(ین?)?|گری?|های?)(?=[ \n{punctuations}]|$)', r'‌\1', 'before تر, تری, ترین, گر, گری, ها, های - replace space with non-joiner', 0, 'hazm', 'true'),
         (rf'([^ ]ه) (ا(م|یم|ش|ند|ی|ید|ت))(?=[ \n{punctuations}]|$)', r'\1‌\2', 'before ام, ایم, اش, اند, ای, اید, ات - replace space with non-joiner', 0, 'hazm', 'true'),  
         # (r'', r'', '', 0, 'hazm', 'true'),
         # (r'', r'', '', 0, 'hazm', 'true'),
@@ -145,12 +147,116 @@ class RefinementNormalizer(Normalizer):
 
     def uniform_signs(self, text):
         text.content = text.content.translate(text.content.maketrans(self.translation_characters))
-        logger.info(f'> After uniform_signs : \n{text.content}')
+        text.content = text.content.strip()
+        # logger.info(f'> After uniform_signs : \n{text.content}')
 
     def refine_text(self, text):
         for pattern, replacement in self.refinement_patterns:
             text.content = pattern.sub(replacement, text.content)
             logger.info(f'> after {pattern} -> {replacement} : \n{text.content}')
+        text.content = text.content.strip()
+    repetition_pattern = re.compile(r"(.)\1{1,}")
+    # repetition_pattern = re.compile(r"([^A-Za-z])\1{1,}")
+
+    def fix_repetition_token(self, token_content):
+        fixed_token_content = token_content
+        if self.repetition_pattern.search(fixed_token_content):
+            fixed_token_content = self.repetition_pattern.sub(r'\1', token_content)
+            if fixed_token_content in cache.token_set:
+                return fixed_token_content
+
+            fixed_token_content = self.repetition_pattern.sub(r'\1\1', token_content)
+            if fixed_token_content in cache.token_set:
+                return fixed_token_content
+            
+        return fixed_token_content
+
+    def fix_repetition_tokens(self, text):
+        token_contents = text.content.split()
+        fixed_text_content = ''
+        fixed_token_content = ''
+        for token_content in token_contents:
+            fixed_token_content = token_content.strip()
+            if fixed_token_content not in cache.token_set:
+                fixed_token_content = self.fix_repetition_token(fixed_token_content)
+            
+            fixed_text_content += fixed_token_content.strip() + " "
+        text.content = fixed_text_content[:-1]
+        text.content = text.content.strip()
+
+    move_limit = 3
+    def join_multipart_tokens(self, text):
+        logger.debug(f'>> join_multipart_tokens')
+        logger.debug(f'{text.content}')
+
+        token_contents = text.content.split()
+        logger.debug(f'token_contents : {token_contents}')
+        fixed_text_content = ''
+        fixed_token_content = ''
+        token_length = len(token_contents)
+        
+        i = 0
+        while i < token_length:
+            move_count = min(token_length - (i+1), self.move_limit)
+            logger.debug(f'> i : {i} | move_count : {move_count}')
+
+            # end
+            if move_count == 0:
+                logger.debug(f'> Join the last one : {token_contents[i]}')
+                fixed_text_content += token_contents[i]
+                break
+
+            # try to join
+            for move_count in reversed(range(0, move_count+1)):
+                fixed_token_content = '‌'.join(token_contents[i:i+move_count+1])
+                logger.debug(f'> [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
+                if fixed_token_content in cache.token_set or move_count == 0:
+                    logger.debug(f'> Found => move_count : {move_count} | fixed_token_content : {fixed_token_content}')
+                    i = i + move_count + 1
+                    fixed_text_content += fixed_token_content + ' '
+                    break
+
+        text.content = fixed_text_content.strip()
+        logger.debug(f'{text.content}')
+
+
+    def fix_wrong_joined_undefined_token(self, token_content):
+        part1, part2, nj_joined, sp_joined = '', '', '', ''
+        for i in range(1, len(token_content)):
+            part1, part2 = token_content[:i], token_content[i:]
+            nj_joined = f'{part1}‌{part2}'
+            if nj_joined in cache.token_set:
+                logger.debug(f'> Found nj_joined : {nj_joined}')
+                return nj_joined
+        
+        for i in range(1, len(token_content)):
+            part1, part2 = token_content[:i], token_content[i:]
+            if part1 in cache.token_set and part2 in cache.token_set:
+                sp_joined = f'{part1} {part2}'
+                logger.debug(f'> Found sp_joined : {sp_joined}')
+                return sp_joined
+
+        logger.debug(f"> Can't fix {token_content}")
+        return token_content
+
+    def fix_wrong_joined_undefined_tokens(self, text):
+        logger.debug(f'>> join_multipart_tokens')
+        logger.debug(f'{text.content}')
+
+        token_contents = text.content.split()
+        logger.debug(f'> token_contents : {token_contents}')
+        fixed_text_content = ''
+        fixed_token_content = ''
+
+        for token_content in token_contents:
+            fixed_token_content = token_content.strip()
+            if fixed_token_content not in cache.token_set:
+                logger.debug(f'> {fixed_token_content} not in token set!')
+                fixed_token_content = self.fix_wrong_joined_undefined_token(fixed_token_content)
+            
+            fixed_text_content += fixed_token_content.strip() + " "
+        text.content = fixed_text_content[:-1]
+        text.content = text.content.strip()
 
     def normalize(self, text):
         logger.info(f'>> RefinementRuleBasedNormalizer : \n{text}')
@@ -159,12 +265,19 @@ class RefinementNormalizer(Normalizer):
             normalizer=self
             )
         normal_text.content = text.content.strip()
+        beg_ts = time.time()
         self.uniform_signs(normal_text)
         self.refine_text(normal_text)
+        self.join_multipart_tokens(normal_text) # آرام کننده
+        self.fix_repetition_tokens(normal_text)
+        self.join_multipart_tokens(normal_text) # فرههههههههنگ سرا
+        self.fix_wrong_joined_undefined_tokens(normal_text) # آرامکننده کتابمن 
+        self.join_multipart_tokens(normal_text) # آرام کنندهخوبی
+        end_ts = time.time()
+        logger.info(f"> (Time)({end_ts - beg_ts:.6f})")
         normal_text.content = normal_text.content.strip()
         normal_text.save()
-        logger.info(f'>> Result : \n{text}')
-        # text = normalizer.normalize(text)
+        logger.info(f'{normal_text}')
         return normal_text
     
 class Text(models.Model):

@@ -63,7 +63,6 @@ class NormalizerViewSet(viewsets.ModelViewSet):
     @csrf_exempt
     def normalize(self, request, name=None):
         normalizers = RefinementNormalizer.objects.all()
-        logger.info(f'> normalizers : {normalizers}')
         if name == 'refinement-normalizer':
             normalizer = RefinementNormalizer.objects.get(name='refinement-normalizer')
         else:

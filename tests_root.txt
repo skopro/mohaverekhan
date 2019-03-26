@@ -1,0 +1,12 @@
+> Getting logger : /home/bitianist/bitianist/logs/2019-03-26/data.log
+> Getting logger : /home/bitianist/bitianist/logs/2019-03-26/normilizer.log
+> Getting logger : /home/bitianist/bitianist/logs/2019-03-26/sentence_splitter.log
+> Getting logger : /home/bitianist/bitianist/logs/2019-03-26/tokenizer.log
+> Getting logger : /home/bitianist/bitianist/logs/2019-03-26/nltk_taggers.log
+> Getting logger : /home/bitianist/bitianist/logs/2019-03-26/data_setup_7.log
+> Getting logger : /home/bitianist/bitianist/logs/2019-03-26/seq2seq.log
+> Getting logger : /home/bitianist/bitianist/logs/2019-03-26/utils.log
+> Getting logger : /home/bitianist/bitianist/logs/2019-03-26/data_importer.log
+Creating test database for alias 'default'...
+System check identified no issues (0 silenced).
+Destroying test database for alias 'default'...

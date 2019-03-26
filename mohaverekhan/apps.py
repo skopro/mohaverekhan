@@ -9,8 +9,9 @@ class MohaverekhanConfig(AppConfig):
     def ready(self):
         
 
-        from mohaverekhan.core.tools import utils, normalizer, tokenizer, sentence_splitter
+        from mohaverekhan.core.tools import utils, normalizer, tokenizer, sentence_splitter, cache
         utils.init()
+        cache.init()
         
         from mohaverekhan import serializers, models, views
         serializers.init()

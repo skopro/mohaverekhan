@@ -1,1 +1,1 @@
-python manage.py test mohaverekhan > stdout.txt 2> stderr.txt
+python manage.py test mohaverekhan > tests_root.txt 2> tests_out.txt
