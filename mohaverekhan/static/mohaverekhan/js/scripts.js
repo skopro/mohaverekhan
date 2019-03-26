@@ -61,6 +61,7 @@ function do_after_success_getting_taggers(result, status, xhr) {
     for ( var i in xhr.responseJSON) {
         tagger = xhr.responseJSON[i]
         console.log(tagger.name)
+        console.log(tagger.model_type)
         if (tagger.model_type == "manual")
             continue
         // $( "#taggers" ).append( `"<option>${tagger.name}</option>"` );
@@ -68,12 +69,14 @@ function do_after_success_getting_taggers(result, status, xhr) {
                 .attr("value", tagger.name)
                 .text(tagger.name)); 
     }
+    $('.selectpicker').selectpicker('refresh');
 }
 
 function do_after_success_getting_normalizers(result, status, xhr) {
     for ( var i in xhr.responseJSON) {
         normalizer = xhr.responseJSON[i]
         console.log(normalizer.name)
+        console.log(normalizer.model_type)
         if (normalizer.model_type == "manual")
             continue
         // $( "#normalizers" ).append( `"<option>${normalizer.name}</option>"` );
@@ -81,6 +84,7 @@ function do_after_success_getting_normalizers(result, status, xhr) {
                 .attr("value", normalizer.name)
                 .text(normalizer.name)); 
     }
+    $('.selectpicker').selectpicker('refresh');
 }
 
 get(`${taggers_url}`, do_after_success_getting_taggers)
