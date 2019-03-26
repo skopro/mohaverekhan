@@ -79,6 +79,9 @@ class Normalizer(models.Model):
     def total_valid_normal_text_count(self):
         return self.normal_texts.filter(is_valid=True).count()
 
+    def train(self):
+        pass
+
     def normalize(self, text):
         normal_text_content = text.content
         normal_text, created = NormalText.objects.update_or_create(
@@ -209,7 +212,15 @@ class RefinementNormalizer(Normalizer):
             # try to join
             for move_count in reversed(range(0, move_count+1)):
                 fixed_token_content = '‌'.join(token_contents[i:i+move_count+1])
-                logger.debug(f'> [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
+                logger.debug(f'> nj [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
+                if fixed_token_content in cache.token_set or move_count == 0:
+                    logger.debug(f'> Found => move_count : {move_count} | fixed_token_content : {fixed_token_content}')
+                    i = i + move_count + 1
+                    fixed_text_content += fixed_token_content + ' '
+                    break
+
+                fixed_token_content = ''.join(token_contents[i:i+move_count+1])
+                logger.debug(f'> empty [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
                 if fixed_token_content in cache.token_set or move_count == 0:
                     logger.debug(f'> Found => move_count : {move_count} | fixed_token_content : {fixed_token_content}')
                     i = i + move_count + 1
@@ -221,6 +232,14 @@ class RefinementNormalizer(Normalizer):
 
 
     def fix_wrong_joined_undefined_token(self, token_content):
+        nj_pattern = re.compile(r'‌')
+        if nj_pattern.search(token_content):
+            logger.debug(f'> nj found in token.')
+            fixed_token_content = token_content.replace('‌', '')
+            if fixed_token_content in cache.token_set:
+                logger.debug(f'> nj replaced with empty')
+                return fixed_token_content
+
         part1, part2, nj_joined, sp_joined = '', '', '', ''
         for i in range(1, len(token_content)):
             part1, part2 = token_content[:i], token_content[i:]
@@ -229,18 +248,18 @@ class RefinementNormalizer(Normalizer):
                 logger.debug(f'> Found nj_joined : {nj_joined}')
                 return nj_joined
         
-        for i in range(1, len(token_content)):
-            part1, part2 = token_content[:i], token_content[i:]
-            if part1 in cache.token_set and part2 in cache.token_set:
-                sp_joined = f'{part1} {part2}'
-                logger.debug(f'> Found sp_joined : {sp_joined}')
-                return sp_joined
+        # for i in range(1, len(token_content)):
+        #     part1, part2 = token_content[:i], token_content[i:]
+        #     if part1 in cache.token_set and part2 in cache.token_set:
+        #         sp_joined = f'{part1} {part2}'
+        #         logger.debug(f'> Found sp_joined : {sp_joined}')
+        #         return sp_joined
 
         logger.debug(f"> Can't fix {token_content}")
         return token_content
 
     def fix_wrong_joined_undefined_tokens(self, text):
-        logger.debug(f'>> join_multipart_tokens')
+        logger.debug(f'>> fix_wrong_joined_undefined_tokens')
         logger.debug(f'{text.content}')
 
         token_contents = text.content.split()
@@ -409,7 +428,7 @@ class Tagger(models.Model):
     def __str__(self):
         return self.name
 
-    def learn_model(self):
+    def train(self):
         num_epochs = 150
         logger.info(f'Model is going to train for {num_epochs} epochs.')
         seq2seq_model.train(False, num_epochs=num_epochs)
@@ -422,7 +441,7 @@ class Tagger(models.Model):
                 sentence=sentence,
         )
 
-    def tag_text(self, text):
+    def tag(self, text):
         if text.sentences.exists():
             logger.debug(f'> sentence was exists')
         else:
@@ -502,7 +521,56 @@ class Tagger(models.Model):
         except Exception as ex:
             logger.exception(ex)
 
-# class MohaverekhanTagger
+class NLTKTagger(Tagger):
+    
+    class Meta:
+        proxy = True
+    
+    def train(self):
+        nltk_taggers_model.train()
+        pass
+
+    def tag(self, text):
+        if text.sentences.exists():
+            logger.debug(f'> sentence was exists')
+        else:
+            text.create_sentences()
+
+        for sentence in text.sentences:
+            self.tag_sentence(sentence)
+            
+            tagged_sentence.split_to_tokens()
+
+        sentence_tokens = [
+            ("خیلی", "A"),
+            ("افتضاح", "A"),
+            ("است", "V"),
+            (".", "O")
+        ]
+        sentence_tokens = [
+            {
+                'content':token, 
+                'tag':
+                {
+                    'name': tag
+                }
+            } for token, tag in sentence_tokens]
+        logger.info(f'sentence_tokens : \n\n{sentence_tokens}\n')
+
+        obj, created = TaggedSentence.objects.update_or_create(
+            tagger=self, sentence=sentence,
+            defaults={'tokens': sentence_tokens},
+        )
+        logger.debug(f"> created : {created}")
+
+        # TaggedSentence.objects.create(
+        #     tagger=self,
+        #     sentence=sentence,
+        #     tokens=sentence_tokens
+        # )
+        return text
+
+
 class Sentence(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     content = models.TextField()
