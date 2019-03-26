@@ -285,15 +285,15 @@ def import_taggers():
         'state': 'not-trained'
     }
 
-    mohaverekhan_tagger = generate_tagger_dictionary(
-        'mohaverekhan-tagger',
+    nltk_tagger = generate_tagger_dictionary(
+        'nltk-tagger',
         owner='bitianist',
         tag_set='bijankhan-tag-set',
         model_type='stochastic',
         model_details=model_details
     )
 
-    response, error = post(taggers_url, mohaverekhan_tagger)
+    response, error = post(taggers_url, nltk_tagger)
     if error:
         return 0
 
