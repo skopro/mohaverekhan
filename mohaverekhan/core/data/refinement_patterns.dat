@@ -1,5 +1,0 @@
-| +| |                       hazm    |   remove_extra_spaces                |
-|\n+|\n|                     ippost  |   remove extra newlines              |
-|[ـ\r]||                     hazm    |   remove keshide                     |
-|"([^\n"]+)"|«\1»|           hazm   |   replace quotation with gyoome        |
-|([\d+])\.([\d+])|\1٫\2|     hazm     |  replace dot with momayez            |

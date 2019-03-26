@@ -26,6 +26,9 @@ WORD_PATTERNS = [
     # (r'^a$', 'PREP'),
 ]
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+DATA_PATH = os.path.join(os.path.dirname(CURRENT_PATH), 'data')
+
 MAIN_TAGGER_PATH = os.path.join(utils.DATA_PATH, 'nltk_main_tagger.pkl')
 MAIN_TAGGER = None
 
@@ -128,5 +131,5 @@ def train():
         logger.exception(ex)
 
 def init():
-    train()
+    # train()
 

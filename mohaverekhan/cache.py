@@ -3,7 +3,7 @@ import logging
 import random
 import re
 repetition_pattern = re.compile(r"([^A-Za-z])\1{1,}")
-debug_pattern = re.compile(r'نوشیدنی')
+debug_pattern = re.compile(r'فرهنگسرا')
 # debug_pattern = re.compile(r'هایمان')
 
 

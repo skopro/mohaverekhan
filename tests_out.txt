@@ -1,1013 +1,182 @@
-[ INFO ][ 2019-03-26 19:42:18,721 ][ 20269 140440801105728 ][ data 6 ][ ------------------------------------------------------------------- ]
-[ INFO ][ 2019-03-26 19:42:18,721 ][ 20269 140440801105728 ][ normalizer 11 ][ ------------------------------------------------------------------- ]
-[ INFO ][ 2019-03-26 19:42:18,724 ][ 20269 140440801105728 ][ sentence_splitter 6 ][ ------------------------------------------------------------------- ]
-[ INFO ][ 2019-03-26 19:42:18,724 ][ 20269 140440801105728 ][ tokenizer 5 ][ ------------------------------------------------------------------- ]
-[ INFO ][ 2019-03-26 19:42:18,724 ][ 20269 140440801105728 ][ model 10 ][ ------------------------------------------------------------------- ]
-[ INFO ][ 2019-03-26 19:42:28,261 ][ 20269 140440801105728 ][ data 19 ][ CURRENT_DIR : /home/bitianist/bitianist/python/mohaverekhan/mohaverekhan/core/seq2seq/data/mohaverekhan_v1 ]
-[ INFO ][ 2019-03-26 19:42:28,261 ][ 20269 140440801105728 ][ model 24 ][ ------------------------------------------------------------------- ]
-[ INFO ][ 2019-03-26 19:42:28,261 ][ 20269 140440801105728 ][ model 26 ][ CURRENT_DIR : /home/bitianist/bitianist/python/mohaverekhan/mohaverekhan/core/seq2seq ]
-[ INFO ][ 2019-03-26 19:42:28,262 ][ 20269 140440801105728 ][ model 327 ][ this is not main, mohaverekhan.core.seq2seq.model ]
-> Token [نوشیدنیهای] has tag [N]
-> Token [نوشیدنیهای] has tag [N]
-> Token [نوشیدنیهای] has tag [N]
+[ INFO ][ 2019-03-26 20:34:19,471 ][ 24939 140200175494976 ][ data 6 ][ ------------------------------------------------------------------- ]
+[ INFO ][ 2019-03-26 20:34:19,472 ][ 24939 140200175494976 ][ normalizer 11 ][ ------------------------------------------------------------------- ]
+[ INFO ][ 2019-03-26 20:34:19,476 ][ 24939 140200175494976 ][ sentence_splitter 6 ][ ------------------------------------------------------------------- ]
+[ INFO ][ 2019-03-26 20:34:19,477 ][ 24939 140200175494976 ][ tokenizer 5 ][ ------------------------------------------------------------------- ]
+[ INFO ][ 2019-03-26 20:34:19,477 ][ 24939 140200175494976 ][ model 10 ][ ------------------------------------------------------------------- ]
+[ INFO ][ 2019-03-26 20:34:29,165 ][ 24939 140200175494976 ][ data 19 ][ CURRENT_DIR : /home/bitianist/bitianist/python/mohaverekhan/mohaverekhan/core/seq2seq/data/mohaverekhan_v1 ]
+[ INFO ][ 2019-03-26 20:34:29,166 ][ 24939 140200175494976 ][ model 24 ][ ------------------------------------------------------------------- ]
+[ INFO ][ 2019-03-26 20:34:29,166 ][ 24939 140200175494976 ][ model 26 ][ CURRENT_DIR : /home/bitianist/bitianist/python/mohaverekhan/mohaverekhan/core/seq2seq ]
+[ INFO ][ 2019-03-26 20:34:29,166 ][ 24939 140200175494976 ][ model 327 ][ this is not main, mohaverekhan.core.seq2seq.model ]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرا] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسراها] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسرای] has tag [N]
+> Token [فرهنگسراها] has tag [N]
+> Token [فرهنگسراها] has tag [N]
+> Token [فرهنگسراها] has tag [N]
+> Token [فرهنگسرای] has tag [N]
 > len(token_set) : 53425
-> token_set samples : {'اصلاح\u200cکنندگی', 'آگاه', 'می\u200cپرداختم', 'نصحیت', 'جریده\u200cای', 'بشکه\u200cای', 'سازوبرگ', 'سیکل', 'الحادگرایی', 'اگوست', 'نرفته\u200cاست', 'انتخاب\u200cشدگان', 'بپسندد', 'امتیازآورترین', 'حباب', 'هالماهرا', 'آماده\u200cتر', 'اتلتیکو', 'بلسبنه', 'خارجیهای'}
+> token_set samples : {'غیراوپک', 'پرقیمتی', 'آگست', 'خرمای', 'می\u200cشتابد', 'بیوشیمی', 'علاوه\u200cبرآن\u200cکه', 'هیئت\u200cمدیره\u200cای', 'مصرف', 'ماده\u200cگاو', 'ادات', 'شدید', 'مدیرمسئولی', 'خائفاً', 'هافمن', 'انبارداری', 'ور', 'منفعتی', 'نجوا', 'کنایه\u200cهایی'}
 > len(repetition_word_set) : 3575
-> repetition_word_set samples: {'زجرهایی', 'پررمزوراز', 'تحسین\u200cکننده', 'حساس\u200cکننده', 'هنجاری\u200cهایی', 'روح\u200cاللهی', 'ویلایی', 'خوش\u200cییلاق', 'شووالف', 'بنایی', 'گوستاوو', 'تبدیل\u200cکننده', 'الله', 'بفرمایی', 'شماتتها', 'جابه\u200cجایی', 'سبزیهایی', 'ظرفشویی', 'دررو', 'ننشسته\u200cاند', 'تاخیرهایی', 'الحمدالله\u200cرب\u200cالعالمین', 'ژوییه\u200cی', 'تأییدیه', 'لباس\u200cشویی', 'مجدد', 'رابطه\u200cیی', 'گناهها', 'بیننده\u200cای', 'سیگماالوموک', 'لوون', 'هیات\u200cرییسه', 'رشددهنده', 'وظیفه\u200cیی', 'شش\u200cروزه', 'گفتارهایی', 'امیدوارکننده', 'کنایه\u200cهایی', 'رییس\u200cکل', 'دارویی', 'قابل\u200cبررسی', 'تربیتهایی', 'گالووی', 'سرنخهایی', 'ننهند', 'حاش\u200cلله', 'عدد', 'نیکویی', 'سعدالله', 'مؤسسه\u200cای', 'کشکویی', 'بازگوکننده', 'شیرین\u200cکننده', 'جدایی\u200cخواهان', 'تعدد', 'دریافت\u200cکننده', 'جبهه\u200cها', 'تخمه\u200cهایی', 'آفتهایی', 'فرانجییالی', 'لیون\u200cشیووای', 'دشمنهایی', 'آرتورواویی', 'قانونگرایی', 'نهی\u200cکننده', 'راه\u200cپیمایی', 'عبدالله\u200cبن\u200cعباس', 'دههٌ', 'بسم\u200cالله', 'مفسده\u200cهایی', 'گوودراکا', 'تمرکزگرایی', 'کیمیایی', 'تقاضایی', 'ضیایی', 'جیووانا', 'گامهایی', 'نارسایی', 'مسئولیتهایی', 'ننشیند', 'ننشینی', 'موضعگیریهایی', 'جبرگرایی', 'ملیت\u200cگرایی', 'مایکروسافت\u200cوورد', 'شش\u200cساله', 'موسسه', 'ترکشهایی', 'نکنند', 'کانالهایی', 'نقدهایی', 'مجدداً', 'ناگسستنی', 'رمانهایی', 'گازوییل', 'بزرگراهها', 'ننمود', 'نازایی', 'صندوقهایی', 'ضرری'}
+> repetition_word_set samples: {'فرودگاهها', 'سناریویی', 'جهت\u200cگیریهایی', 'وصیت\u200cنامه\u200cهایی', 'به\u200cحمدلله', 'رژیمهایی', 'منطق\u200cالمشرقیین', 'آلوده\u200cکننده', 'ضدآمریکایی', 'بایراکتاروویچ', 'شماره\u200cتلفنهایی', 'قراردادهایی', 'جزیی\u200cترین', 'بااقتدار', 'بیراهه', 'گزافه\u200cگویی', 'عیب\u200cجویی', 'پذیرایی', 'مساله\u200cیی', 'سس', 'پیامهایی', 'خوانندهٌ', 'علیایی\u200cنژاد', 'خالهایی', 'غیرآمریکایی', 'تضمینهایی', 'افتتاح', 'گردد', 'منزلهایی', 'جهتهایی', 'توانایی\u200cها', 'پایمال\u200cکننده', 'بااین\u200cوجود', 'ننمایم', 'نکنند', 'برگرداننده', 'رشوه\u200cزدایی', 'فرمانروایی', 'روشنایی', 'درون\u200cزایی', 'گفتگوهایی', 'چهارراهها', 'ازسویی', 'مقرر', 'هورمونهایی', 'کنند', 'باانضباط\u200cتری', 'تولیدکننده', 'گویایی', 'بی\u200cپروایی', 'سرنخهایی', 'ذخیره\u200cگاههای', 'ردیابی\u200cهایی', 'مقرری', 'بارانکوییلا', 'للرعیة', 'مکرر', 'دستگاه\u200cهایی', 'ممزوج', 'تبیینی', 'تحت\u200cاللفظی', 'امضاکننده', 'سیلهایی', 'راهپیمایی', 'هواپیماربایی', 'منشهایی', 'قلم\u200cفرسایی', 'سان\u200cلوییس', 'سوالهایی', 'فایلهایی', 'حلقه\u200cمانند', 'کاووس', 'راههائی', 'الاالله', 'بازدیدهایی', 'دههاساله', 'ضیایی', 'روییده', 'تماشایی', 'رجایی', 'گازهایی', 'محرومیتهایی', 'عبدالله\u200cبن\u200cعصام', 'روشنایی\u200cهای', 'مصرف\u200cکنندگان', '!!!', 'علم\u200cالهدایی', 'سالهایی', 'ییلاقات', 'دیدارهایی', 'آشتیی', 'بررسی\u200cای', 'رضی\u200cالله\u200cعنه', 'مسمایی', 'سوررئالیست', 'عبدالله\u200cبن\u200cمسعود', 'ببینم', 'بیماریهایی', 'دانایی', 'ننمایی'}
 >> RefinementRuleBasedNormalizer : 
-سلاااااااااااااااااااااااام چطوووووووووری؟؟
+فرهنگسرا فرهنگ سرا فرهنگ‌سرا
 > after re.compile('([^\\.]|^)(\\.\\.\\.)([^\\.]|$)') -> \1…\3 : 
-سلاااااااااااااااااااااااام چطوووووووووری؟؟
+فرهنگسرا فرهنگ سرا فرهنگ‌سرا
 > after re.compile('[ـ\\r]') ->  : 
-سلاااااااااااااااااااااااام چطوووووووووری؟؟
+فرهنگسرا فرهنگ سرا فرهنگ‌سرا
 > after re.compile('[\\u064B\\u064C\\u064D\\u064E\\u064F\\u0650\\u0651\\u0652]') ->  : 
-سلاااااااااااااااااااااااام چطوووووووووری؟؟
+فرهنگسرا فرهنگ سرا فرهنگ‌سرا
 > after re.compile('([\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…])\\1{1,}') -> \1 : 
-سلاااااااااااااااااااااااام چطوووووووووری؟
+فرهنگسرا فرهنگ سرا فرهنگ‌سرا
 > after re.compile('"([^\\n"]+)"') -> «\1» : 
-سلاااااااااااااااااااااااام چطوووووووووری؟
+فرهنگسرا فرهنگ سرا فرهنگ‌سرا
 > after re.compile('([\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…])') ->  \1  : 
-سلاااااااااااااااااااااااام چطوووووووووری ؟ 
+فرهنگسرا فرهنگ سرا فرهنگ‌سرا
 > after re.compile(' +') ->   : 
-سلاااااااااااااااااااااااام چطوووووووووری ؟ 
+فرهنگسرا فرهنگ سرا فرهنگ‌سرا
 > after re.compile('\\n+') -> \n : 
-سلاااااااااااااااااااااااام چطوووووووووری ؟ 
+فرهنگسرا فرهنگ سرا فرهنگ‌سرا
 > after re.compile('([^ ]ه) ی ') -> \1‌ی  : 
-سلاااااااااااااااااااااااام چطوووووووووری ؟ 
+فرهنگسرا فرهنگ سرا فرهنگ‌سرا
 > after re.compile('(^| )(ن?می) ') -> \1\2‌ : 
-سلاااااااااااااااااااااااام چطوووووووووری ؟ 
+فرهنگسرا فرهنگ سرا فرهنگ‌سرا
 > after re.compile('(?<=[^\\n\\d \\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]{2}) (تر(ین?)?|گری?|های?)(?=[ \\n\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]|$)') -> ‌\1 : 
-سلاااااااااااااااااااااااام چطوووووووووری ؟ 
+فرهنگسرا فرهنگ سرا فرهنگ‌سرا
 > after re.compile('([^ ]ه) (ا(م|یم|ش|ند|ی|ید|ت))(?=[ \\n\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]|$)') -> \1‌\2 : 
-سلاااااااااااااااااااااااام چطوووووووووری ؟ 
+فرهنگسرا فرهنگ سرا فرهنگ‌سرا
 >> join_multipart_tokens
-سلاااااااااااااااااااااااام چطوووووووووری ؟
-token_contents : ['سلاااااااااااااااااااااااام', 'چطوووووووووری', '؟']
+فرهنگسرا فرهنگ سرا فرهنگ‌سرا
+token_contents : ['فرهنگسرا', 'فرهنگ', 'سرا', 'فرهنگ\u200cسرا']
+> i : 0 | move_count : 3
+> nj [i:i+move_count+1] : [0:4] : فرهنگسرا‌فرهنگ‌سرا‌فرهنگ‌سرا
+> empty [i:i+move_count+1] : [0:4] : فرهنگسرافرهنگسرافرهنگ‌سرا
+> nj [i:i+move_count+1] : [0:3] : فرهنگسرا‌فرهنگ‌سرا
+> empty [i:i+move_count+1] : [0:3] : فرهنگسرافرهنگسرا
+> nj [i:i+move_count+1] : [0:2] : فرهنگسرا‌فرهنگ
+> empty [i:i+move_count+1] : [0:2] : فرهنگسرافرهنگ
+> nj [i:i+move_count+1] : [0:1] : فرهنگسرا
+> Found => move_count : 0 | fixed_token_content : فرهنگسرا
+> i : 1 | move_count : 2
+> nj [i:i+move_count+1] : [1:4] : فرهنگ‌سرا‌فرهنگ‌سرا
+> empty [i:i+move_count+1] : [1:4] : فرهنگسرافرهنگ‌سرا
+> nj [i:i+move_count+1] : [1:3] : فرهنگ‌سرا
+> empty [i:i+move_count+1] : [1:3] : فرهنگسرا
+> Found => move_count : 1 | fixed_token_content : فرهنگسرا
+> i : 3 | move_count : 0
+> Join the last one : فرهنگ‌سرا
+فرهنگسرا فرهنگسرا فرهنگ‌سرا
+>> join_multipart_tokens
+فرهنگسرا فرهنگسرا فرهنگ‌سرا
+token_contents : ['فرهنگسرا', 'فرهنگسرا', 'فرهنگ\u200cسرا']
 > i : 0 | move_count : 2
-> [i:i+move_count+1] : [0:3] : سلاااااااااااااااااااااااام‌چطوووووووووری‌؟
-> [i:i+move_count+1] : [0:2] : سلاااااااااااااااااااااااام‌چطوووووووووری
-> [i:i+move_count+1] : [0:1] : سلاااااااااااااااااااااااام
-> Found => move_count : 0 | fixed_token_content : سلاااااااااااااااااااااااام
+> nj [i:i+move_count+1] : [0:3] : فرهنگسرا‌فرهنگسرا‌فرهنگ‌سرا
+> empty [i:i+move_count+1] : [0:3] : فرهنگسرافرهنگسرافرهنگ‌سرا
+> nj [i:i+move_count+1] : [0:2] : فرهنگسرا‌فرهنگسرا
+> empty [i:i+move_count+1] : [0:2] : فرهنگسرافرهنگسرا
+> nj [i:i+move_count+1] : [0:1] : فرهنگسرا
+> Found => move_count : 0 | fixed_token_content : فرهنگسرا
 > i : 1 | move_count : 1
-> [i:i+move_count+1] : [1:3] : چطوووووووووری‌؟
-> [i:i+move_count+1] : [1:2] : چطوووووووووری
-> Found => move_count : 0 | fixed_token_content : چطوووووووووری
+> nj [i:i+move_count+1] : [1:3] : فرهنگسرا‌فرهنگ‌سرا
+> empty [i:i+move_count+1] : [1:3] : فرهنگسرافرهنگ‌سرا
+> nj [i:i+move_count+1] : [1:2] : فرهنگسرا
+> Found => move_count : 0 | fixed_token_content : فرهنگسرا
 > i : 2 | move_count : 0
-> Join the last one : ؟
-سلاااااااااااااااااااااااام چطوووووووووری ؟
+> Join the last one : فرهنگ‌سرا
+فرهنگسرا فرهنگسرا فرهنگ‌سرا
+>> fix_wrong_joined_undefined_tokens
+فرهنگسرا فرهنگسرا فرهنگ‌سرا
+> token_contents : ['فرهنگسرا', 'فرهنگسرا', 'فرهنگ\u200cسرا']
+> فرهنگ‌سرا not in token set!
+> nj found in token.
+> nj replaced with empty
 >> join_multipart_tokens
-سلام چطوری ؟
-token_contents : ['سلام', 'چطوری', '؟']
+فرهنگسرا فرهنگسرا فرهنگسرا
+token_contents : ['فرهنگسرا', 'فرهنگسرا', 'فرهنگسرا']
 > i : 0 | move_count : 2
-> [i:i+move_count+1] : [0:3] : سلام‌چطوری‌؟
-> [i:i+move_count+1] : [0:2] : سلام‌چطوری
-> [i:i+move_count+1] : [0:1] : سلام
-> Found => move_count : 0 | fixed_token_content : سلام
+> nj [i:i+move_count+1] : [0:3] : فرهنگسرا‌فرهنگسرا‌فرهنگسرا
+> empty [i:i+move_count+1] : [0:3] : فرهنگسرافرهنگسرافرهنگسرا
+> nj [i:i+move_count+1] : [0:2] : فرهنگسرا‌فرهنگسرا
+> empty [i:i+move_count+1] : [0:2] : فرهنگسرافرهنگسرا
+> nj [i:i+move_count+1] : [0:1] : فرهنگسرا
+> Found => move_count : 0 | fixed_token_content : فرهنگسرا
 > i : 1 | move_count : 1
-> [i:i+move_count+1] : [1:3] : چطوری‌؟
-> [i:i+move_count+1] : [1:2] : چطوری
-> Found => move_count : 0 | fixed_token_content : چطوری
+> nj [i:i+move_count+1] : [1:3] : فرهنگسرا‌فرهنگسرا
+> empty [i:i+move_count+1] : [1:3] : فرهنگسرافرهنگسرا
+> nj [i:i+move_count+1] : [1:2] : فرهنگسرا
+> Found => move_count : 0 | fixed_token_content : فرهنگسرا
 > i : 2 | move_count : 0
-> Join the last one : ؟
-سلام چطوری ؟
->> join_multipart_tokens
-سلام چطوری ؟
-> token_contents : ['سلام', 'چطوری', '؟']
-> ؟ not in token set!
-> Can't fix ؟
->> join_multipart_tokens
-سلام چطوری ؟
-token_contents : ['سلام', 'چطوری', '؟']
-> i : 0 | move_count : 2
-> [i:i+move_count+1] : [0:3] : سلام‌چطوری‌؟
-> [i:i+move_count+1] : [0:2] : سلام‌چطوری
-> [i:i+move_count+1] : [0:1] : سلام
-> Found => move_count : 0 | fixed_token_content : سلام
-> i : 1 | move_count : 1
-> [i:i+move_count+1] : [1:3] : چطوری‌؟
-> [i:i+move_count+1] : [1:2] : چطوری
-> Found => move_count : 0 | fixed_token_content : چطوری
-> i : 2 | move_count : 0
-> Join the last one : ؟
-سلام چطوری ؟
-> (Time)(0.002428)
-سلام چطوری ؟
->> RefinementRuleBasedNormalizer : 
-باید بریم ... اوکی؟
-> after re.compile('([^\\.]|^)(\\.\\.\\.)([^\\.]|$)') -> \1…\3 : 
-باید بریم … اوکی؟
-> after re.compile('[ـ\\r]') ->  : 
-باید بریم … اوکی؟
-> after re.compile('[\\u064B\\u064C\\u064D\\u064E\\u064F\\u0650\\u0651\\u0652]') ->  : 
-باید بریم … اوکی؟
-> after re.compile('([\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…])\\1{1,}') -> \1 : 
-باید بریم … اوکی؟
-> after re.compile('"([^\\n"]+)"') -> «\1» : 
-باید بریم … اوکی؟
-> after re.compile('([\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…])') ->  \1  : 
-باید بریم  …  اوکی ؟ 
-> after re.compile(' +') ->   : 
-باید بریم … اوکی ؟ 
-> after re.compile('\\n+') -> \n : 
-باید بریم … اوکی ؟ 
-> after re.compile('([^ ]ه) ی ') -> \1‌ی  : 
-باید بریم … اوکی ؟ 
-> after re.compile('(^| )(ن?می) ') -> \1\2‌ : 
-باید بریم … اوکی ؟ 
-> after re.compile('(?<=[^\\n\\d \\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]{2}) (تر(ین?)?|گری?|های?)(?=[ \\n\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]|$)') -> ‌\1 : 
-باید بریم … اوکی ؟ 
-> after re.compile('([^ ]ه) (ا(م|یم|ش|ند|ی|ید|ت))(?=[ \\n\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]|$)') -> \1‌\2 : 
-باید بریم … اوکی ؟ 
->> join_multipart_tokens
-باید بریم … اوکی ؟
-token_contents : ['باید', 'بریم', '…', 'اوکی', '؟']
-> i : 0 | move_count : 3
-> [i:i+move_count+1] : [0:4] : باید‌بریم‌…‌اوکی
-> [i:i+move_count+1] : [0:3] : باید‌بریم‌…
-> [i:i+move_count+1] : [0:2] : باید‌بریم
-> [i:i+move_count+1] : [0:1] : باید
-> Found => move_count : 0 | fixed_token_content : باید
-> i : 1 | move_count : 3
-> [i:i+move_count+1] : [1:5] : بریم‌…‌اوکی‌؟
-> [i:i+move_count+1] : [1:4] : بریم‌…‌اوکی
-> [i:i+move_count+1] : [1:3] : بریم‌…
-> [i:i+move_count+1] : [1:2] : بریم
-> Found => move_count : 0 | fixed_token_content : بریم
-> i : 2 | move_count : 2
-> [i:i+move_count+1] : [2:5] : …‌اوکی‌؟
-> [i:i+move_count+1] : [2:4] : …‌اوکی
-> [i:i+move_count+1] : [2:3] : …
-> Found => move_count : 0 | fixed_token_content : …
-> i : 3 | move_count : 1
-> [i:i+move_count+1] : [3:5] : اوکی‌؟
-> [i:i+move_count+1] : [3:4] : اوکی
-> Found => move_count : 0 | fixed_token_content : اوکی
-> i : 4 | move_count : 0
-> Join the last one : ؟
-باید بریم … اوکی ؟
->> join_multipart_tokens
-باید بریم … اوکی ؟
-token_contents : ['باید', 'بریم', '…', 'اوکی', '؟']
-> i : 0 | move_count : 3
-> [i:i+move_count+1] : [0:4] : باید‌بریم‌…‌اوکی
-> [i:i+move_count+1] : [0:3] : باید‌بریم‌…
-> [i:i+move_count+1] : [0:2] : باید‌بریم
-> [i:i+move_count+1] : [0:1] : باید
-> Found => move_count : 0 | fixed_token_content : باید
-> i : 1 | move_count : 3
-> [i:i+move_count+1] : [1:5] : بریم‌…‌اوکی‌؟
-> [i:i+move_count+1] : [1:4] : بریم‌…‌اوکی
-> [i:i+move_count+1] : [1:3] : بریم‌…
-> [i:i+move_count+1] : [1:2] : بریم
-> Found => move_count : 0 | fixed_token_content : بریم
-> i : 2 | move_count : 2
-> [i:i+move_count+1] : [2:5] : …‌اوکی‌؟
-> [i:i+move_count+1] : [2:4] : …‌اوکی
-> [i:i+move_count+1] : [2:3] : …
-> Found => move_count : 0 | fixed_token_content : …
-> i : 3 | move_count : 1
-> [i:i+move_count+1] : [3:5] : اوکی‌؟
-> [i:i+move_count+1] : [3:4] : اوکی
-> Found => move_count : 0 | fixed_token_content : اوکی
-> i : 4 | move_count : 0
-> Join the last one : ؟
-باید بریم … اوکی ؟
->> join_multipart_tokens
-باید بریم … اوکی ؟
-> token_contents : ['باید', 'بریم', '…', 'اوکی', '؟']
-> … not in token set!
-> Can't fix …
-> ؟ not in token set!
-> Can't fix ؟
->> join_multipart_tokens
-باید بریم … اوکی ؟
-token_contents : ['باید', 'بریم', '…', 'اوکی', '؟']
-> i : 0 | move_count : 3
-> [i:i+move_count+1] : [0:4] : باید‌بریم‌…‌اوکی
-> [i:i+move_count+1] : [0:3] : باید‌بریم‌…
-> [i:i+move_count+1] : [0:2] : باید‌بریم
-> [i:i+move_count+1] : [0:1] : باید
-> Found => move_count : 0 | fixed_token_content : باید
-> i : 1 | move_count : 3
-> [i:i+move_count+1] : [1:5] : بریم‌…‌اوکی‌؟
-> [i:i+move_count+1] : [1:4] : بریم‌…‌اوکی
-> [i:i+move_count+1] : [1:3] : بریم‌…
-> [i:i+move_count+1] : [1:2] : بریم
-> Found => move_count : 0 | fixed_token_content : بریم
-> i : 2 | move_count : 2
-> [i:i+move_count+1] : [2:5] : …‌اوکی‌؟
-> [i:i+move_count+1] : [2:4] : …‌اوکی
-> [i:i+move_count+1] : [2:3] : …
-> Found => move_count : 0 | fixed_token_content : …
-> i : 3 | move_count : 1
-> [i:i+move_count+1] : [3:5] : اوکی‌؟
-> [i:i+move_count+1] : [3:4] : اوکی
-> Found => move_count : 0 | fixed_token_content : اوکی
-> i : 4 | move_count : 0
-> Join the last one : ؟
-باید بریم … اوکی ؟
-> (Time)(0.003436)
-باید بریم … اوکی ؟
->> RefinementRuleBasedNormalizer : 
-0123456789 “كي”%?
-> after re.compile('([^\\.]|^)(\\.\\.\\.)([^\\.]|$)') -> \1…\3 : 
-۰۱۲۳۴۵۶۷۸۹ "کی"٪؟
-> after re.compile('[ـ\\r]') ->  : 
-۰۱۲۳۴۵۶۷۸۹ "کی"٪؟
-> after re.compile('[\\u064B\\u064C\\u064D\\u064E\\u064F\\u0650\\u0651\\u0652]') ->  : 
-۰۱۲۳۴۵۶۷۸۹ "کی"٪؟
-> after re.compile('([\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…])\\1{1,}') -> \1 : 
-۰۱۲۳۴۵۶۷۸۹ "کی"٪؟
-> after re.compile('"([^\\n"]+)"') -> «\1» : 
-۰۱۲۳۴۵۶۷۸۹ «کی»٪؟
-> after re.compile('([\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…])') ->  \1  : 
-۰۱۲۳۴۵۶۷۸۹  « کی » ٪ ؟ 
-> after re.compile(' +') ->   : 
-۰۱۲۳۴۵۶۷۸۹ « کی » ٪ ؟ 
-> after re.compile('\\n+') -> \n : 
-۰۱۲۳۴۵۶۷۸۹ « کی » ٪ ؟ 
-> after re.compile('([^ ]ه) ی ') -> \1‌ی  : 
-۰۱۲۳۴۵۶۷۸۹ « کی » ٪ ؟ 
-> after re.compile('(^| )(ن?می) ') -> \1\2‌ : 
-۰۱۲۳۴۵۶۷۸۹ « کی » ٪ ؟ 
-> after re.compile('(?<=[^\\n\\d \\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]{2}) (تر(ین?)?|گری?|های?)(?=[ \\n\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]|$)') -> ‌\1 : 
-۰۱۲۳۴۵۶۷۸۹ « کی » ٪ ؟ 
-> after re.compile('([^ ]ه) (ا(م|یم|ش|ند|ی|ید|ت))(?=[ \\n\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]|$)') -> \1‌\2 : 
-۰۱۲۳۴۵۶۷۸۹ « کی » ٪ ؟ 
->> join_multipart_tokens
-۰۱۲۳۴۵۶۷۸۹ « کی » ٪ ؟
-token_contents : ['۰۱۲۳۴۵۶۷۸۹', '«', 'کی', '»', '٪', '؟']
-> i : 0 | move_count : 3
-> [i:i+move_count+1] : [0:4] : ۰۱۲۳۴۵۶۷۸۹‌«‌کی‌»
-> [i:i+move_count+1] : [0:3] : ۰۱۲۳۴۵۶۷۸۹‌«‌کی
-> [i:i+move_count+1] : [0:2] : ۰۱۲۳۴۵۶۷۸۹‌«
-> [i:i+move_count+1] : [0:1] : ۰۱۲۳۴۵۶۷۸۹
-> Found => move_count : 0 | fixed_token_content : ۰۱۲۳۴۵۶۷۸۹
-> i : 1 | move_count : 3
-> [i:i+move_count+1] : [1:5] : «‌کی‌»‌٪
-> [i:i+move_count+1] : [1:4] : «‌کی‌»
-> [i:i+move_count+1] : [1:3] : «‌کی
-> [i:i+move_count+1] : [1:2] : «
-> Found => move_count : 0 | fixed_token_content : «
-> i : 2 | move_count : 3
-> [i:i+move_count+1] : [2:6] : کی‌»‌٪‌؟
-> [i:i+move_count+1] : [2:5] : کی‌»‌٪
-> [i:i+move_count+1] : [2:4] : کی‌»
-> [i:i+move_count+1] : [2:3] : کی
-> Found => move_count : 0 | fixed_token_content : کی
-> i : 3 | move_count : 2
-> [i:i+move_count+1] : [3:6] : »‌٪‌؟
-> [i:i+move_count+1] : [3:5] : »‌٪
-> [i:i+move_count+1] : [3:4] : »
-> Found => move_count : 0 | fixed_token_content : »
-> i : 4 | move_count : 1
-> [i:i+move_count+1] : [4:6] : ٪‌؟
-> [i:i+move_count+1] : [4:5] : ٪
-> Found => move_count : 0 | fixed_token_content : ٪
-> i : 5 | move_count : 0
-> Join the last one : ؟
-۰۱۲۳۴۵۶۷۸۹ « کی » ٪ ؟
->> join_multipart_tokens
-۰۱۲۳۴۵۶۷۸۹ « کی » ٪ ؟
-token_contents : ['۰۱۲۳۴۵۶۷۸۹', '«', 'کی', '»', '٪', '؟']
-> i : 0 | move_count : 3
-> [i:i+move_count+1] : [0:4] : ۰۱۲۳۴۵۶۷۸۹‌«‌کی‌»
-> [i:i+move_count+1] : [0:3] : ۰۱۲۳۴۵۶۷۸۹‌«‌کی
-> [i:i+move_count+1] : [0:2] : ۰۱۲۳۴۵۶۷۸۹‌«
-> [i:i+move_count+1] : [0:1] : ۰۱۲۳۴۵۶۷۸۹
-> Found => move_count : 0 | fixed_token_content : ۰۱۲۳۴۵۶۷۸۹
-> i : 1 | move_count : 3
-> [i:i+move_count+1] : [1:5] : «‌کی‌»‌٪
-> [i:i+move_count+1] : [1:4] : «‌کی‌»
-> [i:i+move_count+1] : [1:3] : «‌کی
-> [i:i+move_count+1] : [1:2] : «
-> Found => move_count : 0 | fixed_token_content : «
-> i : 2 | move_count : 3
-> [i:i+move_count+1] : [2:6] : کی‌»‌٪‌؟
-> [i:i+move_count+1] : [2:5] : کی‌»‌٪
-> [i:i+move_count+1] : [2:4] : کی‌»
-> [i:i+move_count+1] : [2:3] : کی
-> Found => move_count : 0 | fixed_token_content : کی
-> i : 3 | move_count : 2
-> [i:i+move_count+1] : [3:6] : »‌٪‌؟
-> [i:i+move_count+1] : [3:5] : »‌٪
-> [i:i+move_count+1] : [3:4] : »
-> Found => move_count : 0 | fixed_token_content : »
-> i : 4 | move_count : 1
-> [i:i+move_count+1] : [4:6] : ٪‌؟
-> [i:i+move_count+1] : [4:5] : ٪
-> Found => move_count : 0 | fixed_token_content : ٪
-> i : 5 | move_count : 0
-> Join the last one : ؟
-۰۱۲۳۴۵۶۷۸۹ « کی » ٪ ؟
->> join_multipart_tokens
-۰۱۲۳۴۵۶۷۸۹ « کی » ٪ ؟
-> token_contents : ['۰۱۲۳۴۵۶۷۸۹', '«', 'کی', '»', '٪', '؟']
-> ۰۱۲۳۴۵۶۷۸۹ not in token set!
-> Can't fix ۰۱۲۳۴۵۶۷۸۹
-> « not in token set!
-> Can't fix «
-> » not in token set!
-> Can't fix »
-> ٪ not in token set!
-> Can't fix ٪
-> ؟ not in token set!
-> Can't fix ؟
->> join_multipart_tokens
-۰۱۲۳۴۵۶۷۸۹ « کی » ٪ ؟
-token_contents : ['۰۱۲۳۴۵۶۷۸۹', '«', 'کی', '»', '٪', '؟']
-> i : 0 | move_count : 3
-> [i:i+move_count+1] : [0:4] : ۰۱۲۳۴۵۶۷۸۹‌«‌کی‌»
-> [i:i+move_count+1] : [0:3] : ۰۱۲۳۴۵۶۷۸۹‌«‌کی
-> [i:i+move_count+1] : [0:2] : ۰۱۲۳۴۵۶۷۸۹‌«
-> [i:i+move_count+1] : [0:1] : ۰۱۲۳۴۵۶۷۸۹
-> Found => move_count : 0 | fixed_token_content : ۰۱۲۳۴۵۶۷۸۹
-> i : 1 | move_count : 3
-> [i:i+move_count+1] : [1:5] : «‌کی‌»‌٪
-> [i:i+move_count+1] : [1:4] : «‌کی‌»
-> [i:i+move_count+1] : [1:3] : «‌کی
-> [i:i+move_count+1] : [1:2] : «
-> Found => move_count : 0 | fixed_token_content : «
-> i : 2 | move_count : 3
-> [i:i+move_count+1] : [2:6] : کی‌»‌٪‌؟
-> [i:i+move_count+1] : [2:5] : کی‌»‌٪
-> [i:i+move_count+1] : [2:4] : کی‌»
-> [i:i+move_count+1] : [2:3] : کی
-> Found => move_count : 0 | fixed_token_content : کی
-> i : 3 | move_count : 2
-> [i:i+move_count+1] : [3:6] : »‌٪‌؟
-> [i:i+move_count+1] : [3:5] : »‌٪
-> [i:i+move_count+1] : [3:4] : »
-> Found => move_count : 0 | fixed_token_content : »
-> i : 4 | move_count : 1
-> [i:i+move_count+1] : [4:6] : ٪‌؟
-> [i:i+move_count+1] : [4:5] : ٪
-> Found => move_count : 0 | fixed_token_content : ٪
-> i : 5 | move_count : 0
-> Join the last one : ؟
-۰۱۲۳۴۵۶۷۸۹ « کی » ٪ ؟
-> (Time)(0.004121)
-۰۱۲۳۴۵۶۷۸۹ « کی » ٪ ؟
->> RefinementRuleBasedNormalizer : 
-مملکت ققنوس عاااالی. خوووب.. خییییلی کمااااینکه سر ...
-> after re.compile('([^\\.]|^)(\\.\\.\\.)([^\\.]|$)') -> \1…\3 : 
-مملکت ققنوس عاااالی. خوووب.. خییییلی کمااااینکه سررشته
-> after re.compile('[ـ\\r]') ->  : 
-مملکت ققنوس عاااالی. خوووب.. خییییلی کمااااینکه سررشته
-> after re.compile('[\\u064B\\u064C\\u064D\\u064E\\u064F\\u0650\\u0651\\u0652]') ->  : 
-مملکت ققنوس عاااالی. خوووب.. خییییلی کمااااینکه سررشته
-> after re.compile('([\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…])\\1{1,}') -> \1 : 
-مملکت ققنوس عاااالی. خوووب. خییییلی کمااااینکه سررشته
-> after re.compile('"([^\\n"]+)"') -> «\1» : 
-مملکت ققنوس عاااالی. خوووب. خییییلی کمااااینکه سررشته
-> after re.compile('([\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…])') ->  \1  : 
-مملکت ققنوس عاااالی .  خوووب .  خییییلی کمااااینکه سررشته
-> after re.compile(' +') ->   : 
-مملکت ققنوس عاااالی . خوووب . خییییلی کمااااینکه سررشته
-> after re.compile('\\n+') -> \n : 
-مملکت ققنوس عاااالی . خوووب . خییییلی کمااااینکه سررشته
-> after re.compile('([^ ]ه) ی ') -> \1‌ی  : 
-مملکت ققنوس عاااالی . خوووب . خییییلی کمااااینکه سررشته
-> after re.compile('(^| )(ن?می) ') -> \1\2‌ : 
-مملکت ققنوس عاااالی . خوووب . خییییلی کمااااینکه سررشته
-> after re.compile('(?<=[^\\n\\d \\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]{2}) (تر(ین?)?|گری?|های?)(?=[ \\n\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]|$)') -> ‌\1 : 
-مملکت ققنوس عاااالی . خوووب . خییییلی کمااااینکه سررشته
-> after re.compile('([^ ]ه) (ا(م|یم|ش|ند|ی|ید|ت))(?=[ \\n\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]|$)') -> \1‌\2 : 
-مملکت ققنوس عاااالی . خوووب . خییییلی کمااااینکه سررشته
->> join_multipart_tokens
-مملکت ققنوس عاااالی . خوووب . خییییلی کمااااینکه سررشته
-token_contents : ['مملکت', 'ققنوس', 'عاااالی', '.', 'خوووب', '.', 'خییییلی', 'کمااااینکه', 'سررشته']
-> i : 0 | move_count : 3
-> [i:i+move_count+1] : [0:4] : مملکت‌ققنوس‌عاااالی‌.
-> [i:i+move_count+1] : [0:3] : مملکت‌ققنوس‌عاااالی
-> [i:i+move_count+1] : [0:2] : مملکت‌ققنوس
-> [i:i+move_count+1] : [0:1] : مملکت
-> Found => move_count : 0 | fixed_token_content : مملکت
-> i : 1 | move_count : 3
-> [i:i+move_count+1] : [1:5] : ققنوس‌عاااالی‌.‌خوووب
-> [i:i+move_count+1] : [1:4] : ققنوس‌عاااالی‌.
-> [i:i+move_count+1] : [1:3] : ققنوس‌عاااالی
-> [i:i+move_count+1] : [1:2] : ققنوس
-> Found => move_count : 0 | fixed_token_content : ققنوس
-> i : 2 | move_count : 3
-> [i:i+move_count+1] : [2:6] : عاااالی‌.‌خوووب‌.
-> [i:i+move_count+1] : [2:5] : عاااالی‌.‌خوووب
-> [i:i+move_count+1] : [2:4] : عاااالی‌.
-> [i:i+move_count+1] : [2:3] : عاااالی
-> Found => move_count : 0 | fixed_token_content : عاااالی
-> i : 3 | move_count : 3
-> [i:i+move_count+1] : [3:7] : .‌خوووب‌.‌خییییلی
-> [i:i+move_count+1] : [3:6] : .‌خوووب‌.
-> [i:i+move_count+1] : [3:5] : .‌خوووب
-> [i:i+move_count+1] : [3:4] : .
-> Found => move_count : 0 | fixed_token_content : .
-> i : 4 | move_count : 3
-> [i:i+move_count+1] : [4:8] : خوووب‌.‌خییییلی‌کمااااینکه
-> [i:i+move_count+1] : [4:7] : خوووب‌.‌خییییلی
-> [i:i+move_count+1] : [4:6] : خوووب‌.
-> [i:i+move_count+1] : [4:5] : خوووب
-> Found => move_count : 0 | fixed_token_content : خوووب
-> i : 5 | move_count : 3
-> [i:i+move_count+1] : [5:9] : .‌خییییلی‌کمااااینکه‌سررشته
-> [i:i+move_count+1] : [5:8] : .‌خییییلی‌کمااااینکه
-> [i:i+move_count+1] : [5:7] : .‌خییییلی
-> [i:i+move_count+1] : [5:6] : .
-> Found => move_count : 0 | fixed_token_content : .
-> i : 6 | move_count : 2
-> [i:i+move_count+1] : [6:9] : خییییلی‌کمااااینکه‌سررشته
-> [i:i+move_count+1] : [6:8] : خییییلی‌کمااااینکه
-> [i:i+move_count+1] : [6:7] : خییییلی
-> Found => move_count : 0 | fixed_token_content : خییییلی
-> i : 7 | move_count : 1
-> [i:i+move_count+1] : [7:9] : کمااااینکه‌سررشته
-> [i:i+move_count+1] : [7:8] : کمااااینکه
-> Found => move_count : 0 | fixed_token_content : کمااااینکه
-> i : 8 | move_count : 0
-> Join the last one : سررشته
-مملکت ققنوس عاااالی . خوووب . خییییلی کمااااینکه سررشته
->> join_multipart_tokens
-مملکت ققنوس عالی . خوب . خیلی کمااینکه سررشته
-token_contents : ['مملکت', 'ققنوس', 'عالی', '.', 'خوب', '.', 'خیلی', 'کمااینکه', 'سررشته']
-> i : 0 | move_count : 3
-> [i:i+move_count+1] : [0:4] : مملکت‌ققنوس‌عالی‌.
-> [i:i+move_count+1] : [0:3] : مملکت‌ققنوس‌عالی
-> [i:i+move_count+1] : [0:2] : مملکت‌ققنوس
-> [i:i+move_count+1] : [0:1] : مملکت
-> Found => move_count : 0 | fixed_token_content : مملکت
-> i : 1 | move_count : 3
-> [i:i+move_count+1] : [1:5] : ققنوس‌عالی‌.‌خوب
-> [i:i+move_count+1] : [1:4] : ققنوس‌عالی‌.
-> [i:i+move_count+1] : [1:3] : ققنوس‌عالی
-> [i:i+move_count+1] : [1:2] : ققنوس
-> Found => move_count : 0 | fixed_token_content : ققنوس
-> i : 2 | move_count : 3
-> [i:i+move_count+1] : [2:6] : عالی‌.‌خوب‌.
-> [i:i+move_count+1] : [2:5] : عالی‌.‌خوب
-> [i:i+move_count+1] : [2:4] : عالی‌.
-> [i:i+move_count+1] : [2:3] : عالی
-> Found => move_count : 0 | fixed_token_content : عالی
-> i : 3 | move_count : 3
-> [i:i+move_count+1] : [3:7] : .‌خوب‌.‌خیلی
-> [i:i+move_count+1] : [3:6] : .‌خوب‌.
-> [i:i+move_count+1] : [3:5] : .‌خوب
-> [i:i+move_count+1] : [3:4] : .
-> Found => move_count : 0 | fixed_token_content : .
-> i : 4 | move_count : 3
-> [i:i+move_count+1] : [4:8] : خوب‌.‌خیلی‌کمااینکه
-> [i:i+move_count+1] : [4:7] : خوب‌.‌خیلی
-> [i:i+move_count+1] : [4:6] : خوب‌.
-> [i:i+move_count+1] : [4:5] : خوب
-> Found => move_count : 0 | fixed_token_content : خوب
-> i : 5 | move_count : 3
-> [i:i+move_count+1] : [5:9] : .‌خیلی‌کمااینکه‌سررشته
-> [i:i+move_count+1] : [5:8] : .‌خیلی‌کمااینکه
-> [i:i+move_count+1] : [5:7] : .‌خیلی
-> [i:i+move_count+1] : [5:6] : .
-> Found => move_count : 0 | fixed_token_content : .
-> i : 6 | move_count : 2
-> [i:i+move_count+1] : [6:9] : خیلی‌کمااینکه‌سررشته
-> [i:i+move_count+1] : [6:8] : خیلی‌کمااینکه
-> [i:i+move_count+1] : [6:7] : خیلی
-> Found => move_count : 0 | fixed_token_content : خیلی
-> i : 7 | move_count : 1
-> [i:i+move_count+1] : [7:9] : کمااینکه‌سررشته
-> [i:i+move_count+1] : [7:8] : کمااینکه
-> Found => move_count : 0 | fixed_token_content : کمااینکه
-> i : 8 | move_count : 0
-> Join the last one : سررشته
-مملکت ققنوس عالی . خوب . خیلی کمااینکه سررشته
->> join_multipart_tokens
-مملکت ققنوس عالی . خوب . خیلی کمااینکه سررشته
-> token_contents : ['مملکت', 'ققنوس', 'عالی', '.', 'خوب', '.', 'خیلی', 'کمااینکه', 'سررشته']
-> . not in token set!
-> Can't fix .
-> . not in token set!
-> Can't fix .
->> join_multipart_tokens
-مملکت ققنوس عالی . خوب . خیلی کمااینکه سررشته
-token_contents : ['مملکت', 'ققنوس', 'عالی', '.', 'خوب', '.', 'خیلی', 'کمااینکه', 'سررشته']
-> i : 0 | move_count : 3
-> [i:i+move_count+1] : [0:4] : مملکت‌ققنوس‌عالی‌.
-> [i:i+move_count+1] : [0:3] : مملکت‌ققنوس‌عالی
-> [i:i+move_count+1] : [0:2] : مملکت‌ققنوس
-> [i:i+move_count+1] : [0:1] : مملکت
-> Found => move_count : 0 | fixed_token_content : مملکت
-> i : 1 | move_count : 3
-> [i:i+move_count+1] : [1:5] : ققنوس‌عالی‌.‌خوب
-> [i:i+move_count+1] : [1:4] : ققنوس‌عالی‌.
-> [i:i+move_count+1] : [1:3] : ققنوس‌عالی
-> [i:i+move_count+1] : [1:2] : ققنوس
-> Found => move_count : 0 | fixed_token_content : ققنوس
-> i : 2 | move_count : 3
-> [i:i+move_count+1] : [2:6] : عالی‌.‌خوب‌.
-> [i:i+move_count+1] : [2:5] : عالی‌.‌خوب
-> [i:i+move_count+1] : [2:4] : عالی‌.
-> [i:i+move_count+1] : [2:3] : عالی
-> Found => move_count : 0 | fixed_token_content : عالی
-> i : 3 | move_count : 3
-> [i:i+move_count+1] : [3:7] : .‌خوب‌.‌خیلی
-> [i:i+move_count+1] : [3:6] : .‌خوب‌.
-> [i:i+move_count+1] : [3:5] : .‌خوب
-> [i:i+move_count+1] : [3:4] : .
-> Found => move_count : 0 | fixed_token_content : .
-> i : 4 | move_count : 3
-> [i:i+move_count+1] : [4:8] : خوب‌.‌خیلی‌کمااینکه
-> [i:i+move_count+1] : [4:7] : خوب‌.‌خیلی
-> [i:i+move_count+1] : [4:6] : خوب‌.
-> [i:i+move_count+1] : [4:5] : خوب
-> Found => move_count : 0 | fixed_token_content : خوب
-> i : 5 | move_count : 3
-> [i:i+move_count+1] : [5:9] : .‌خیلی‌کمااینکه‌سررشته
-> [i:i+move_count+1] : [5:8] : .‌خیلی‌کمااینکه
-> [i:i+move_count+1] : [5:7] : .‌خیلی
-> [i:i+move_count+1] : [5:6] : .
-> Found => move_count : 0 | fixed_token_content : .
-> i : 6 | move_count : 2
-> [i:i+move_count+1] : [6:9] : خیلی‌کمااینکه‌سررشته
-> [i:i+move_count+1] : [6:8] : خیلی‌کمااینکه
-> [i:i+move_count+1] : [6:7] : خیلی
-> Found => move_count : 0 | fixed_token_content : خیلی
-> i : 7 | move_count : 1
-> [i:i+move_count+1] : [7:9] : کمااینکه‌سررشته
-> [i:i+move_count+1] : [7:8] : کمااینکه
-> Found => move_count : 0 | fixed_token_content : کمااینکه
-> i : 8 | move_count : 0
-> Join the last one : سررشته
-مملکت ققنوس عالی . خوب . خیلی کمااینکه سررشته
-> (Time)(0.005536)
-مملکت ققنوس عالی . خوب . خیلی کمااینکه سررشته
->> RefinementRuleBasedNormalizer : 
-ستاره ی درخشان
-> after re.compile('([^\\.]|^)(\\.\\.\\.)([^\\.]|$)') -> \1…\3 : 
-ستاره ی درخشان
-> after re.compile('[ـ\\r]') ->  : 
-ستاره ی درخشان
-> after re.compile('[\\u064B\\u064C\\u064D\\u064E\\u064F\\u0650\\u0651\\u0652]') ->  : 
-ستاره ی درخشان
-> after re.compile('([\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…])\\1{1,}') -> \1 : 
-ستاره ی درخشان
-> after re.compile('"([^\\n"]+)"') -> «\1» : 
-ستاره ی درخشان
-> after re.compile('([\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…])') ->  \1  : 
-ستاره ی درخشان
-> after re.compile(' +') ->   : 
-ستاره ی درخشان
-> after re.compile('\\n+') -> \n : 
-ستاره ی درخشان
-> after re.compile('([^ ]ه) ی ') -> \1‌ی  : 
-ستاره‌ی درخشان
-> after re.compile('(^| )(ن?می) ') -> \1\2‌ : 
-ستاره‌ی درخشان
-> after re.compile('(?<=[^\\n\\d \\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]{2}) (تر(ین?)?|گری?|های?)(?=[ \\n\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]|$)') -> ‌\1 : 
-ستاره‌ی درخشان
-> after re.compile('([^ ]ه) (ا(م|یم|ش|ند|ی|ید|ت))(?=[ \\n\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]|$)') -> \1‌\2 : 
-ستاره‌ی درخشان
->> join_multipart_tokens
-ستاره‌ی درخشان
-token_contents : ['ستاره\u200cی', 'درخشان']
-> i : 0 | move_count : 1
-> [i:i+move_count+1] : [0:2] : ستاره‌ی‌درخشان
-> [i:i+move_count+1] : [0:1] : ستاره‌ی
-> Found => move_count : 0 | fixed_token_content : ستاره‌ی
-> i : 1 | move_count : 0
-> Join the last one : درخشان
-ستاره‌ی درخشان
->> join_multipart_tokens
-ستاره‌ی درخشان
-token_contents : ['ستاره\u200cی', 'درخشان']
-> i : 0 | move_count : 1
-> [i:i+move_count+1] : [0:2] : ستاره‌ی‌درخشان
-> [i:i+move_count+1] : [0:1] : ستاره‌ی
-> Found => move_count : 0 | fixed_token_content : ستاره‌ی
-> i : 1 | move_count : 0
-> Join the last one : درخشان
-ستاره‌ی درخشان
->> join_multipart_tokens
-ستاره‌ی درخشان
-> token_contents : ['ستاره\u200cی', 'درخشان']
->> join_multipart_tokens
-ستاره‌ی درخشان
-token_contents : ['ستاره\u200cی', 'درخشان']
-> i : 0 | move_count : 1
-> [i:i+move_count+1] : [0:2] : ستاره‌ی‌درخشان
-> [i:i+move_count+1] : [0:1] : ستاره‌ی
-> Found => move_count : 0 | fixed_token_content : ستاره‌ی
-> i : 1 | move_count : 0
-> Join the last one : درخشان
-ستاره‌ی درخشان
-> (Time)(0.001837)
-ستاره‌ی درخشان
->> RefinementRuleBasedNormalizer : 
-می رویم
-> after re.compile('([^\\.]|^)(\\.\\.\\.)([^\\.]|$)') -> \1…\3 : 
-می رویم
-> after re.compile('[ـ\\r]') ->  : 
-می رویم
-> after re.compile('[\\u064B\\u064C\\u064D\\u064E\\u064F\\u0650\\u0651\\u0652]') ->  : 
-می رویم
-> after re.compile('([\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…])\\1{1,}') -> \1 : 
-می رویم
-> after re.compile('"([^\\n"]+)"') -> «\1» : 
-می رویم
-> after re.compile('([\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…])') ->  \1  : 
-می رویم
-> after re.compile(' +') ->   : 
-می رویم
-> after re.compile('\\n+') -> \n : 
-می رویم
-> after re.compile('([^ ]ه) ی ') -> \1‌ی  : 
-می رویم
-> after re.compile('(^| )(ن?می) ') -> \1\2‌ : 
-می‌رویم
-> after re.compile('(?<=[^\\n\\d \\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]{2}) (تر(ین?)?|گری?|های?)(?=[ \\n\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]|$)') -> ‌\1 : 
-می‌رویم
-> after re.compile('([^ ]ه) (ا(م|یم|ش|ند|ی|ید|ت))(?=[ \\n\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]|$)') -> \1‌\2 : 
-می‌رویم
->> join_multipart_tokens
-می‌رویم
-token_contents : ['می\u200cرویم']
-> i : 0 | move_count : 0
-> Join the last one : می‌رویم
-می‌رویم
->> join_multipart_tokens
-می‌رویم
-token_contents : ['می\u200cرویم']
-> i : 0 | move_count : 0
-> Join the last one : می‌رویم
-می‌رویم
->> join_multipart_tokens
-می‌رویم
-> token_contents : ['می\u200cرویم']
->> join_multipart_tokens
-می‌رویم
-token_contents : ['می\u200cرویم']
-> i : 0 | move_count : 0
-> Join the last one : می‌رویم
-می‌رویم
-> (Time)(0.001312)
-می‌رویم
->> RefinementRuleBasedNormalizer : 
-کرده ایم
-> after re.compile('([^\\.]|^)(\\.\\.\\.)([^\\.]|$)') -> \1…\3 : 
-کرده ایم
-> after re.compile('[ـ\\r]') ->  : 
-کرده ایم
-> after re.compile('[\\u064B\\u064C\\u064D\\u064E\\u064F\\u0650\\u0651\\u0652]') ->  : 
-کرده ایم
-> after re.compile('([\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…])\\1{1,}') -> \1 : 
-کرده ایم
-> after re.compile('"([^\\n"]+)"') -> «\1» : 
-کرده ایم
-> after re.compile('([\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…])') ->  \1  : 
-کرده ایم
-> after re.compile(' +') ->   : 
-کرده ایم
-> after re.compile('\\n+') -> \n : 
-کرده ایم
-> after re.compile('([^ ]ه) ی ') -> \1‌ی  : 
-کرده ایم
-> after re.compile('(^| )(ن?می) ') -> \1\2‌ : 
-کرده ایم
-> after re.compile('(?<=[^\\n\\d \\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]{2}) (تر(ین?)?|گری?|های?)(?=[ \\n\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]|$)') -> ‌\1 : 
-کرده ایم
-> after re.compile('([^ ]ه) (ا(م|یم|ش|ند|ی|ید|ت))(?=[ \\n\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]|$)') -> \1‌\2 : 
-کرده‌ایم
->> join_multipart_tokens
-کرده‌ایم
-token_contents : ['کرده\u200cایم']
-> i : 0 | move_count : 0
-> Join the last one : کرده‌ایم
-کرده‌ایم
->> join_multipart_tokens
-کرده‌ایم
-token_contents : ['کرده\u200cایم']
-> i : 0 | move_count : 0
-> Join the last one : کرده‌ایم
-کرده‌ایم
->> join_multipart_tokens
-کرده‌ایم
-> token_contents : ['کرده\u200cایم']
->> join_multipart_tokens
-کرده‌ایم
-token_contents : ['کرده\u200cایم']
-> i : 0 | move_count : 0
-> Join the last one : کرده‌ایم
-کرده‌ایم
-> (Time)(0.001198)
-کرده‌ایم
->> RefinementRuleBasedNormalizer : 
-کتاب های او را بیاورید.
-> after re.compile('([^\\.]|^)(\\.\\.\\.)([^\\.]|$)') -> \1…\3 : 
-کتاب های او را بیاورید.
-> after re.compile('[ـ\\r]') ->  : 
-کتاب های او را بیاورید.
-> after re.compile('[\\u064B\\u064C\\u064D\\u064E\\u064F\\u0650\\u0651\\u0652]') ->  : 
-کتاب های او را بیاورید.
-> after re.compile('([\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…])\\1{1,}') -> \1 : 
-کتاب های او را بیاورید.
-> after re.compile('"([^\\n"]+)"') -> «\1» : 
-کتاب های او را بیاورید.
-> after re.compile('([\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…])') ->  \1  : 
-کتاب های او را بیاورید . 
-> after re.compile(' +') ->   : 
-کتاب های او را بیاورید . 
-> after re.compile('\\n+') -> \n : 
-کتاب های او را بیاورید . 
-> after re.compile('([^ ]ه) ی ') -> \1‌ی  : 
-کتاب های او را بیاورید . 
-> after re.compile('(^| )(ن?می) ') -> \1\2‌ : 
-کتاب های او را بیاورید . 
-> after re.compile('(?<=[^\\n\\d \\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]{2}) (تر(ین?)?|گری?|های?)(?=[ \\n\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]|$)') -> ‌\1 : 
-کتاب‌های او را بیاورید . 
-> after re.compile('([^ ]ه) (ا(م|یم|ش|ند|ی|ید|ت))(?=[ \\n\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]|$)') -> \1‌\2 : 
-کتاب‌های او را بیاورید . 
->> join_multipart_tokens
-کتاب‌های او را بیاورید .
-token_contents : ['کتاب\u200cهای', 'او', 'را', 'بیاورید', '.']
-> i : 0 | move_count : 3
-> [i:i+move_count+1] : [0:4] : کتاب‌های‌او‌را‌بیاورید
-> [i:i+move_count+1] : [0:3] : کتاب‌های‌او‌را
-> [i:i+move_count+1] : [0:2] : کتاب‌های‌او
-> [i:i+move_count+1] : [0:1] : کتاب‌های
-> Found => move_count : 0 | fixed_token_content : کتاب‌های
-> i : 1 | move_count : 3
-> [i:i+move_count+1] : [1:5] : او‌را‌بیاورید‌.
-> [i:i+move_count+1] : [1:4] : او‌را‌بیاورید
-> [i:i+move_count+1] : [1:3] : او‌را
-> [i:i+move_count+1] : [1:2] : او
-> Found => move_count : 0 | fixed_token_content : او
-> i : 2 | move_count : 2
-> [i:i+move_count+1] : [2:5] : را‌بیاورید‌.
-> [i:i+move_count+1] : [2:4] : را‌بیاورید
-> [i:i+move_count+1] : [2:3] : را
-> Found => move_count : 0 | fixed_token_content : را
-> i : 3 | move_count : 1
-> [i:i+move_count+1] : [3:5] : بیاورید‌.
-> [i:i+move_count+1] : [3:4] : بیاورید
-> Found => move_count : 0 | fixed_token_content : بیاورید
-> i : 4 | move_count : 0
-> Join the last one : .
-کتاب‌های او را بیاورید .
->> join_multipart_tokens
-کتاب‌های او را بیاورید .
-token_contents : ['کتاب\u200cهای', 'او', 'را', 'بیاورید', '.']
-> i : 0 | move_count : 3
-> [i:i+move_count+1] : [0:4] : کتاب‌های‌او‌را‌بیاورید
-> [i:i+move_count+1] : [0:3] : کتاب‌های‌او‌را
-> [i:i+move_count+1] : [0:2] : کتاب‌های‌او
-> [i:i+move_count+1] : [0:1] : کتاب‌های
-> Found => move_count : 0 | fixed_token_content : کتاب‌های
-> i : 1 | move_count : 3
-> [i:i+move_count+1] : [1:5] : او‌را‌بیاورید‌.
-> [i:i+move_count+1] : [1:4] : او‌را‌بیاورید
-> [i:i+move_count+1] : [1:3] : او‌را
-> [i:i+move_count+1] : [1:2] : او
-> Found => move_count : 0 | fixed_token_content : او
-> i : 2 | move_count : 2
-> [i:i+move_count+1] : [2:5] : را‌بیاورید‌.
-> [i:i+move_count+1] : [2:4] : را‌بیاورید
-> [i:i+move_count+1] : [2:3] : را
-> Found => move_count : 0 | fixed_token_content : را
-> i : 3 | move_count : 1
-> [i:i+move_count+1] : [3:5] : بیاورید‌.
-> [i:i+move_count+1] : [3:4] : بیاورید
-> Found => move_count : 0 | fixed_token_content : بیاورید
-> i : 4 | move_count : 0
-> Join the last one : .
-کتاب‌های او را بیاورید .
->> join_multipart_tokens
-کتاب‌های او را بیاورید .
-> token_contents : ['کتاب\u200cهای', 'او', 'را', 'بیاورید', '.']
-> کتاب‌های not in token set!
-> Can't fix کتاب‌های
-> . not in token set!
-> Can't fix .
->> join_multipart_tokens
-کتاب‌های او را بیاورید .
-token_contents : ['کتاب\u200cهای', 'او', 'را', 'بیاورید', '.']
-> i : 0 | move_count : 3
-> [i:i+move_count+1] : [0:4] : کتاب‌های‌او‌را‌بیاورید
-> [i:i+move_count+1] : [0:3] : کتاب‌های‌او‌را
-> [i:i+move_count+1] : [0:2] : کتاب‌های‌او
-> [i:i+move_count+1] : [0:1] : کتاب‌های
-> Found => move_count : 0 | fixed_token_content : کتاب‌های
-> i : 1 | move_count : 3
-> [i:i+move_count+1] : [1:5] : او‌را‌بیاورید‌.
-> [i:i+move_count+1] : [1:4] : او‌را‌بیاورید
-> [i:i+move_count+1] : [1:3] : او‌را
-> [i:i+move_count+1] : [1:2] : او
-> Found => move_count : 0 | fixed_token_content : او
-> i : 2 | move_count : 2
-> [i:i+move_count+1] : [2:5] : را‌بیاورید‌.
-> [i:i+move_count+1] : [2:4] : را‌بیاورید
-> [i:i+move_count+1] : [2:3] : را
-> Found => move_count : 0 | fixed_token_content : را
-> i : 3 | move_count : 1
-> [i:i+move_count+1] : [3:5] : بیاورید‌.
-> [i:i+move_count+1] : [3:4] : بیاورید
-> Found => move_count : 0 | fixed_token_content : بیاورید
-> i : 4 | move_count : 0
-> Join the last one : .
-کتاب‌های او را بیاورید .
-> (Time)(0.003867)
-کتاب‌های او را بیاورید .
->> RefinementRuleBasedNormalizer : 
-سلطه گری آن ها
-> after re.compile('([^\\.]|^)(\\.\\.\\.)([^\\.]|$)') -> \1…\3 : 
-سلطه گری آن ها
-> after re.compile('[ـ\\r]') ->  : 
-سلطه گری آن ها
-> after re.compile('[\\u064B\\u064C\\u064D\\u064E\\u064F\\u0650\\u0651\\u0652]') ->  : 
-سلطه گری آن ها
-> after re.compile('([\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…])\\1{1,}') -> \1 : 
-سلطه گری آن ها
-> after re.compile('"([^\\n"]+)"') -> «\1» : 
-سلطه گری آن ها
-> after re.compile('([\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…])') ->  \1  : 
-سلطه گری آن ها
-> after re.compile(' +') ->   : 
-سلطه گری آن ها
-> after re.compile('\\n+') -> \n : 
-سلطه گری آن ها
-> after re.compile('([^ ]ه) ی ') -> \1‌ی  : 
-سلطه گری آن ها
-> after re.compile('(^| )(ن?می) ') -> \1\2‌ : 
-سلطه گری آن ها
-> after re.compile('(?<=[^\\n\\d \\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]{2}) (تر(ین?)?|گری?|های?)(?=[ \\n\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]|$)') -> ‌\1 : 
-سلطه‌گری آن‌ها
-> after re.compile('([^ ]ه) (ا(م|یم|ش|ند|ی|ید|ت))(?=[ \\n\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]|$)') -> \1‌\2 : 
-سلطه‌گری آن‌ها
->> join_multipart_tokens
-سلطه‌گری آن‌ها
-token_contents : ['سلطه\u200cگری', 'آن\u200cها']
-> i : 0 | move_count : 1
-> [i:i+move_count+1] : [0:2] : سلطه‌گری‌آن‌ها
-> [i:i+move_count+1] : [0:1] : سلطه‌گری
-> Found => move_count : 0 | fixed_token_content : سلطه‌گری
-> i : 1 | move_count : 0
-> Join the last one : آن‌ها
-سلطه‌گری آن‌ها
->> join_multipart_tokens
-سلطه‌گری آن‌ها
-token_contents : ['سلطه\u200cگری', 'آن\u200cها']
-> i : 0 | move_count : 1
-> [i:i+move_count+1] : [0:2] : سلطه‌گری‌آن‌ها
-> [i:i+move_count+1] : [0:1] : سلطه‌گری
-> Found => move_count : 0 | fixed_token_content : سلطه‌گری
-> i : 1 | move_count : 0
-> Join the last one : آن‌ها
-سلطه‌گری آن‌ها
->> join_multipart_tokens
-سلطه‌گری آن‌ها
-> token_contents : ['سلطه\u200cگری', 'آن\u200cها']
->> join_multipart_tokens
-سلطه‌گری آن‌ها
-token_contents : ['سلطه\u200cگری', 'آن\u200cها']
-> i : 0 | move_count : 1
-> [i:i+move_count+1] : [0:2] : سلطه‌گری‌آن‌ها
-> [i:i+move_count+1] : [0:1] : سلطه‌گری
-> Found => move_count : 0 | fixed_token_content : سلطه‌گری
-> i : 1 | move_count : 0
-> Join the last one : آن‌ها
-سلطه‌گری آن‌ها
-> (Time)(0.001885)
-سلطه‌گری آن‌ها
->> RefinementRuleBasedNormalizer : 
-نوشیدنی اش آرام کننده بود.
-> after re.compile('([^\\.]|^)(\\.\\.\\.)([^\\.]|$)') -> \1…\3 : 
-نوشیدنی اش آرام کننده بود.
-> after re.compile('[ـ\\r]') ->  : 
-نوشیدنی اش آرام کننده بود.
-> after re.compile('[\\u064B\\u064C\\u064D\\u064E\\u064F\\u0650\\u0651\\u0652]') ->  : 
-نوشیدنی اش آرام کننده بود.
-> after re.compile('([\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…])\\1{1,}') -> \1 : 
-نوشیدنی اش آرام کننده بود.
-> after re.compile('"([^\\n"]+)"') -> «\1» : 
-نوشیدنی اش آرام کننده بود.
-> after re.compile('([\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…])') ->  \1  : 
-نوشیدنی اش آرام کننده بود . 
-> after re.compile(' +') ->   : 
-نوشیدنی اش آرام کننده بود . 
-> after re.compile('\\n+') -> \n : 
-نوشیدنی اش آرام کننده بود . 
-> after re.compile('([^ ]ه) ی ') -> \1‌ی  : 
-نوشیدنی اش آرام کننده بود . 
-> after re.compile('(^| )(ن?می) ') -> \1\2‌ : 
-نوشیدنی اش آرام کننده بود . 
-> after re.compile('(?<=[^\\n\\d \\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]{2}) (تر(ین?)?|گری?|های?)(?=[ \\n\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]|$)') -> ‌\1 : 
-نوشیدنی اش آرام کننده بود . 
-> after re.compile('([^ ]ه) (ا(م|یم|ش|ند|ی|ید|ت))(?=[ \\n\\.:!،؛؟»\\]\\)\\}«\\[\\(\\{\\\'\\"…]|$)') -> \1‌\2 : 
-نوشیدنی اش آرام کننده بود . 
->> join_multipart_tokens
-نوشیدنی اش آرام کننده بود .
-token_contents : ['نوشیدنی', 'اش', 'آرام', 'کننده', 'بود', '.']
-> i : 0 | move_count : 3
-> [i:i+move_count+1] : [0:4] : نوشیدنی‌اش‌آرام‌کننده
-> [i:i+move_count+1] : [0:3] : نوشیدنی‌اش‌آرام
-> [i:i+move_count+1] : [0:2] : نوشیدنی‌اش
-> [i:i+move_count+1] : [0:1] : نوشیدنی
-> Found => move_count : 0 | fixed_token_content : نوشیدنی
-> i : 1 | move_count : 3
-> [i:i+move_count+1] : [1:5] : اش‌آرام‌کننده‌بود
-> [i:i+move_count+1] : [1:4] : اش‌آرام‌کننده
-> [i:i+move_count+1] : [1:3] : اش‌آرام
-> [i:i+move_count+1] : [1:2] : اش
-> Found => move_count : 0 | fixed_token_content : اش
-> i : 2 | move_count : 3
-> [i:i+move_count+1] : [2:6] : آرام‌کننده‌بود‌.
-> [i:i+move_count+1] : [2:5] : آرام‌کننده‌بود
-> [i:i+move_count+1] : [2:4] : آرام‌کننده
-> Found => move_count : 1 | fixed_token_content : آرام‌کننده
-> i : 4 | move_count : 1
-> [i:i+move_count+1] : [4:6] : بود‌.
-> [i:i+move_count+1] : [4:5] : بود
-> Found => move_count : 0 | fixed_token_content : بود
-> i : 5 | move_count : 0
-> Join the last one : .
-نوشیدنی اش آرام‌کننده بود .
->> join_multipart_tokens
-نوشیدنی اش آرام‌کننده بود .
-token_contents : ['نوشیدنی', 'اش', 'آرام\u200cکننده', 'بود', '.']
-> i : 0 | move_count : 3
-> [i:i+move_count+1] : [0:4] : نوشیدنی‌اش‌آرام‌کننده‌بود
-> [i:i+move_count+1] : [0:3] : نوشیدنی‌اش‌آرام‌کننده
-> [i:i+move_count+1] : [0:2] : نوشیدنی‌اش
-> [i:i+move_count+1] : [0:1] : نوشیدنی
-> Found => move_count : 0 | fixed_token_content : نوشیدنی
-> i : 1 | move_count : 3
-> [i:i+move_count+1] : [1:5] : اش‌آرام‌کننده‌بود‌.
-> [i:i+move_count+1] : [1:4] : اش‌آرام‌کننده‌بود
-> [i:i+move_count+1] : [1:3] : اش‌آرام‌کننده
-> [i:i+move_count+1] : [1:2] : اش
-> Found => move_count : 0 | fixed_token_content : اش
-> i : 2 | move_count : 2
-> [i:i+move_count+1] : [2:5] : آرام‌کننده‌بود‌.
-> [i:i+move_count+1] : [2:4] : آرام‌کننده‌بود
-> [i:i+move_count+1] : [2:3] : آرام‌کننده
-> Found => move_count : 0 | fixed_token_content : آرام‌کننده
-> i : 3 | move_count : 1
-> [i:i+move_count+1] : [3:5] : بود‌.
-> [i:i+move_count+1] : [3:4] : بود
-> Found => move_count : 0 | fixed_token_content : بود
-> i : 4 | move_count : 0
-> Join the last one : .
-نوشیدنی اش آرام‌کننده بود .
->> join_multipart_tokens
-نوشیدنی اش آرام‌کننده بود .
-> token_contents : ['نوشیدنی', 'اش', 'آرام\u200cکننده', 'بود', '.']
-> نوشیدنی not in token set!
-> Found sp_joined : نوشی دنی
-> . not in token set!
-> Can't fix .
->> join_multipart_tokens
-نوشی دنی اش آرام‌کننده بود .
-token_contents : ['نوشی', 'دنی', 'اش', 'آرام\u200cکننده', 'بود', '.']
-> i : 0 | move_count : 3
-> [i:i+move_count+1] : [0:4] : نوشی‌دنی‌اش‌آرام‌کننده
-> [i:i+move_count+1] : [0:3] : نوشی‌دنی‌اش
-> [i:i+move_count+1] : [0:2] : نوشی‌دنی
-> [i:i+move_count+1] : [0:1] : نوشی
-> Found => move_count : 0 | fixed_token_content : نوشی
-> i : 1 | move_count : 3
-> [i:i+move_count+1] : [1:5] : دنی‌اش‌آرام‌کننده‌بود
-> [i:i+move_count+1] : [1:4] : دنی‌اش‌آرام‌کننده
-> [i:i+move_count+1] : [1:3] : دنی‌اش
-> [i:i+move_count+1] : [1:2] : دنی
-> Found => move_count : 0 | fixed_token_content : دنی
-> i : 2 | move_count : 3
-> [i:i+move_count+1] : [2:6] : اش‌آرام‌کننده‌بود‌.
-> [i:i+move_count+1] : [2:5] : اش‌آرام‌کننده‌بود
-> [i:i+move_count+1] : [2:4] : اش‌آرام‌کننده
-> [i:i+move_count+1] : [2:3] : اش
-> Found => move_count : 0 | fixed_token_content : اش
-> i : 3 | move_count : 2
-> [i:i+move_count+1] : [3:6] : آرام‌کننده‌بود‌.
-> [i:i+move_count+1] : [3:5] : آرام‌کننده‌بود
-> [i:i+move_count+1] : [3:4] : آرام‌کننده
-> Found => move_count : 0 | fixed_token_content : آرام‌کننده
-> i : 4 | move_count : 1
-> [i:i+move_count+1] : [4:6] : بود‌.
-> [i:i+move_count+1] : [4:5] : بود
-> Found => move_count : 0 | fixed_token_content : بود
-> i : 5 | move_count : 0
-> Join the last one : .
-نوشی دنی اش آرام‌کننده بود .
-> (Time)(0.006768)
-نوشی دنی اش آرام‌کننده بود .
-F
-======================================================================
-FAIL: test_refinement_normalizer (mohaverekhan.tests.NormalizerViewTests)
+> Join the last one : فرهنگسرا
+فرهنگسرا فرهنگسرا فرهنگسرا
+> (Time)(0.002877)
+فرهنگسرا فرهنگسرا فرهنگسرا
+.
 ----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home/bitianist/bitianist/python/mohaverekhan/mohaverekhan/tests.py", line 77, in test_refinement_normalizer
-    self.assertEqual(response.data['content'], normal_text_content)
-AssertionError: 'نوشی دنی اش آرام\u200cکننده بود .' != 'نوشیدنی اش آرام\u200cکننده بود .'
-- نوشی دنی اش آرام‌کننده بود .
-?     -
-+ نوشیدنی اش آرام‌کننده بود .
+Ran 1 test in 0.030s
 
-
-----------------------------------------------------------------------
-Ran 1 test in 0.174s
-
-FAILED (failures=1)
+OK
