@@ -126,13 +126,13 @@ class RefinementNormalizer(Normalizer):
     refinement_patterns = (
         (r'([^\.]|^)(\.\.\.)([^\.]|$)', r'\1…\3', 'replace 3 dots with …', 0, 'bitianist', 'true'),
         # (rf'([^{repetition_characters}])\1{{1,}}', r'\1', 'remove repetitions except ی و', 0, 'bitianist', 'true'),
-        (r'[ـ\r]', r'', 'remove keshide', 0, 'hazm', 'true'),
+        (r'[ـ\r\n]', r'', r'remove keshide, \n, \r', 0, 'hazm', 'true'),
         (r'[\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652]', r'', 'remove FATHATAN, DAMMATAN, KASRATAN, FATHA, DAMMA, KASRA, SHADDA, SUKUN', 0, 'hazm', 'true'),
         (rf'([{punctuations}])\1{{1,}}', r'\1', 'remove punctuations repetitions', 0, 'bitianist', 'true'),
         (r'"([^\n"]+)"', r'«\1»', 'replace quotation with gyoome', 0, 'hazm', 'true'),
         (rf'([{punctuations}])', r' \1 ', 'add extra space before and after of punctuations', 0, 'bitianist', 'true'),
         (r' +', r' ', 'remove extra spaces', 0, 'hazm', 'true'),
-        (r'\n+', r'\n', 'remove extra newlines', 0, 'bitianist', 'true'),
+        # (r'\n+', r'\n', 'remove extra newlines', 0, 'bitianist', 'true'),
         (r'([^ ]ه) ی ', r'\1‌ی ', 'between ی and ه - replace space with non-joiner ', 0, 'hazm', 'true'),
         (r'(^| )(ن?می) ', r'\1\2‌', 'after می،نمی - replace space with non-joiner ', 0, 'hazm', 'true'),
         (rf'(?<=[^\n\d {punctuations}]{{2}}) (تر(ین?)?|گری?|های?)(?=[ \n{punctuations}]|$)', r'‌\1', 'before تر, تری, ترین, گر, گری, ها, های - replace space with non-joiner', 0, 'hazm', 'true'),
@@ -315,14 +315,6 @@ class Text(models.Model):
     def __str__(self):
         return f'{self.content[:50]}{" ..." if len(self.content) > 50 else ""}'
 
-    def create_sentences(self):
-        text = sentence_splitter_pattern.sub(r'\1\n\n', self.content)
-        sentences = [sentence.replace('\n', ' ').strip() for sentence in text.split('\n\n') if sentence.strip()]
-        order = 0
-        for sentence in sentences:
-            Sentence.objects.create(content=sentence, text=self, order=order)
-            order += 1
-    
 class NormalText(Text):
     is_valid = models.BooleanField(default=False, blank=True)
     normalizer = models.ForeignKey(Normalizer, on_delete=models.CASCADE, related_name='normal_texts', related_query_name='normal_text')
@@ -528,47 +520,76 @@ class NLTKTagger(Tagger):
     
     def train(self):
         nltk_taggers_model.train()
-        pass
 
-    def tag(self, text):
+    def get_or_create_sentences(self, text):
         if text.sentences.exists():
             logger.debug(f'> sentence was exists')
-        else:
-            text.create_sentences()
+            return False
+        text_content = sentence_splitter_pattern.sub(r'\1\n\n', text.content) # hazm
+        sentence_contents = [sentence_content.replace('\n', ' ').strip() \
+            for sentence_content in text_content.split('\n\n') if sentence_content.strip()] #hazm
+        order = 0
+        for sentence_content in sentence_contents:
+            Sentence.objects.create(content=sentence_content, text=text, order=order)
+            order += 1
+        return True
 
-        for sentence in text.sentences:
-            self.tag_sentence(sentence)
+    def tag(self, text):
+        self.create_sentences()
+        created = self.get_or_create_sentences(text)
+        tagged_sentence = None
+        if not created:
+            for sentence in text.sentences:
+                tagged_sentence = TaggedSentence.objects.get_or_create(
+                                    tagger=self, 
+                                    sentence=sentence
+                                    )
+                token_contents = tagged_sentence.sentence.content.split()
+                tagged_tokens = nltk_taggers_model.tag(token_contents)
+                token_dictionary = {}
+                for tagged_token in tagged_tokens:
+                    token_dictionary = {
+                        'content': tagged_token[0],
+                        'tag': {
+                            'name': tagged_token[1]
+                        }
+                    }
+                    tagged_sentence.tokens.append(token_dictionary)
+                tagged_sentence.save()
+
+        # for sentence in text.sentences:
+        #     self.tag_sentence(sentence)
             
-            tagged_sentence.split_to_tokens()
+        #     tagged_sentence.split_to_tokens()
 
-        sentence_tokens = [
-            ("خیلی", "A"),
-            ("افتضاح", "A"),
-            ("است", "V"),
-            (".", "O")
-        ]
-        sentence_tokens = [
-            {
-                'content':token, 
-                'tag':
-                {
-                    'name': tag
-                }
-            } for token, tag in sentence_tokens]
-        logger.info(f'sentence_tokens : \n\n{sentence_tokens}\n')
+        # sentence_tokens = [
+        #     ("خیلی", "A"),
+        #     ("افتضاح", "A"),
+        #     ("است", "V"),
+        #     (".", "O")
+        # ]
+        # sentence_tokens = [
+        #     {
+        #         'content':token, 
+        #         'tag':
+        #         {
+        #             'name': tag
+        #         }
+        #     } for token, tag in sentence_tokens]
+        # logger.info(f'sentence_tokens : \n\n{sentence_tokens}\n')
 
-        obj, created = TaggedSentence.objects.update_or_create(
-            tagger=self, sentence=sentence,
-            defaults={'tokens': sentence_tokens},
-        )
-        logger.debug(f"> created : {created}")
+        # obj, created = TaggedSentence.objects.update_or_create(
+        #     tagger=self, sentence=sentence,
+        #     defaults={'tokens': sentence_tokens},
+        # )
+        # logger.debug(f"> created : {created}")
 
         # TaggedSentence.objects.create(
         #     tagger=self,
         #     sentence=sentence,
         #     tokens=sentence_tokens
         # )
-        return text
+        # return text
 
 
 class Sentence(models.Model):
