@@ -10,7 +10,7 @@ from .models import (Normalizer, Text, NormalText,
             RefinementPattern)
 
 import json
-from mohaverekhan.core.tools import data_importer
+from mohaverekhan import data_importer
 
 base_api_url = r'http://127.0.0.1:8000/mohaverekhan/api'
 normalizers_url = fr'{base_api_url}/normalizers'

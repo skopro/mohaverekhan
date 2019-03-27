@@ -9,7 +9,7 @@ class MohaverekhanConfig(AppConfig):
     def ready(self):
         
 
-        from mohaverekhan.core.tools import utils, normalizer, tokenizer, sentence_splitter, cache
+        from mohaverekhan import utils, cache
         utils.init()
         cache.init()
         

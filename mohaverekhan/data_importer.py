@@ -12,7 +12,7 @@ import re
 if __name__ == '__main__':
     import utils
 else:
-    from mohaverekhan.core.tools import utils
+    from mohaverekhan import utils
 
 logger = utils.get_logger(logger_name='data_importer')
 

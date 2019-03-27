@@ -11,7 +11,7 @@ import pandas as pd
 import nltk
 
 # from ..tools import utils
-from mohaverekhan.core.tools import utils
+from mohaverekhan import utils
 
 
 logger = utils.get_logger(logger_name='data_setup_7')
