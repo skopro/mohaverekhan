@@ -47,7 +47,7 @@ bijankhan_tag_set_dictionary = [
   {
     "name": "V",
     "persian": "فعل",
-    "color": "#19A3FF"
+    "color": "#33B4FF"
   },
   {
     "name": "J",
@@ -72,7 +72,7 @@ bijankhan_tag_set_dictionary = [
   {
     "name": "Z",
     "persian": "ضمیر",
-    "color": "#EF0DFF"
+    "color": "#FF82FF"
   },
   {
     "name": "O",
