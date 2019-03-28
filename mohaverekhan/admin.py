@@ -61,6 +61,8 @@ class TagAdmin(admin.ModelAdmin):
                 'get_color_html', 'examples', 'tag_set', 'created')
     ordering = ('-tag_set', '-created')
     readonly_fields = ['created', 'id']
+    list_filter = ['tag_set', 'name', 'persian']
+    search_fields = ['persian']
 
     fieldsets = (
         (None, {
@@ -188,13 +190,13 @@ class NormalTextAdmin(admin.ModelAdmin):
     get_text_id.short_description = 'Text ID'
 
 class TaggerAdmin(admin.ModelAdmin):
-    list_display = ('name', 'owner', 'model_type', 'total_tagged_sentence_count', 
+    list_display = ('name', 'owner', 'model_type', 'tag_set', 'total_tagged_sentence_count', 
                 'total_valid_tagged_sentence_count', 
                 'get_model_details', 'last_update', 'created')
-    ordering = ('model_type', '-created')
+    ordering = ('model_type', 'tag_set', '-created')
     readonly_fields = ['created', 'id', 'sentences', 'last_update',
                 'total_tagged_sentence_count', 'total_valid_tagged_sentence_count']
-    list_filter = ['owner', 'model_type']
+    list_filter = ['owner', 'model_type', 'tag_set']
 
     fieldsets = (
         (None, {
