@@ -17,8 +17,8 @@ from tqdm import tqdm
 from sklearn.utils import shuffle
 from tensorlayer.layers import DenseLayer, EmbeddingInputlayer, Seq2Seq, retrieve_seq_length_op2
 
-from .data.mohaverekhan_v1 import data
-from ..tools import utils
+from . import data
+from mohaverekhan import utils
 
 logger = utils.get_logger(logger_name='seq2seq')
 logger.info('-------------------------------------------------------------------')

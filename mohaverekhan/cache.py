@@ -3,8 +3,10 @@ import logging
 import random
 import re
 repetition_pattern = re.compile(r"([^A-Za-z])\1{1,}")
-debug_pattern = re.compile(r'فرهنگسرا')
+# debug_pattern = re.compile(r'[0-9۰۱۲۳۴۵۶۷۸۹]')
+# debug_pattern = re.compile(r'^گرون$|^میدون$|^خونه$|^نون$|^ارزون$|^اون$|^قلیون$')
 # debug_pattern = re.compile(r'هایمان')
+debug_pattern = re.compile(r'هفت‌هشت')
 
 
 logger = None
@@ -22,6 +24,7 @@ def cache_tokens():
             token_content = token['content']
             tag_name = token['tag']['name']
             if debug_pattern.search(token_content):
+                # if tag_name != 'U':
                 logger.info(f'> Token [{token_content}] has tag [{tag_name}]')
             if tag_name not in ('O', 'U'):
                 token_set.add(token_content)

@@ -134,12 +134,14 @@ $(document).ready(function(){
             get(`${taggers_url}/${selected_tagger}/tag?text-id=${text_id}`, do_after_success_tagging_text)
         }
         else {
-            $("#output-text").text(xhr.responseJSON.content)
+            $("#output-text").html(xhr.responseJSON.content.replace(/\n/g, "<br>"))
         }
     }
     function do_after_success_getting_item(result, status, xhr) {
-        text_id = xhr.responseJSON.id
+        var text = xhr.responseJSON
+        text_id = text.id
         console.log(`text_id : ${text_id}`)
+        console.log(`text content : ${text}`)
         if (selected_normalizer != "no-normalizer") {
             get(`${normalizers_url}/${selected_normalizer}/normalize?text-id=${text_id}`, do_after_success_normalizing_text)
         }
@@ -149,7 +151,14 @@ $(document).ready(function(){
     }
 
     $("#do-it-button").click(function() {
-        input_text = $("#input-text").text();
+        // input_text = $("#input-text").text()
+        input_text = $('#input-text').clone().children().remove().end().text() + '\n';
+        current_line = ''
+        $("#input-text").children('div').each(function () {
+            current_line = $(this).text()
+            if (current_line != '')
+                input_text += current_line + '\n';
+        });
         console.log(`input_text : ${input_text}`)
         selected_normalizer = $("#normalizers").children("option:selected").val();
         console.log(`selected_normalizer : ${selected_normalizer}`)
@@ -159,7 +168,10 @@ $(document).ready(function(){
             $("#output-text").text('لطفا حداقل یک رسمی کننده یا یک برچسب زننده انتخاب کنید.');
             return
         }
+        input_text = input_text.replace(/\n/g, "\\n")
+        console.log(`input_text : \n${input_text}\n`)
         var data = `{"content": "${input_text}"}`
+        console.log(`data : ${data}`)
         post(texts_url, data, do_after_success_getting_item)
     })
     
