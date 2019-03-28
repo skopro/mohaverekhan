@@ -84,6 +84,10 @@ html, body {
     padding-left: 0;
 }
 
+textarea {
+    resize: none;
+}
+
 #input-text, #output-text {
     width: 95%;
     display: block;
@@ -106,8 +110,8 @@ html, body {
     font-weight: 500;
     padding: 1.7vh 1.7vw 1.7vh 1.7vw;
     word-wrap: break-word;
-    overflow: hidden;
-    overflow-y: auto;
+    overflow: auto;
+    /* overflow-y: auto; */
 }
 
 
