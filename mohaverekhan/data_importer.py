@@ -57,7 +57,7 @@ bijankhan_tag_set_dictionary = [
   {
     "name": "A",
     "persian": "صفت",
-    "color": "#F1C40F"
+    "color": "#FFF82E"
   },
   {
     "name": "U",
@@ -111,6 +111,33 @@ bijankhan_tag_set_dictionary = [
   }
 ]
 
+mohaverekhan_tag_set_dictionary = bijankhan_tag_set_dictionary + [
+  {
+    "name": "X",
+    "persian": "ایموجی",
+    "color": "#00B3FF"
+  },
+  {
+    "name": "S",
+    "persian": "شناسه",
+    "color": "#00B3FF"
+  },
+  {
+    "name": "K",
+    "persian": "لینک",
+    "color": "#00B3FF"
+  },
+  {
+    "name": "M",
+    "persian": "ایمیل",
+    "color": "#00B3FF"
+  },
+  {
+    "name": "G",
+    "persian": "تگ",
+    "color": "#00B3FF"
+  },
+]
 def make_pretty_json_from_dictionary(dictionary):
     return json.dumps(dictionary, ensure_ascii=False, indent=4,)
 
@@ -254,11 +281,18 @@ def generate_refinement_pattern_dictionary(pattern, replacement, order=9999, own
     return d
 
 @utils.time_usage(logger)
-def import_bijankhan_tag_set():
-    bijankhan_tag_set = generate_tag_set_dictionary('bijankhan-tag-set', 
-        tags=bijankhan_tag_set_dictionary)
+def import_tag_sets():
+    # bijankhan_tag_set = generate_tag_set_dictionary('bijankhan-tag-set', 
+    #     tags=bijankhan_tag_set_dictionary)
 
-    response, error = post(tag_sets_url, bijankhan_tag_set)
+    # response, error = post(tag_sets_url, bijankhan_tag_set)
+    # if error:
+    #     return 0
+
+    mohaverekhan_tag_set = generate_tag_set_dictionary('mohaverekhan-tag-set', 
+        tags=mohaverekhan_tag_set_dictionary)
+
+    response, error = post(tag_sets_url, mohaverekhan_tag_set)
     if error:
         return 0
 
@@ -629,12 +663,12 @@ def import_refinement_patterns():
 
 def main():
     try:
-        # import_bijankhan_tag_set()
+        import_tag_sets()
         # import_normalizers()
         # import_taggers()
         # import_text_equivalents()
         # import_word_equivalents()
-        import_bijankhan_data()
+        # import_bijankhan_data()
 
 
         # import_tags()

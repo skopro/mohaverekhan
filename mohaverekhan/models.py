@@ -11,6 +11,7 @@ from mohaverekhan.machine_learning_models.seq2seq \
         import model as seq2seq_model
 from colorfield.fields import ColorField
 from django.db.models import Count
+from django.db.models import Q
 import time
 import datetime
 import re
@@ -149,7 +150,7 @@ class RefinementNormalizer(Normalizer):
         (rf'([{punctuations}])\1+', r'\1', 'remove punctuations repetitions', 0, 'bitianist', 'true'),
         (r'"([^\n"]+)"', r'«\1»', 'replace quotation with gyoome', 0, 'hazm', 'true'),
         # (rf'(?<=[^a-zA-Z{numbers}])([{punctuations}])(?=[^a-zA-Z]|$)', r' \1 ', 'add extra space before and after of punctuations', 0, 'bitianist', 'true'),
-        (rf'(?<=[{persians}\n ])([{punctuations}])(?=[{persians}\n ]|$)', r' \1 ', 'add extra space before and after of punctuations', 0, 'bitianist', 'true'),
+        (rf'([{punctuations}])(?=[{persians}\n ]|$)|(?<=[{persians}\n ])([{punctuations}])', r' \1\2 ', 'add extra space before and after of punctuations', 0, 'bitianist', 'true'),
         # (rf'([^a-zA-Z {numbers}]+)([{numbers}]+)|([{numbers}]+)([^a-zA-Z {numbers}]+)', r'\1 \2\3 \4', '', 0, 'bitianist', 'true'),
         (rf'([{persians}]+)([{numbers}]+)|([{numbers}]+)([{persians}]+)', r'\1 \2\3 \4', '', 0, 'bitianist', 'true'),
         (r'\n+', r'\n', 'remove extra newlines', 0, 'bitianist', 'true'),
@@ -205,15 +206,20 @@ class RefinementNormalizer(Normalizer):
         if self.repetition_pattern.search(fixed_token_content):
             fixed_token_content = self.repetition_pattern.sub(r'\1\1', token_content) #شش
             if fixed_token_content in cache.token_set:
+                logger.info(f'> found repetition token {token_content} -> {fixed_token_content}')
                 return fixed_token_content
 
             fixed_token_content = self.repetition_pattern.sub(r'\1', token_content)
             if fixed_token_content in cache.token_set:
+                logger.info(f'> found repetition token {token_content} -> {fixed_token_content}')
                 return fixed_token_content
+            
+            fixed_token_content = token_content
             
         return fixed_token_content
 
     def fix_repetition_tokens(self, text):
+        logger.info(f'>> fix_repetition_tokens')
         token_contents = split_into_token_contents(text.content)
         fixed_text_content = ''
         fixed_token_content = ''
@@ -252,17 +258,17 @@ class RefinementNormalizer(Normalizer):
             for move_count in reversed(range(0, move_count+1)):
                 # end when move_count = 0 return the word without any join
                 fixed_token_content = '‌'.join(token_contents[i:i+move_count+1])
-                logger.debug(f'> nj [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
                 if fixed_token_content in cache.token_set or move_count == 0:
-                    logger.debug(f'> Found => move_count : {move_count} | fixed_token_content : {fixed_token_content}')
+                    logger.debug(f'> nj [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
+                    # logger.debug(f'> Found => move_count : {move_count} | fixed_token_content : {fixed_token_content}')
                     i = i + move_count + 1
                     fixed_text_content += fixed_token_content + ' '
                     break
 
                 fixed_token_content = ''.join(token_contents[i:i+move_count+1])
-                logger.debug(f'> empty [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
                 if fixed_token_content in cache.token_set or move_count == 0:
-                    logger.debug(f'> Found => move_count : {move_count} | fixed_token_content : {fixed_token_content}')
+                    logger.debug(f'> empty [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
+                    # logger.debug(f'> Found => move_count : {move_count} | fixed_token_content : {fixed_token_content}')
                     i = i + move_count + 1
                     fixed_text_content += fixed_token_content + ' '
                     break
@@ -333,7 +339,7 @@ class RefinementNormalizer(Normalizer):
         self.join_multipart_tokens(normal_text) # فرههههههههنگ سرا
         self.fix_wrong_joined_undefined_tokens(normal_text) # آرامکننده کتابمن 
         self.join_multipart_tokens(normal_text) # آرام کنندهخوبی
-        normal_text.content = normal_text.content.replace('newline','\n').strip()
+        normal_text.content = normal_text.content.replace(' newline ','\n').strip()
         end_ts = time.time()
         logger.info(f"> (Time)({end_ts - beg_ts:.6f})")
         normal_text.save()
@@ -428,7 +434,7 @@ class Tag(models.Model):
         verbose_name = 'Tag'
         verbose_name_plural = 'Tags'
         ordering = ('-created',)
-        unique_together = (("name", "persian"), ("name", "color"), ("name", "tag_set"))
+        unique_together = (("name", "tag_set"), ("persian", "tag_set"),)
 
     def add_to_examples(self, token_content):
         if (token_content not in self.examples 
@@ -572,8 +578,18 @@ class NLTKTagger(Tagger):
         return (token_content, token_tag_name)
 
     def train(self):
-        tagged_sentences = TaggedSentence.objects.filter(tagger__tag_set=self.tag_set, is_valid=True)
+        bijankhan_tag_set = TagSet.objects.get(name='bijankhan-tag-set')
+        tagged_sentences = TaggedSentence.objects.filter(
+            Q(is_valid=True) &
+            (Q(tagger__tag_set=self.tag_set) | Q(tagger__tag_set=bijankhan_tag_set))
+            )
+            # .filter(tagger__tag_set=bijankhan_tag_set, is_valid=True)
+            # .filter(tagger__tag_set=self.tag_set, is_valid=True)\
         logger.info(f'> tagged_sentences.count() : {tagged_sentences.count()}')
+        if tagged_sentences.count() == 0:
+            logger.error(f'> tagged_sentences count == 0 !!!')
+            return
+
         self.normalizer = RefinementNormalizer.objects.get(name='refinement-normalizer')
         self.temp_text = Text()
         # tagged_sentences = [[(self.refine_training_token(token['content']), token['tag']['name']) \
