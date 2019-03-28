@@ -19,7 +19,7 @@ from .serializers import (NormalizerSerializer, TextSerializer,
 from .models import (Normalizer, Text, NormalText, 
             TagSet, Tag, Tagger, Sentence, TaggedSentence, 
             TranslationCharacter, RefinementPattern,
-            RefinementNormalizer,)
+            RefinementNormalizer, NLTKTagger)
 from django.views.decorators.csrf import csrf_exempt
 import threading 
 import json
@@ -46,10 +46,10 @@ class NormalizerViewSet(viewsets.ModelViewSet):
     lookup_field = 'name'
     # filterset_fields = ('is_manual',)
 
-    @action(detail=False, methods=['get',], url_name='learn_model')
+    @action(detail=False, methods=['get',], url_name='train')
     @csrf_exempt
-    def learn_model(self, request):
-        logger.debug('learn_model')
+    def train(self, request):
+        logger.debug('train')
         text = Text()
         thread = threading.Thread(target=text.learn_model)
         logger.debug('start parallel')
@@ -62,9 +62,9 @@ class NormalizerViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get',], url_name='normalize', renderer_classes=[renderers.JSONRenderer,])
     @csrf_exempt
     def normalize(self, request, name=None):
-        normalizers = RefinementNormalizer.objects.all()
+        normalizer = None
         if name == 'refinement-normalizer':
-            normalizer = RefinementNormalizer.objects.get(name='refinement-normalizer')
+            normalizer = RefinementNormalizer.objects.get(name=name)
         else:
             normalizer = self.get_object()
         text_id = request.GET.get('text-id', None)
@@ -99,14 +99,39 @@ class TaggerViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     # filterset_fields = ('is_manual', 'model_name')
 
-    @action(detail=True, methods=['get',], url_name='tag', renderer_classes=[renderers.JSONRenderer,])
+    @action(detail=True, methods=['get',], url_name='train')
+    @csrf_exempt
+    def train(self, request, name=None):
+        tagger = None
+        if name == 'nltk-tagger':
+            tagger = NLTKTagger.objects.get(name=name)
+        else:
+            tagger = self.get_object()
+
+        tagger.model_details['state'] = 'training'
+        tagger.save(update_fields=['model_details'])
+        thread = threading.Thread(target=tagger.train)
+        logger.debug(f'> Start training tagger {name} in parallel ...')
+        thread.start()  
+        logger.debug(f'> End training tagger {name} in parallel.')
+        
+        serializer = TaggerSerializer(tagger)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get',], url_name='tag')
     @csrf_exempt
     def tag(self, request, name=None):
-        tagger = self.get_object()
+        tagger = None
+        if name == 'nltk-tagger':
+            tagger = NLTKTagger.objects.get(name=name)
+        else:
+            tagger = self.get_object()
+
         text_id = request.GET.get('text-id', None)
+        logger.debug(f'text_id : {text_id}')
         text = Text.objects.get(id=text_id)
         # if tagger not in text.sentences[0].taggers:
-        text = tagger.tag_text(text)
+        text = tagger.tag(text)
         serializer = TextSerializer(text)
         return Response(serializer.data)
 

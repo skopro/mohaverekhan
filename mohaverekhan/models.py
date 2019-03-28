@@ -5,14 +5,16 @@ import logging
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models
 from django import forms
-from .core.nltk_taggers import model as nltk_taggers_model
-from .core.seq2seq import model as seq2seq_model
+from mohaverekhan.machine_learning_models.nltk_taggers \
+        import model as nltk_taggers_model
+from mohaverekhan.machine_learning_models.seq2seq \
+        import model as seq2seq_model
 from colorfield.fields import ColorField
 from django.db.models import Count
 import time
 import datetime
 import re
-from mohaverekhan.core.tools import cache
+from mohaverekhan import cache
 
 logger = None
 
@@ -21,8 +23,10 @@ from django.contrib.postgres.forms.jsonb import (
     JSONField as JSONFormField,
 )
 
-sentence_splitter_pattern = re.compile(r'([!\.\?⸮؟]+)')
+sentence_splitter_pattern = re.compile(r'([!\.\?⸮؟]+)[ \n]+|[ \n]+([!\.\?⸮؟]+)')
 
+def split_into_token_contents(text_content, delimiters='[ \n]+'):
+    return re.split(delimiters, text_content)
 
 class UTF8JSONFormField(JSONFormField):
 
@@ -103,6 +107,11 @@ class RefinementNormalizer(Normalizer):
         (r' ', r' ', 'space character 160 -> 32', 'hazm', 'true'),
         (r'ك', r'ک', '', 'hazm', 'true'),
         (r'ي', r'ی', '', 'hazm', 'true'),
+        (r'ئ', r'ی', '', 'hazm', 'true'),
+        (r'ؤ', r'و', '', 'hazm', 'true'),
+        (r'إ', r'ا', '', 'hazm', 'true'),
+        (r'أ', r'ا', '', 'hazm', 'true'),
+        (r'ة', r'ه', '', 'hazm', 'true'),
         (r'“', r'"', '', 'hazm', 'true'),
         (r'”', r'"', '', 'hazm', 'true'),
         (r'0', r'۰', '', 'hazm', 'true'),
@@ -117,26 +126,45 @@ class RefinementNormalizer(Normalizer):
         (r'9', r'۹', '', 'hazm', 'true'),
         (r'%', r'٪', '', 'hazm', 'true'),
         (r'?', r'؟', '', 'hazm', 'true'),
+
+        
     )
+
     translation_characters = {tc[0]:tc[1] for tc in translation_characters}
 
     punctuations = r'\.:!،؛؟»\]\)\}«\[\(\{\'\"…'
-    repetition_characters = r'۰۱۲۳۴۵۶۷۸۹'
+    numbers = r'۰۱۲۳۴۵۶۷۸۹'
+    persians = 'اآب‌پتثجچحخدذرزژسشصضطظعغفقکگلمنوهی'
+
+    remove_character_patterns = (
+        (r'[\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652]', r'', 'remove FATHATAN, DAMMATAN, KASRATAN, FATHA, DAMMA, KASRA, SHADDA, SUKUN', 0, 'hazm', 'true'),
+        (r'[ـ\r]', r'', r'remove keshide, \r', 0, 'hazm', 'true'),
+
+    )
+    remove_character_patterns = [(rc[0], rc[1]) for rc in remove_character_patterns]
+    remove_character_patterns = compile_patterns(remove_character_patterns)
 
     refinement_patterns = (
         (r'([^\.]|^)(\.\.\.)([^\.]|$)', r'\1…\3', 'replace 3 dots with …', 0, 'bitianist', 'true'),
-        # (rf'([^{repetition_characters}])\1{{1,}}', r'\1', 'remove repetitions except ی و', 0, 'bitianist', 'true'),
-        (r'[ـ\r\n]', r'', r'remove keshide, \n, \r', 0, 'hazm', 'true'),
-        (r'[\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652]', r'', 'remove FATHATAN, DAMMATAN, KASRATAN, FATHA, DAMMA, KASRA, SHADDA, SUKUN', 0, 'hazm', 'true'),
-        (rf'([{punctuations}])\1{{1,}}', r'\1', 'remove punctuations repetitions', 0, 'bitianist', 'true'),
+        (rf'([{punctuations}])\1+', r'\1', 'remove punctuations repetitions', 0, 'bitianist', 'true'),
         (r'"([^\n"]+)"', r'«\1»', 'replace quotation with gyoome', 0, 'hazm', 'true'),
-        (rf'([{punctuations}])', r' \1 ', 'add extra space before and after of punctuations', 0, 'bitianist', 'true'),
+        # (rf'(?<=[^a-zA-Z{numbers}])([{punctuations}])(?=[^a-zA-Z]|$)', r' \1 ', 'add extra space before and after of punctuations', 0, 'bitianist', 'true'),
+        (rf'(?<=[{persians}\n ])([{punctuations}])(?=[{persians}\n ]|$)', r' \1 ', 'add extra space before and after of punctuations', 0, 'bitianist', 'true'),
+        # (rf'([^a-zA-Z {numbers}]+)([{numbers}]+)|([{numbers}]+)([^a-zA-Z {numbers}]+)', r'\1 \2\3 \4', '', 0, 'bitianist', 'true'),
+        (rf'([{persians}]+)([{numbers}]+)|([{numbers}]+)([{persians}]+)', r'\1 \2\3 \4', '', 0, 'bitianist', 'true'),
+        (r'\n+', r'\n', 'remove extra newlines', 0, 'bitianist', 'true'),
+        (r'\n', r' newline ', 'replace \n to newline for changing back', 0, 'bitianist', 'true'),
         (r' +', r' ', 'remove extra spaces', 0, 'hazm', 'true'),
-        # (r'\n+', r'\n', 'remove extra newlines', 0, 'bitianist', 'true'),
+
         (r'([^ ]ه) ی ', r'\1‌ی ', 'between ی and ه - replace space with non-joiner ', 0, 'hazm', 'true'),
         (r'(^| )(ن?می) ', r'\1\2‌', 'after می،نمی - replace space with non-joiner ', 0, 'hazm', 'true'),
         (rf'(?<=[^\n\d {punctuations}]{{2}}) (تر(ین?)?|گری?|های?)(?=[ \n{punctuations}]|$)', r'‌\1', 'before تر, تری, ترین, گر, گری, ها, های - replace space with non-joiner', 0, 'hazm', 'true'),
         (rf'([^ ]ه) (ا(م|یم|ش|ند|ی|ید|ت))(?=[ \n{punctuations}]|$)', r'\1‌\2', 'before ام, ایم, اش, اند, ای, اید, ات - replace space with non-joiner', 0, 'hazm', 'true'),  
+
+
+
+        # (rf'([^{repetition_characters}])\1{{1,}}', r'\1', 'remove repetitions except ی و', 0, 'bitianist', 'true'),
+            
         # (r'', r'', '', 0, 'hazm', 'true'),
         # (r'', r'', '', 0, 'hazm', 'true'),
         # (r'', r'', '', 0, 'hazm', 'true'),
@@ -153,29 +181,40 @@ class RefinementNormalizer(Normalizer):
         text.content = text.content.strip()
         # logger.info(f'> After uniform_signs : \n{text.content}')
 
+    def remove_some_characters(self, text):
+        for pattern, replacement in self.remove_character_patterns:
+            text.content = pattern.sub(replacement, text.content)
+            # logger.info(f'> after {pattern} -> {replacement} : \n{text.content}')
+        text.content = text.content.strip()
+
     def refine_text(self, text):
         for pattern, replacement in self.refinement_patterns:
             text.content = pattern.sub(replacement, text.content)
-            logger.info(f'> after {pattern} -> {replacement} : \n{text.content}')
+            # logger.info(f'> after {pattern} -> {replacement} : \n{text.content}')
         text.content = text.content.strip()
+
+
     repetition_pattern = re.compile(r"(.)\1{1,}")
     # repetition_pattern = re.compile(r"([^A-Za-z])\1{1,}")
 
     def fix_repetition_token(self, token_content):
+        if len(token_content) <= 2: #شش
+            return token_content
+
         fixed_token_content = token_content
         if self.repetition_pattern.search(fixed_token_content):
-            fixed_token_content = self.repetition_pattern.sub(r'\1', token_content)
+            fixed_token_content = self.repetition_pattern.sub(r'\1\1', token_content) #شش
             if fixed_token_content in cache.token_set:
                 return fixed_token_content
 
-            fixed_token_content = self.repetition_pattern.sub(r'\1\1', token_content)
+            fixed_token_content = self.repetition_pattern.sub(r'\1', token_content)
             if fixed_token_content in cache.token_set:
                 return fixed_token_content
             
         return fixed_token_content
 
     def fix_repetition_tokens(self, text):
-        token_contents = text.content.split()
+        token_contents = split_into_token_contents(text.content)
         fixed_text_content = ''
         fixed_token_content = ''
         for token_content in token_contents:
@@ -192,7 +231,7 @@ class RefinementNormalizer(Normalizer):
         logger.debug(f'>> join_multipart_tokens')
         logger.debug(f'{text.content}')
 
-        token_contents = text.content.split()
+        token_contents = split_into_token_contents(text.content)
         logger.debug(f'token_contents : {token_contents}')
         fixed_text_content = ''
         fixed_token_content = ''
@@ -211,6 +250,7 @@ class RefinementNormalizer(Normalizer):
 
             # try to join
             for move_count in reversed(range(0, move_count+1)):
+                # end when move_count = 0 return the word without any join
                 fixed_token_content = '‌'.join(token_contents[i:i+move_count+1])
                 logger.debug(f'> nj [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
                 if fixed_token_content in cache.token_set or move_count == 0:
@@ -248,7 +288,7 @@ class RefinementNormalizer(Normalizer):
                 logger.debug(f'> Found nj_joined : {nj_joined}')
                 return nj_joined
         
-        # for i in range(1, len(token_content)):
+        # for i in range(1, len(token_content)): # محاوره‌ خوان
         #     part1, part2 = token_content[:i], token_content[i:]
         #     if part1 in cache.token_set and part2 in cache.token_set:
         #         sp_joined = f'{part1} {part2}'
@@ -262,7 +302,7 @@ class RefinementNormalizer(Normalizer):
         logger.debug(f'>> fix_wrong_joined_undefined_tokens')
         logger.debug(f'{text.content}')
 
-        token_contents = text.content.split()
+        token_contents = split_into_token_contents(text.content)
         logger.debug(f'> token_contents : {token_contents}')
         fixed_text_content = ''
         fixed_token_content = ''
@@ -286,15 +326,16 @@ class RefinementNormalizer(Normalizer):
         normal_text.content = text.content.strip()
         beg_ts = time.time()
         self.uniform_signs(normal_text)
+        self.remove_some_characters(normal_text)
         self.refine_text(normal_text)
         self.join_multipart_tokens(normal_text) # آرام کننده
         self.fix_repetition_tokens(normal_text)
         self.join_multipart_tokens(normal_text) # فرههههههههنگ سرا
         self.fix_wrong_joined_undefined_tokens(normal_text) # آرامکننده کتابمن 
         self.join_multipart_tokens(normal_text) # آرام کنندهخوبی
+        normal_text.content = normal_text.content.replace('newline','\n').strip()
         end_ts = time.time()
         logger.info(f"> (Time)({end_ts - beg_ts:.6f})")
-        normal_text.content = normal_text.content.strip()
         normal_text.save()
         logger.info(f'{normal_text}')
         return normal_text
@@ -313,7 +354,7 @@ class Text(models.Model):
         ordering = ('-created',)
 
     def __str__(self):
-        return f'{self.content[:50]}{" ..." if len(self.content) > 50 else ""}'
+        return f'{self.content[:120]}{" ..." if len(self.content) > 120 else ""}'
 
 class NormalText(Text):
     is_valid = models.BooleanField(default=False, blank=True)
@@ -518,45 +559,68 @@ class NLTKTagger(Tagger):
     class Meta:
         proxy = True
     
+    temp_text, normalizer = None, None
+    def refine_training_token(self, token):
+        token_content = token['content']
+        token_tag_name = token['tag']['name']
+        self.temp_text.content = token_content
+        self.normalizer.uniform_signs(self.temp_text)
+        self.normalizer.remove_some_characters(self.temp_text)
+        self.temp_text.content = self.temp_text.content.strip()
+        self.temp_text.content = self.temp_text.content.replace(' ', '‌')
+        token_content = self.temp_text.content
+        return (token_content, token_tag_name)
+
     def train(self):
-        nltk_taggers_model.train()
+        tagged_sentences = TaggedSentence.objects.filter(tagger__tag_set=self.tag_set, is_valid=True)
+        logger.info(f'> tagged_sentences.count() : {tagged_sentences.count()}')
+        self.normalizer = RefinementNormalizer.objects.get(name='refinement-normalizer')
+        self.temp_text = Text()
+        # tagged_sentences = [[(self.refine_training_token(token['content']), token['tag']['name']) \
+        tagged_sentences = [[self.refine_training_token(token) \
+            for token in tagged_sentence.tokens] \
+            for tagged_sentence in tagged_sentences]
+        logger.info(f'> tagged_sentences[:20] : \n\n{tagged_sentences[:20]}\n\n')
+        nltk_taggers_model.train(tagged_sentences)
+        self.model_details['state'] = 'trained'
+        self.save()
 
     def get_or_create_sentences(self, text):
         if text.sentences.exists():
             logger.debug(f'> sentence was exists')
             return False
-        text_content = sentence_splitter_pattern.sub(r'\1\n\n', text.content) # hazm
+        text_content = sentence_splitter_pattern.sub(r' \1\2 newline', text.content) # hazm
         sentence_contents = [sentence_content.replace('\n', ' ').strip() \
-            for sentence_content in text_content.split('\n\n') if sentence_content.strip()] #hazm
+            for sentence_content in text_content.split('newline') if sentence_content.strip()] #hazm
         order = 0
         for sentence_content in sentence_contents:
             Sentence.objects.create(content=sentence_content, text=text, order=order)
+            logger.debug(f'> new sentence : {sentence_content}')
             order += 1
         return True
 
     def tag(self, text):
-        self.create_sentences()
         created = self.get_or_create_sentences(text)
         tagged_sentence = None
-        if not created:
-            for sentence in text.sentences:
-                tagged_sentence = TaggedSentence.objects.get_or_create(
-                                    tagger=self, 
-                                    sentence=sentence
-                                    )
-                token_contents = tagged_sentence.sentence.content.split()
-                tagged_tokens = nltk_taggers_model.tag(token_contents)
-                token_dictionary = {}
-                for tagged_token in tagged_tokens:
-                    token_dictionary = {
-                        'content': tagged_token[0],
-                        'tag': {
-                            'name': tagged_token[1]
-                        }
+        for sentence in text.sentences.all():
+            tagged_sentence, created = TaggedSentence.objects.get_or_create(
+                                tagger=self, 
+                                sentence=sentence
+                                )
+            token_contents = split_into_token_contents(tagged_sentence.sentence.content)
+            tagged_tokens = nltk_taggers_model.tag(token_contents)
+            token_dictionary = {}
+            for tagged_token in tagged_tokens:
+                token_dictionary = {
+                    'content': tagged_token[0],
+                    'tag': {
+                        'name': tagged_token[1]
                     }
-                    tagged_sentence.tokens.append(token_dictionary)
-                tagged_sentence.save()
-
+                }
+                tagged_sentence.tokens.append(token_dictionary)
+            tagged_sentence.save()
+            logger.info(f'{tagged_sentence.__unicode__()}')
+        return text
         # for sentence in text.sentences:
         #     self.tag_sentence(sentence)
             
@@ -624,10 +688,12 @@ class TaggedSentence(models.Model):
 
     def is_tokens_valid(self):
         is_valid = True
+        if not self.tokens:
+            is_valid = False
+            return is_valid
         for token in self.tokens:
             if 'is_valid' not in token:
                 token['is_valid'] = False
-                break
             is_valid = is_valid and token['is_valid']
             if not is_valid:
                 break
@@ -636,12 +702,12 @@ class TaggedSentence(models.Model):
     def check_validation(self):
         self.is_valid = False
         if self.tagger:
-            if not self.tagger.model_type == MANUAL:
-                self.is_valid = self.is_tokens_valid()
-            else:
+            if self.tagger.model_type == MANUAL:
                 self.is_valid = True
                 for token in self.tokens:
                     token['is_valid'] = True
+            else:
+                self.is_valid = self.is_tokens_valid()
 
     def set_tag_details(self):
         tag_details_dictionary = {tag.name:tag for tag in self.tagger.tag_set.tags.all()}
@@ -796,8 +862,6 @@ text
 """
 
 
-
-
 """
 E : ['با', 'در', 'به', 'از', 'برای', 'علیرغم', 'جز', 'در مقابل', 'پس از', 'تا', 'بر', 'به دنبال', 'از نظر', 'جهت', 'در پی', 'میان', 'به عنوان', 'تحت', 'از طریق', 'به دست', 'بر اساس', 'در جهت', 'از سوی', 'در زمینه', 'زیر', 'در معرض', 'به جای', 'وارد', 'از جمله', 'درباره', 'بدون', 'فرا', 'به صورت', 'به خاطر', 'پیرامون', 'در مورد', 'طی', 'روی', 'قبل از', 'توسط', 'بعد', 'مقابل', 'از روی', 'در حضور', 'به رغم', 'به دلیل', 'برابر', 'در برابر', 'با توجه به', 'به نفع']
 Noun - اسم - N : ['قدرت', 'یهودیها', 'انگلیس', 'وجود', 'فضای', 'سو', 'مطبوعات', 'کشور', 'نیاز', 'منابع', 'چیز', 'رشد', 'رویتر', 'فراهم', 'موقعیتی', 'سال', 'جلیوس', 'دفتر', 'نزدیکی', 'بازار', 'بورس', 'لندن', 'گشایش', 'عده', 'یهودیهای', 'آلمان', 'دعوت', 'کار', 'عهده', 'بازاریابی', 'معرفی', 'خبرگزاری', 'پترزبورگ', 'سفر', 'نامه ای', 'نیکولای', 'گریش', 'سردبیران', 'نشریات', 'جائی', 'سردبیر', 'درک', 'پل', 'استوف', 'استقبال', 'قراردادی', 'مبلغ', 'روبل', 'امضاء', 'خدمات']
@@ -815,3 +879,11 @@ C : ['ش', 'یشان', 'شان', 'م', 'ام', 'یش', 'اش', 'ست', 'ند', '
 R : ['سالگی', 'ساله', 'الف', 'د', '!!!', 'G . I . S', 'کیلومتری', 'روزه', 'نه', 'آری', 'ردوا', 'الحجر', 'من', 'حیث', 'جاء', 'فان', 'الشر', 'لا', 'یدفعه', 'الا', 'بسمه تعالی', 'ساله ای', 'APB', 'ماهه', 'نفره', 'سلام', 'پوندی', 'STAINLESS', 'STEEL', 'AWTE', 'تنی', 'میلیونی', 'صفحه ای', 'یا', 'صــاح', 'للعجـب', 'دعــوتک', 'ثـم', 'لـم', 'تجـب', 'الی', 'القینات', 'والشهوات', 'والصهبــاء', 'و', 'الطـــرب', 'باطیه', 'مکلله', 'علیهــا', 'سـاده']
 Interjection - حرف ندا - حرف ربط - I : ['ای', 'یا', 'زهی', 'هان', 'الا', 'آی', 'ایها', 'آهای'] 
 """
+
+"""""
+حرف اضافه
+حرف ربط
+قید مقدار
+واحد
+"""
+##حرف اضافه
