@@ -36,22 +36,22 @@ bijankhan_data_dir = fr'{data_dir}/pos/bijankhan-online/unannotated'
 bijankhan_tag_set_dictionary = [
   {
     "name": "E",
-    "persian": "E",
-    "color": "#E74C3C"
+    "persian": "حرف اضافه",
+    "color": "#BCFF05"
   },
   {
     "name": "N",
     "persian": "اسم",
-    "color": "#3498DB"
+    "color": "#FBFCFC"
   },
   {
     "name": "V",
     "persian": "فعل",
-    "color": "#9B59B6"
+    "color": "#19A3FF"
   },
   {
     "name": "J",
-    "persian": "J",
+    "persian": "حرف ربط",
     "color": "#1ABC9C"
   },
   {
@@ -62,37 +62,37 @@ bijankhan_tag_set_dictionary = [
   {
     "name": "U",
     "persian": "عدد",
-    "color": "#E67E22"
+    "color": "#C7FFFB"
   },
   {
     "name": "T",
-    "persian": "T",
-    "color": "#ECF0F1"
+    "persian": "قید مقدار",
+    "color": "#BCCEF1"
   },
   {
     "name": "Z",
     "persian": "ضمیر",
-    "color": "#BDC3C7"
+    "color": "#EF0DFF"
   },
   {
     "name": "O",
     "persian": "علامت",
-    "color": "#7F8C8D"
+    "color": "#FFA14F"
   },
   {
     "name": "L",
-    "persian": "L",
+    "persian": "واحد",
     "color": "#34495E"
   },
   {
     "name": "P",
     "persian": "حرف اضافه پسین",
-    "color": "#C39BD3"
+    "color": "#16DB00"
   },
   {
     "name": "D",
     "persian": "قید",
-    "color": "#FBFCFC"
+    "color": "#FF5442"
   },
   {
     "name": "C",
