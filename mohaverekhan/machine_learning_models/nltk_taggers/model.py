@@ -13,10 +13,22 @@ punctuations = r'\.:!،؛؟»\]\)\}«\[\(\{\'\"…'
 numbers = r'۰۱۲۳۴۵۶۷۸۹'
 persians = 'اآب‌پتثجچحخدذرزژسشصضطظعغفقکگلمنوهی'
 
+"""
+Emoji => X
+ID => S
+Link => K
+Email => M
+Tag => G
+"""
 WORD_PATTERNS = [
     (r'^-?[0-9۰۱۲۳۴۵۶۷۸۹]+([.,][0-9۰۱۲۳۴۵۶۷۸۹]+)?$', 'U'),
     (r'^[\.:!،؛؟»\]\)\}«\[\(\{\'\"…#+*,$@]+$', 'O'),
     (rf'^بی‌[{persians}]+$|^بی [{persians}]+$', 'A'),
+    (r'^[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F4CC\U0001F4CD]+$', 'X'), #hazm emoticons - symbols & pictographs - pushpin & round pushpin
+    (r'^([^\w\._]*)(@[\w_]+).*$', 'S'), #hazm
+    (r'^((https?|ftp):\/\/)?(?<!@)([wW]{3}\.)?(([\w-]+)(\.(\w){2,})+([-\w@:%_\+\/~#?&=]+)?)$', 'K'), #hazm forgot "="? lol
+    (r'^[a-zA-Z0-9\._\+-]+@([a-zA-Z0-9-]+\.)+[A-Za-z]{2,}$', 'M'), #hazm
+    (r'^\#([\S]+)$', 'G'),
     # (r'.*ed$', 'VBD'),
     # (r'.*ness$', 'NN'),
     # (r'.*ment$', 'NN'),
@@ -103,7 +115,7 @@ def create_main_tagger(train_data, test_data):
     #         ] 
     brill_trainer_result = brill_trainer.BrillTaggerTrainer( 
             trigram_tagger, templates, deterministic=True) 
-    brill_tagger = brill_trainer_result.train(train_data, max_rules=500, min_score=10)
+    brill_tagger = brill_trainer_result.train(train_data, max_rules=300, min_score=10)
     logger.info(f'>brill_tagger.print_template_statistics() => in console :(')
     brill_tagger.print_template_statistics()
     rules = '\n'.join([rule.__str__() for rule in brill_tagger.rules()])
