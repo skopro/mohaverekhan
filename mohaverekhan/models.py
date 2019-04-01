@@ -60,6 +60,26 @@ MODEL_TYPES = (
 
 # باید فاصله تو توکن ها رو تبدیل به نیم فاصله کنم تو ایمورت داده ها
 
+class Validator(models.Model):
+    name = models.SlugField(default='unknown-validator', unique=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def total_normal_text_count(self):
+        return self.normal_texts.count()
+
+    @property
+    def total_normal_sentence_count(self):
+        return self.normal_sentences.count()
+
+    @property
+    def total_normal_word_count(self):
+        return self.normal_words.count()
+
+    @property
+    def total_tagged_sentence_count(self):
+        return self.tagged_sentences.count()
+
 class Normalizer(models.Model):
     name = models.SlugField(default='unknown-normalizer', unique=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -418,6 +438,7 @@ class Text(models.Model):
         return f'{self.content[:120]}{" ..." if len(self.content) > 120 else ""}'
 
 class NormalText(Text):
+    validator = models.ForeignKey(Validator, on_delete=models.CASCADE, related_name='normal_texts', related_query_name='normal_text', blank=True, null=True)
     is_valid = models.BooleanField(default=False, blank=True)
     normalizer = models.ForeignKey(Normalizer, on_delete=models.CASCADE, related_name='normal_texts', related_query_name='normal_text')
     text = models.ForeignKey(Text, on_delete=models.CASCADE, related_name='normal_texts', related_query_name='normal_text')
@@ -431,8 +452,9 @@ class NormalText(Text):
         self.is_normal = True
         self.is_valid = False
         if self.normalizer:
-            if self.normalizer.model_type == MANUAL:
+            if not self.normalizer.is_automatic:
                 self.is_valid = True
+                self.validator = cache.bitianist_validator
         super(NormalText, self).save(*args, **kwargs)
 
 
@@ -453,6 +475,7 @@ class Word(models.Model):
         return f'{self.content[:120]}{" ..." if len(self.content) > 120 else ""}'
 
 class NormalWord(Word):
+    validator = models.ForeignKey(Validator, on_delete=models.CASCADE, related_name='normal_words', related_query_name='normal_word', blank=True, null=True)
     is_valid = models.BooleanField(default=False, blank=True)
     normalizer = models.ForeignKey(Normalizer, on_delete=models.CASCADE, related_name='normal_words', related_query_name='normal_word')
     word = models.ForeignKey(Word, on_delete=models.CASCADE, related_name='normal_words', related_query_name='normal_word')
@@ -466,8 +489,9 @@ class NormalWord(Word):
         self.is_normal = True
         self.is_valid = False
         if self.normalizer:
-            if self.normalizer.model_type == MANUAL:
+            if not self.normalizer.is_automatic:
                 self.is_valid = True
+                self.validator = cache.bitianist_validator
         super(NormalWord, self).save(*args, **kwargs)
 
 
@@ -784,6 +808,7 @@ class Sentence(models.Model):
         return rep
 
 class NormalSentence(Sentence):
+    validator = models.ForeignKey(Validator, on_delete=models.CASCADE, related_name='normal_sentences', related_query_name='normal_sentence', blank=True, null=True)
     is_valid = models.BooleanField(default=False, blank=True)
     normalizer = models.ForeignKey(Normalizer, on_delete=models.CASCADE, related_name='normal_sentences', related_query_name='normal_sentence')
     sentence = models.ForeignKey(Sentence, on_delete=models.CASCADE, related_name='normal_sentences', related_query_name='normal_sentence')
@@ -797,8 +822,9 @@ class NormalSentence(Sentence):
         self.is_normal = True
         self.is_valid = False
         if self.normalizer:
-            if self.normalizer.model_type == MANUAL:
+            if not self.normalizer.is_automatic:
                 self.is_valid = True
+                self.validator = cache.bitianist_validator
         super(NormalSentence, self).save(*args, **kwargs)
 
 class TaggedSentence(models.Model):
@@ -807,6 +833,7 @@ class TaggedSentence(models.Model):
     tagger = models.ForeignKey(Tagger, on_delete=models.CASCADE, related_name='tagged_sentences', related_query_name='tagged_sentence')
     sentence = models.ForeignKey(Sentence, on_delete=models.CASCADE, related_name='tagged_sentences', related_query_name='tagged_sentence')
     tokens = UTF8JSONField(default=list) # contains list of token with it's tag
+    validator = models.ForeignKey(Validator, on_delete=models.CASCADE, related_name='tagged_sentences', related_query_name='tagged_sentence', blank=True, null=True)
     is_valid = models.BooleanField(default=False, blank=True)
     
     class Meta:
@@ -830,10 +857,11 @@ class TaggedSentence(models.Model):
     def check_validation(self):
         self.is_valid = False
         if self.tagger:
-            if self.tagger.model_type == MANUAL:
+            if not self.tagger.is_automatic:
                 self.is_valid = True
                 for token in self.tokens:
                     token['is_valid'] = True
+                    token['validator'] = cache.bitianist_validator.name
             else:
                 self.is_valid = self.is_tokens_valid()
 

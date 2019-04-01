@@ -1,7 +1,7 @@
 from django.urls import path, include
 from django.conf.urls import url, re_path
 #from rest_framework.urlpatterns import format_suffix_patterns
-from .views import (HomePageView, 
+from .views import (HomePageView, ValidatorViewSet, 
         NormalizerViewSet, TextViewSet, NormalTextViewSet, 
         WordViewSet, NormalWordViewSet,
         TagViewSet, TagSetViewSet,
@@ -26,6 +26,7 @@ router = OptionalSlashRouter()
 # router.register(r'', HomeViewSet, basename='home')
 # router.register(r'api', router.APIRootView, basename='api')
 # router.register(r'schema', router.APISchemaView, basename='schema')
+router.register(r'validators', ValidatorViewSet)
 router.register(r'normalizers', NormalizerViewSet)
 router.register(r'texts', TextViewSet)
 router.register(r'normal-texts', NormalTextViewSet)

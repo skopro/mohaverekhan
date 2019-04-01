@@ -1,12 +1,32 @@
 from rest_framework import serializers
 from rest_framework_recursive.fields import RecursiveField
-from .models import (Normalizer, Text, NormalText,
+from .models import (Validator, Normalizer, Text, NormalText,
             Word, NormalWord,
             TagSet, Tag, Tagger,
             Sentence, NormalSentence, TaggedSentence)
 import logging
 
 logger = None
+
+
+class ValidatorSerializer(serializers.ModelSerializer):
+    # normal_text = NormalTextSerializer(required=False)
+    # normal_texts = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
+    class Meta:
+        model = Validator
+        fields = ('id', 'name', 'created', 
+            'total_normal_text_count', 
+            'total_normal_sentence_count',
+            'total_normal_word_count',
+            'total_tagged_sentence_count'
+            )
+        read_only_fields = (
+            'total_normal_text_count', 
+            'total_normal_sentence_count',
+            'total_normal_word_count',
+            'total_tagged_sentence_count')
+
 
 class TagInTagSetSerializer(serializers.ModelSerializer):
 
@@ -108,13 +128,15 @@ class TaggedSentenceSerializer(serializers.ModelSerializer):
     tagger = serializers.SlugRelatedField(slug_field='name', 
             queryset=Tagger.objects.all())
     sentence = SentenceInTaggedSentenceSerializer()
-
+    validator = serializers.SlugRelatedField(slug_field='name', 
+            queryset=Validator.objects.all())
+        
     class Meta:
         model = TaggedSentence
         fields = ('id', 'created', 
             'tagger', 'sentence', 
-            'tokens', 'is_valid')
-        read_only_fields = ('is_valid',)
+            'tokens', 'validator', 'is_valid')
+        read_only_fields = ('validator', 'is_valid',)
     
     def create(self, validated_data):
         sentence_data = validated_data.pop('sentence')
@@ -130,12 +152,14 @@ class TaggedSentenceSerializer(serializers.ModelSerializer):
 class TaggedSentenceInSentenceSerializer(serializers.ModelSerializer):
     tagger = serializers.SlugRelatedField(slug_field='name', 
             queryset=Tagger.objects.all())
+    validator = serializers.SlugRelatedField(slug_field='name', 
+            queryset=Validator.objects.all())
 
     class Meta:
         model = TaggedSentence
         fields = ('id', 'created', 'tagger', 'sentence', 
-            'tokens', 'is_valid')
-        read_only_fields = ('is_valid',)       
+            'tokens', 'validator', 'is_valid')
+        read_only_fields = ('validator', 'is_valid',)       
 
 class TextInSentenceSerializer(serializers.ModelSerializer):
 
@@ -171,13 +195,15 @@ class NormalSentenceSerializer(serializers.ModelSerializer):
     normalizer = serializers.SlugRelatedField(slug_field='name', 
         queryset=Normalizer.objects.all())
     sentence = SentenceSerializer()
-
+    validator = serializers.SlugRelatedField(slug_field='name', 
+            queryset=Validator.objects.all())
+        
     class Meta:
         model = NormalSentence
         fields = ('id', 'created', 'content', 
-            'is_valid', 'normalizer', 'sentence', 
+            'validator', 'is_valid', 'normalizer', 'sentence', 
             'sentences')
-        read_only_fields = ('is_valid', 'sentences')
+        read_only_fields = ('validator', 'is_valid', 'sentences')
 
     def create(self, validated_data):
         sentence_data = validated_data.pop('sentence')
@@ -225,13 +251,15 @@ class NormalTextSerializer(serializers.ModelSerializer):
         queryset=Normalizer.objects.all())
     text = TextSerializer()
     sentences = SentenceSerializer(many=True, required=False)
+    validator = serializers.SlugRelatedField(slug_field='name', 
+            queryset=Validator.objects.all())
 
     class Meta:
         model = NormalText
         fields = ('id', 'created', 'content', 
-            'is_valid', 'normalizer', 'text', 
-            'sentences')
-        read_only_fields = ('is_valid', 'sentences')
+            'normalizer', 'text', 
+            'validator', 'is_valid', 'sentences')
+        read_only_fields = ('validator', 'is_valid', 'sentences')
 
     def create(self, validated_data):
         text_data = validated_data.pop('text')
@@ -264,13 +292,15 @@ class NormalWordSerializer(serializers.ModelSerializer):
     normalizer = serializers.SlugRelatedField(slug_field='name', 
         queryset=Normalizer.objects.all())
     word = WordSerializer()
-
+    validator = serializers.SlugRelatedField(slug_field='name', 
+            queryset=Validator.objects.all())
+            
     class Meta:
         model = NormalWord
         fields = ('id', 'created', 'content', 
-            'is_valid', 'normalizer', 'word', 
+            'validator', 'is_valid', 'normalizer', 'word', 
             'sentences')
-        read_only_fields = ('is_valid', 'sentences')
+        read_only_fields = ('validator', 'is_valid', 'sentences')
 
     def create(self, validated_data):
         word_data = validated_data.pop('word')

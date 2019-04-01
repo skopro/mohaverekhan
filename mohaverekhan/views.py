@@ -11,13 +11,14 @@ from rest_framework import status
 from django_filters.rest_framework import DjangoFilterBackend
 from django.urls import reverse
 
-from .serializers import (NormalizerSerializer, 
+from .serializers import (ValidatorSerializer, NormalizerSerializer, 
             TextSerializer, NormalTextSerializer, 
             WordSerializer, NormalWordSerializer,
             TagSetSerializer, TagSerializer, TaggerSerializer,
             SentenceSerializer, NormalSentenceSerializer,
             TaggedSentenceSerializer)
-from .models import (Normalizer, Text, NormalText, 
+from .models import (Validator, Normalizer, 
+            Text, NormalText, 
             Word, NormalWord,
             TagSet, Tag, Tagger, 
             Sentence, NormalSentence, TaggedSentence, 
@@ -41,6 +42,13 @@ class HomePageView(TemplateView):
         context = super().get_context_data(**kwargs)
         # context['latest_articles'] = Article.objects.all()[:5]
         return context
+
+
+class ValidatorViewSet(viewsets.ModelViewSet):
+    queryset = Validator.objects.all()
+    serializer_class = ValidatorSerializer
+    lookup_field = 'name'
+
 
 class NormalizerViewSet(viewsets.ModelViewSet):
     queryset = Normalizer.objects.all()
@@ -76,7 +84,6 @@ class NormalizerViewSet(viewsets.ModelViewSet):
         normal_text = normalizer.normalize(text)
         serializer = NormalTextSerializer(normal_text)
         return Response(serializer.data)
-       
 
 class TextViewSet(viewsets.ModelViewSet):
     queryset = Text.objects.all()

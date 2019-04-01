@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
 
-from .models import (Normalizer, Text, NormalText,
+from .models import (Validator, Normalizer, Text, NormalText,
             Word, NormalWord,
             TagSet, Tag, Tagger,
             Sentence, NormalSentence, TaggedSentence)
@@ -10,34 +10,34 @@ from .models import (Normalizer, Text, NormalText,
 class NormalTextInline(admin.TabularInline):
     model = Text.normalizers.through
     fk_name = 'text'
-    fields = ('id', 'content', 'is_valid', 
+    fields = ('id', 'content', 'is_valid', 'validator',
             'text', 'normalizer', 'created')
-    readonly_fields = ['created', 'id']
+    readonly_fields = ['created', 'id', 'validator']
     extra = 0
     max_num = 25
 
 class NormalSentenceInline(admin.TabularInline):
     model = Sentence.normalizers.through
     fk_name = 'sentence'
-    fields = ('id', 'content', 'is_valid', 
+    fields = ('id', 'content', 'is_valid', 'validator'
             'sentence', 'normalizer', 'created')
-    readonly_fields = ['created', 'id']
+    readonly_fields = ['created', 'id', 'validator']
     extra = 0
     max_num = 25
 
 class NormalWordInline(admin.TabularInline):
     model = Word.normalizers.through
     fk_name = 'word'
-    fields = ('id', 'content', 'is_valid', 
+    fields = ('id', 'content', 'is_valid', 'validator' 
             'word', 'normalizer', 'created')
-    readonly_fields = ['created', 'id']
+    readonly_fields = ['created', 'id', 'validator']
     extra = 0
     max_num = 25
 
 class TaggedSentenceInline(admin.TabularInline):
     model = Sentence.taggers.through
-    fields = ('id', 'tokens', 'is_valid', 'tagger', 'sentence', 'created')
-    readonly_fields = ['created', 'id']
+    fields = ('id', 'tokens', 'is_valid', 'validator', 'tagger', 'sentence', 'created')
+    readonly_fields = ['created', 'id', 'validator']
     extra = 0
     max_num = 25
 
@@ -118,6 +118,37 @@ class TagSetAdmin(admin.ModelAdmin):
         TagInLine
     ]
 
+class ValidatorAdmin(admin.ModelAdmin):
+    list_display = ('name',
+                'total_normal_text_count', 
+                'total_normal_sentence_count',
+                'total_normal_word_count',
+                'total_tagged_sentence_count',
+                'created')
+    ordering = ('-created',)
+    readonly_fields = ['created', 'id',
+                'total_normal_text_count', 
+                'total_normal_sentence_count',
+                'total_normal_word_count',
+                'total_tagged_sentence_count',
+                ]
+    list_filter = ['name',]
+
+    fieldsets = (
+        (None, {
+            'fields': ('id', 'created', 'name'
+                    )
+        }),
+        ('Rank', {
+            'fields': (
+                'total_normal_text_count', 
+                'total_normal_sentence_count',
+                'total_normal_word_count',
+                'total_tagged_sentence_count',
+                ),
+        }),
+    )
+
 class NormalizerAdmin(admin.ModelAdmin):
     list_display = ('name', 'owner', 'is_automatic', 
                 'total_normal_text_count', 
@@ -189,19 +220,19 @@ class TextAdmin(admin.ModelAdmin):
 
 class NormalTextAdmin(admin.ModelAdmin):
     list_display = ('content', 'is_valid', 'get_normalizer_name', 
-            'get_text_id', 'created')
+            'get_text_id', 'get_validator_name', 'created')
     search_fields = ['content', 'id']
-    list_filter = ['is_valid', 'normalizer__name']
+    list_filter = ['is_valid', 'normalizer__name', 'validator__name']
     ordering = ('-created',)
-    readonly_fields = ['created', 'id']
+    readonly_fields = ['created', 'id', 'validator']
 
     fieldsets = (
         (None, {
             'fields': ('id', 'created',
-                'content',)
+                'content', 'is_valid')
         }),
         ('Relations', {
-            'fields': ('normalizer', 'text'),
+            'fields': ('normalizer', 'text', 'validator'),
         }),
     )
 
@@ -209,6 +240,13 @@ class NormalTextAdmin(admin.ModelAdmin):
         TextSentenceInline,
         # NormalTextSentenceInline,
     ]
+
+    def get_validator_name(self, obj):
+        if not obj.validator:
+            return None
+        return obj.validator.name
+    get_validator_name.admin_order_field = 'created' 
+    get_validator_name.short_description = 'Validator Name'
 
     def get_normalizer_name(self, obj):
         if not obj.normalizer:
@@ -290,25 +328,32 @@ class SentenceAdmin(admin.ModelAdmin):
 
 class NormalSentenceAdmin(admin.ModelAdmin):
     list_display = ('content', 'is_valid', 'get_normalizer_name', 
-            'get_sentence_id', 'created')
+            'get_sentence_id', 'get_validator_name', 'created')
     search_fields = ['content', 'id']
-    list_filter = ['is_valid', 'normalizer__name']
+    list_filter = ['is_valid', 'normalizer__name', 'validator__name']
     ordering = ('-created',)
     readonly_fields = ['created', 'id', 'taggers']
 
     fieldsets = (
         (None, {
             'fields': ('id', 'created',
-                'content', 'taggers')
+                'content', 'is_valid', 'taggers')
         }),
         ('Relations', {
-            'fields': ('normalizer', 'sentence'),
+            'fields': ('normalizer', 'sentence', 'validator'),
         }),
     )
 
     inlines = [
         TaggedSentenceInline
     ]
+
+    def get_validator_name(self, obj):
+        if not obj.validator:
+            return None
+        return obj.validator.name
+    get_validator_name.admin_order_field = 'created' 
+    get_validator_name.short_description = 'Validator Name'
 
     def get_normalizer_name(self, obj):
         if not obj.normalizer:
@@ -327,7 +372,7 @@ class NormalSentenceAdmin(admin.ModelAdmin):
 
 class TaggedSentenceAdmin(admin.ModelAdmin):
     list_display = ('__unicode__', 'get_sentence_content', 
-                    'get_tagger_name', 'is_valid', 'created')
+                    'get_tagger_name', 'is_valid', 'get_validator_name', 'created')
     search_fields = ['id']
     list_filter = ['is_valid', 'tagger__name']
     ordering = ('-created',)
@@ -339,9 +384,17 @@ class TaggedSentenceAdmin(admin.ModelAdmin):
              'tokens', 'is_valid')
         }),
         ('Relations', {
-            'fields': ('sentence', 'tagger'),
+            'fields': ('sentence', 'tagger', 'validator'),
         }),
     )
+    
+    def get_validator_name(self, obj):
+        if not obj.validator:
+            return None
+        return obj.validator.name
+    get_validator_name.admin_order_field = 'created' 
+    get_validator_name.short_description = 'Validator Name'
+
     
     def get_sentence_content(self, obj):
         if not obj.sentence:
@@ -379,21 +432,28 @@ class WordAdmin(admin.ModelAdmin):
 
 class NormalWordAdmin(admin.ModelAdmin):
     list_display = ('content', 'is_valid', 'get_normalizer_name', 
-            'get_word_id', 'created')
+            'get_word_id', 'get_validator_name', 'created')
     search_fields = ['content', 'id']
-    list_filter = ['is_valid', 'normalizer__name']
+    list_filter = ['is_valid', 'normalizer__name', 'validator__name']
     ordering = ('-created',)
-    readonly_fields = ['created', 'id']
+    readonly_fields = ['created', 'id', 'validator']
 
     fieldsets = (
         (None, {
             'fields': ('id', 'created',
-                'content')
+                'content', 'is_valid')
         }),
         ('Relations', {
-            'fields': ('normalizer', 'word'),
+            'fields': ('normalizer', 'word', 'validator'),
         }),
     )
+
+    def get_validator_name(self, obj):
+        if not obj.validator:
+            return None
+        return obj.validator.name
+    get_validator_name.admin_order_field = 'created' 
+    get_validator_name.short_description = 'Validator Name'
 
     def get_normalizer_name(self, obj):
         if not obj.normalizer:
@@ -421,6 +481,7 @@ class NormalWordAdmin(admin.ModelAdmin):
 #     ordering = ('order', 'is_valid', 'owner')
 #     readonly_fields = ['created',]
 
+admin.site.register(Validator, ValidatorAdmin)
 admin.site.register(Normalizer, NormalizerAdmin)
 admin.site.register(Text, TextAdmin)
 admin.site.register(NormalText, NormalTextAdmin)
