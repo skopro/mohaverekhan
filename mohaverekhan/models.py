@@ -64,7 +64,8 @@ class Normalizer(models.Model):
     name = models.SlugField(default='unknown-normalizer', unique=True)
     created = models.DateTimeField(auto_now_add=True)
     owner = models.CharField(max_length=100, default='undefined')
-    model_type = models.CharField(max_length=15, choices=MODEL_TYPES, default=MANUAL)
+    is_automatic = models.BooleanField(default=False, blank=True)
+    # model_type = models.CharField(max_length=15, choices=MODEL_TYPES, default=MANUAL)
     last_update = models.DateTimeField(auto_now=True)
     model_details = UTF8JSONField(default=dict, blank=True) # contains model training details
 
@@ -84,6 +85,23 @@ class Normalizer(models.Model):
     def total_valid_normal_text_count(self):
         return self.normal_texts.filter(is_valid=True).count()
 
+    @property
+    def total_normal_sentence_count(self):
+        return self.normal_sentences.count()
+
+    @property
+    def total_valid_normal_sentence_count(self):
+        return self.normal_sentences.filter(is_valid=True).count()
+
+    @property
+    def total_normal_word_count(self):
+        return self.normal_words.count()
+
+    @property
+    def total_valid_normal_word_count(self):
+        return self.normal_words.filter(is_valid=True).count()
+
+
     def train(self):
         pass
 
@@ -98,6 +116,43 @@ class Normalizer(models.Model):
 
 compile_patterns = lambda patterns: [(re.compile(pattern), repl) for pattern, repl in patterns]
 
+
+class ReplacementNormalizer(Normalizer):
+    
+    class Meta:
+        proxy = True
+
+    replacement_patterns = (
+        (r'-?[0-9۰۱۲۳۴۵۶۷۸۹]+([.,][0-9۰۱۲۳۴۵۶۷۸۹]+)?', r' NUMBER ', 'number', 0, 'bitianist', 'true'),
+        (r'[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F4CC\U0001F4CD]+', r' EMOJI ', 'emoji', 0, 'hazm', 'true'),
+        (r'[a-zA-Z0-9\._\+-]+@([a-zA-Z0-9-]+\.)+[A-Za-z]{2,}', r' EMAIL ', 'email', 0, 'hazm', 'true'),
+        (r'((https?|ftp):\/\/)?(?<!@)([wW]{3}\.)?(([\w-]+)(\.(\w){2,})+([-\w@:%_\+\/~#?&=]+)?)', r' LINK ', 'link, hazm + "="', 0, 'hazm', 'true'),
+        (r'([^\w\._]*)(@[\w_]+)([\S]+)', r' ID ', 'id', 0, 'hazm', 'true'),
+        (r'\#([\S]+)', r' TAG ', 'tag', 0, 'hazm', 'true'),
+        (r' +', r' ', 'remove extra spaces', 0, 'hazm', 'true'),
+    )
+    replacement_patterns = [(rp[0], rp[1]) for rp in replacement_patterns]
+    replacement_patterns = compile_patterns(replacement_patterns)
+
+    def normalize(self, text):
+        logger.info(f'>> RefinementRuleBasedNormalizer : \n{text}')
+        normal_text, created = NormalText.objects.get_or_create(
+            text=text, 
+            normalizer=self
+            )
+        normal_text.content = text.content.strip()
+        beg_ts = time.time()
+        
+        for pattern, replacement in self.replacement_patterns:
+            normal_text.content = pattern.sub(replacement, normal_text.content)
+            logger.info(f'> After {pattern} -> {replacement} : \n{normal_text.content}')
+        normal_text.content = normal_text.content.strip()
+
+        end_ts = time.time()
+        logger.info(f"> (Time)({end_ts - beg_ts:.6f})")
+        normal_text.save()
+        logger.info(f'{normal_text}')
+        return normal_text
 
 class RefinementNormalizer(Normalizer):
     
@@ -352,7 +407,7 @@ class Text(models.Model):
     content = models.TextField()
     normalizers = models.ManyToManyField(Normalizer, through='NormalText', related_name='texts', 
                             related_query_name='text', blank=True, through_fields=('text', 'normalizer'),)
-    is_normal_text = models.BooleanField(default=False, blank=True)
+    is_normal = models.BooleanField(default=False, blank=True)
 
     class Meta:
         verbose_name = 'Text'
@@ -373,12 +428,48 @@ class NormalText(Text):
         ordering = ('-created',)
 
     def save(self, *args, **kwargs):
-        self.is_normal_text = True
+        self.is_normal = True
         self.is_valid = False
         if self.normalizer:
             if self.normalizer.model_type == MANUAL:
                 self.is_valid = True
         super(NormalText, self).save(*args, **kwargs)
+
+
+class Word(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created = models.DateTimeField(auto_now_add=True)
+    content = models.SlugField(unique=True)
+    normalizers = models.ManyToManyField(Normalizer, through='NormalWord', related_name='words', 
+                            related_query_name='word', blank=True, through_fields=('word', 'normalizer'),)
+    is_normal = models.BooleanField(default=False, blank=True)
+
+    class Meta:
+        verbose_name = 'Word'
+        verbose_name_plural = 'Words'
+        ordering = ('-created',)
+
+    def __str__(self):
+        return f'{self.content[:120]}{" ..." if len(self.content) > 120 else ""}'
+
+class NormalWord(Word):
+    is_valid = models.BooleanField(default=False, blank=True)
+    normalizer = models.ForeignKey(Normalizer, on_delete=models.CASCADE, related_name='normal_words', related_query_name='normal_word')
+    word = models.ForeignKey(Word, on_delete=models.CASCADE, related_name='normal_words', related_query_name='normal_word')
+
+    class Meta:
+        verbose_name = 'Normal Word'
+        verbose_name_plural = 'Normal Words'
+        ordering = ('-created',)
+
+    def save(self, *args, **kwargs):
+        self.is_normal = True
+        self.is_valid = False
+        if self.normalizer:
+            if self.normalizer.model_type == MANUAL:
+                self.is_valid = True
+        super(NormalWord, self).save(*args, **kwargs)
+
 
 def get_unknown_tag():
     return {'name':'unk', 'persian':'نامشخص', 'color':'#FFFFFF', 'examples':[]}
@@ -446,7 +537,8 @@ class Tagger(models.Model):
     name = models.SlugField(default='unknown-tagger', unique=True)
     created = models.DateTimeField(auto_now_add=True)
     owner = models.CharField(max_length=100, default='undefined')
-    model_type = models.CharField(max_length=15, choices=MODEL_TYPES, default=MANUAL)
+    is_automatic = models.BooleanField(default=False, blank=True)
+    # model_type = models.CharField(max_length=15, choices=MODEL_TYPES, default=MANUAL)
     last_update = models.DateTimeField(auto_now=True)
     model_details = UTF8JSONField(default=dict, blank=True) # contains model training details
     tag_set = models.ForeignKey(to=TagSet, on_delete=models.DO_NOTHING, related_name='taggers', related_query_name='tagger')
@@ -463,7 +555,7 @@ class Tagger(models.Model):
     @property
     def total_valid_tagged_sentence_count(self):
         return self.tagged_sentences.filter(is_valid=True).count()
-
+    
     def __str__(self):
         return self.name
 
@@ -671,7 +763,6 @@ class NLTKTagger(Tagger):
         # )
         # return text
 
-
 class Sentence(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     content = models.TextField()
@@ -679,6 +770,9 @@ class Sentence(models.Model):
     taggers = models.ManyToManyField(Tagger, through='TaggedSentence', related_name='sentences', related_query_name='sentence', blank=True)
     text = models.ForeignKey(to=Text, on_delete=models.SET_NULL, related_name='sentences', related_query_name='sentence', blank=True, null=True)
     order = models.IntegerField(default=0, blank=True)
+    normalizers = models.ManyToManyField(Normalizer, through='NormalSentence', related_name='sentences', 
+                            related_query_name='sentence', blank=True, through_fields=('sentence', 'normalizer'),)
+    is_normal = models.BooleanField(default=False, blank=True)
 
     class Meta:
         verbose_name = 'Sentence'
@@ -688,7 +782,25 @@ class Sentence(models.Model):
     def __str__(self):
         rep = f'{self.content[:200]}{" ..." if len(self.content) > 200 else ""}'
         return rep
-    
+
+class NormalSentence(Sentence):
+    is_valid = models.BooleanField(default=False, blank=True)
+    normalizer = models.ForeignKey(Normalizer, on_delete=models.CASCADE, related_name='normal_sentences', related_query_name='normal_sentence')
+    sentence = models.ForeignKey(Sentence, on_delete=models.CASCADE, related_name='normal_sentences', related_query_name='normal_sentence')
+
+    class Meta:
+        verbose_name = 'Normal Sentence'
+        verbose_name_plural = 'Normal Sentences'
+        ordering = ('-created',)
+
+    def save(self, *args, **kwargs):
+        self.is_normal = True
+        self.is_valid = False
+        if self.normalizer:
+            if self.normalizer.model_type == MANUAL:
+                self.is_valid = True
+        super(NormalSentence, self).save(*args, **kwargs)
+
 class TaggedSentence(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created = models.DateTimeField(auto_now_add=True)
@@ -757,44 +869,44 @@ class TaggedSentence(models.Model):
     def split_to_tokens(self):
         pass
 
-class TranslationCharacter(models.Model):
-    created = models.DateTimeField(auto_now_add=True)
-    source = models.CharField(max_length=2, unique=True)
-    destination = models.CharField(max_length=2)
-    description = models.TextField(blank=True)
-    owner = models.CharField(max_length=75)
-    is_valid = models.BooleanField(default=False)
+# class TranslationCharacter(models.Model):
+#     created = models.DateTimeField(auto_now_add=True)
+#     source = models.CharField(max_length=2, unique=True)
+#     destination = models.CharField(max_length=2)
+#     description = models.TextField(blank=True)
+#     owner = models.CharField(max_length=75)
+#     is_valid = models.BooleanField(default=False)
 
-    class Meta:
-        verbose_name = 'Translation Character'
-        verbose_name_plural = 'Translation Characters'
-        ordering = ('-created',)
+#     class Meta:
+#         verbose_name = 'Translation Character'
+#         verbose_name_plural = 'Translation Characters'
+#         ordering = ('-created',)
 
-    def __str__(self):
-        return f'''
-            ({self.source}, {self.destination}, {self.description}, {self.description}, 
-            {self.owner}, {self.is_valid})
-            '''
+#     def __str__(self):
+#         return f'''
+#             ({self.source}, {self.destination}, {self.description}, {self.description}, 
+#             {self.owner}, {self.is_valid})
+#             '''
 
-class RefinementPattern(models.Model):
-    created = models.DateTimeField(auto_now_add=True)
-    pattern = models.CharField(max_length=200, unique=True)
-    replacement = models.CharField(max_length=200)
-    description = models.TextField(blank=True)
-    order = models.IntegerField(default=9999, unique=True)
-    owner = models.CharField(max_length=75)
-    is_valid = models.BooleanField(default=False)
+# class RefinementPattern(models.Model):
+    # created = models.DateTimeField(auto_now_add=True)
+    # pattern = models.CharField(max_length=200, unique=True)
+    # replacement = models.CharField(max_length=200)
+    # description = models.TextField(blank=True)
+    # order = models.IntegerField(default=9999, unique=True)
+    # owner = models.CharField(max_length=75)
+    # is_valid = models.BooleanField(default=False)
 
-    class Meta:
-        verbose_name = 'Refinement Pattern'
-        verbose_name_plural = 'Refinement Patterns'
-        ordering = ('order',)
+    # class Meta:
+    #     verbose_name = 'Refinement Pattern'
+    #     verbose_name_plural = 'Refinement Patterns'
+    #     ordering = ('order',)
 
-    def __str__(self):
-        return f'''
-            ({self.pattern}, {self.replacement}, {self.description}, {self.order}, 
-            {self.owner}, {self.is_valid})
-            '''
+    # def __str__(self):
+    #     return f'''
+    #         ({self.pattern}, {self.replacement}, {self.description}, {self.order}, 
+    #         {self.owner}, {self.is_valid})
+    #         '''
 
 
 

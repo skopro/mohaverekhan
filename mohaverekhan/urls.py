@@ -3,9 +3,10 @@ from django.conf.urls import url, re_path
 #from rest_framework.urlpatterns import format_suffix_patterns
 from .views import (HomePageView, 
         NormalizerViewSet, TextViewSet, NormalTextViewSet, 
+        WordViewSet, NormalWordViewSet,
         TagViewSet, TagSetViewSet,
-        TaggerViewSet, SentenceViewSet, TaggedSentenceViewSet, 
-        TranslationCharacterViewSet, RefinementPatternViewSet)
+        TaggerViewSet, SentenceViewSet, 
+        NormalSentenceViewSet, TaggedSentenceViewSet)
 from rest_framework.routers import DefaultRouter, SimpleRouter
 
 # class OptionalSlashRouter(SimpleRouter):
@@ -28,13 +29,16 @@ router = OptionalSlashRouter()
 router.register(r'normalizers', NormalizerViewSet)
 router.register(r'texts', TextViewSet)
 router.register(r'normal-texts', NormalTextViewSet)
+router.register(r'words', WordViewSet)
+router.register(r'normal-words', NormalWordViewSet)
 router.register(r'tags', TagViewSet)
 router.register(r'tag-sets', TagSetViewSet)
 router.register(r'taggers', TaggerViewSet)
 router.register(r'sentences', SentenceViewSet)
+router.register(r'normal-sentences', NormalSentenceViewSet)
 router.register(r'tagged-sentences', TaggedSentenceViewSet)
-router.register(r'rules/translation-characters', TranslationCharacterViewSet)
-router.register(r'rules/refinement-patterns', RefinementPatternViewSet)
+# router.register(r'rules/translation-characters', TranslationCharacterViewSet)
+# router.register(r'rules/refinement-patt/erns', RefinementPatternViewSet)
 
 urlpatterns = [
     re_path(r'^$', HomePageView.as_view(), name='home'),

@@ -11,15 +11,17 @@ from rest_framework import status
 from django_filters.rest_framework import DjangoFilterBackend
 from django.urls import reverse
 
-from .serializers import (NormalizerSerializer, TextSerializer,
-            NormalTextSerializer, TagSetSerializer,
-            TagSerializer, TaggerSerializer, SentenceSerializer,
-            TaggedSentenceSerializer, TranslationCharacterSerializer,
-            RefinementPatternSerializer)
+from .serializers import (NormalizerSerializer, 
+            TextSerializer, NormalTextSerializer, 
+            WordSerializer, NormalWordSerializer,
+            TagSetSerializer, TagSerializer, TaggerSerializer,
+            SentenceSerializer, NormalSentenceSerializer,
+            TaggedSentenceSerializer)
 from .models import (Normalizer, Text, NormalText, 
-            TagSet, Tag, Tagger, Sentence, TaggedSentence, 
-            TranslationCharacter, RefinementPattern,
-            RefinementNormalizer, NLTKTagger)
+            Word, NormalWord,
+            TagSet, Tag, Tagger, 
+            Sentence, NormalSentence, TaggedSentence, 
+            RefinementNormalizer, ReplacementNormalizer, NLTKTagger)
 from django.views.decorators.csrf import csrf_exempt
 import threading 
 import json
@@ -65,6 +67,8 @@ class NormalizerViewSet(viewsets.ModelViewSet):
         normalizer = None
         if name == 'refinement-normalizer':
             normalizer = RefinementNormalizer.objects.get(name=name)
+        elif name == 'replacement-normalizer':
+            normalizer = ReplacementNormalizer.objects.get(name=name)
         else:
             normalizer = self.get_object()
         text_id = request.GET.get('text-id', None)
@@ -82,6 +86,16 @@ class TextViewSet(viewsets.ModelViewSet):
 class NormalTextViewSet(viewsets.ModelViewSet):
     queryset = NormalText.objects.all()
     serializer_class = NormalTextSerializer
+
+class WordViewSet(viewsets.ModelViewSet):
+    queryset = Word.objects.all()
+    serializer_class = WordSerializer
+    lookup_field = 'content'
+    filterset_fields = ('id',)
+
+class NormalWordViewSet(viewsets.ModelViewSet):
+    queryset = NormalWord.objects.all()
+    serializer_class = NormalWordSerializer
 
 class TagSetViewSet(viewsets.ModelViewSet):
     queryset = TagSet.objects.all()
@@ -183,17 +197,21 @@ class SentenceViewSet(viewsets.ModelViewSet):
     queryset = Sentence.objects.all()
     serializer_class = SentenceSerializer
 
+class NormalSentenceViewSet(viewsets.ModelViewSet):
+    queryset = NormalSentence.objects.all()
+    serializer_class = NormalSentenceSerializer
+
 class TaggedSentenceViewSet(viewsets.ModelViewSet):
     queryset = TaggedSentence.objects.all()
     serializer_class = TaggedSentenceSerializer
 
-class TranslationCharacterViewSet(viewsets.ModelViewSet):
-    queryset = TranslationCharacter.objects.all()
-    serializer_class = TranslationCharacterSerializer
+# class TranslationCharacterViewSet(viewsets.ModelViewSet):
+#     queryset = TranslationCharacter.objects.all()
+#     serializer_class = TranslationCharacterSerializer
 
-class RefinementPatternViewSet(viewsets.ModelViewSet):
-    queryset = RefinementPattern.objects.all()
-    serializer_class = RefinementPatternSerializer
+# class RefinementPatternViewSet(viewsets.ModelViewSet):
+#     queryset = RefinementPattern.objects.all()
+#     serializer_class = RefinementPatternSerializer
 
  # content = {'normal_content': text.normal_content}
         # content = {'normal_content': text.normal_content}
