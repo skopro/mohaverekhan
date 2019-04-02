@@ -26,3 +26,8 @@
     left: 5px;
     top: 2px;
 }
+
+th[scope="col"] { 
+    /* width:100px !important; */
+    white-space: normal !important;
+}

@@ -17,6 +17,7 @@ else:
 logger = utils.get_logger(logger_name='data_importer')
 
 base_api_url = r'http://127.0.0.1:8000/mohaverekhan/api'
+validators_url = fr'{base_api_url}/validators'
 normalizers_url = fr'{base_api_url}/normalizers'
 texts_url = fr'{base_api_url}/texts'
 normal_texts_url = fr'{base_api_url}/normal-texts'
@@ -24,9 +25,12 @@ tags_url = fr'{base_api_url}/tags'
 tag_sets_url = fr'{base_api_url}/tag-sets'
 taggers_url = fr'{base_api_url}/taggers'
 sentences_url = fr'{base_api_url}/sentences'
+normal_sentences_url = fr'{base_api_url}/normal-sentences'
 tagged_sentences_url = fr'{base_api_url}/tagged-sentences'
-translation_character_url = fr'{base_api_url}/rules/translation-characters'
-refinement_pattern_url = fr'{base_api_url}/rules/refinement-patterns'
+words_url = fr'{base_api_url}/words'
+normal_words_url = fr'{base_api_url}/normal-words'
+# translation_character_url = fr'{base_api_url}/rules/translation-characters'
+# refinement_pattern_url = fr'{base_api_url}/rules/refinement-patterns'
 
 data_dir= fr'/home/bitianist/Dropbox/bachelor_thesis/data'
 text_equivalents_path = fr'{data_dir}/seq2seq/text_equivalents.xlsx'
@@ -154,6 +158,13 @@ def post(url, data_dictionary, log_it=False):
     return response, False
 
 
+def generate_validator_dictionary(name, id=None):
+    d = {}
+    d['name'] = name
+    if id:
+        d['id'] = id 
+    return d
+
 def generate_tag_dictionary(id=None, name=None, persian=None, color=None):
     d = {}
     if id:
@@ -186,12 +197,11 @@ def generate_token_dictionary(content, tag=None):
         d['tag'] = tag    
     return d
 
-def generate_normalizer_dictionary(name, model_type=None, 
+def generate_normalizer_dictionary(name, is_automatic=False, 
                                 owner=None, model_details=None, id=None):
     d = {}
     d['name'] = name
-    if model_type:
-        d['model_type'] = model_type
+    d['is_automatic'] = is_automatic
     if owner:
         d['owner'] = owner
     if model_details:
@@ -228,12 +238,39 @@ def generate_normal_text_dictionary(content, normalizer,
     return d
 
 
-def generate_tagger_dictionary(name, owner=None, model_type=None,
+def generate_word_dictionary(content, id=None):
+    d = {}
+    d['content'] = content
+    if id:
+        d['id'] = id 
+    return d
+
+def generate_normal_word_dictionary(content, normalizer, 
+        word, id=None):
+    d = {}
+    d['content'] = content
+    d['normalizer'] = normalizer
+    d['word'] = word
+    if id:
+        d['id'] = id 
+    return d
+
+def generate_normal_sentence_dictionary(content, normalizer, 
+        sentence, id=None):
+    d = {}
+    d['content'] = content
+    d['normalizer'] = normalizer
+    d['sentence'] = sentence
+    if id:
+        d['id'] = id 
+    return d
+
+
+def generate_tagger_dictionary(name, owner=None, is_automatic=False,
                              model_details=None, tag_set=None, id=None):
     d = {}
     d['name'] = name
-    if model_type:
-        d['model_type'] = model_type
+    d['is_automatic'] = is_automatic
     if owner:
         d['owner'] = owner
     if tag_set:
@@ -282,13 +319,15 @@ def generate_refinement_pattern_dictionary(pattern, replacement, order=9999, own
 
 @utils.time_usage(logger)
 def import_tag_sets():
-    # bijankhan_tag_set = generate_tag_set_dictionary('bijankhan-tag-set', 
-    #     tags=bijankhan_tag_set_dictionary)
+    # 0
+    bijankhan_tag_set = generate_tag_set_dictionary('bijankhan-tag-set', 
+        tags=bijankhan_tag_set_dictionary)
 
-    # response, error = post(tag_sets_url, bijankhan_tag_set)
-    # if error:
-    #     return 0
+    response, error = post(tag_sets_url, bijankhan_tag_set)
+    if error:
+        return 0
 
+    # 1
     mohaverekhan_tag_set = generate_tag_set_dictionary('mohaverekhan-tag-set', 
         tags=mohaverekhan_tag_set_dictionary)
 
@@ -297,16 +336,27 @@ def import_tag_sets():
         return 0
 
 @utils.time_usage(logger)
+def import_validators():
+    bitianist_validator = generate_validator_dictionary(
+        'bitianist-validator'
+    )
+
+    response, error = post(validators_url, bitianist_validator)
+    if error:
+        return 0
+
+@utils.time_usage(logger)
 def import_taggers():
+    # 0
     model_details = {
-        
+       'type': 'manual'
     }
 
     bijankhan_tagger = generate_tagger_dictionary(
         'bijankhan-tagger',
         owner='bijankhan',
         tag_set='bijankhan-tag-set',
-        model_type='manual',
+        is_automatic=False,
         model_details=model_details
     )
 
@@ -314,16 +364,18 @@ def import_taggers():
     if error:
         return 0
 
+    # 1
     model_details = {
-        'name': 'nltk',
-        'state': 'not-trained'
+        'module': 'nltk',
+        'type': 'stochastic',
+        'state': 'not-ready',
     }
 
     nltk_tagger = generate_tagger_dictionary(
         'nltk-tagger',
         owner='bitianist',
-        tag_set='bijankhan-tag-set',
-        model_type='stochastic',
+        tag_set='mohaverekhan-tag-set',
+        is_automatic=True,
         model_details=model_details
     )
 
@@ -331,16 +383,33 @@ def import_taggers():
     if error:
         return 0
 
+    # 0
+    model_details = {
+       'type': 'manual'
+    }
+
+    test_tagger = generate_tagger_dictionary(
+        'test-tagger',
+        owner='mohaverekhan',
+        tag_set='mohaverekhan-tag-set',
+        is_automatic=False,
+        model_details=model_details
+    )
+
+    response, error = post(taggers_url, test_tagger)
+    if error:
+        return 0
+
 @utils.time_usage(logger)
 def import_normalizers():
     # 1
     model_details = {
-       
+       'type': 'manual'
     }
     bitianist_normalizer = generate_normalizer_dictionary(
         'bitianist-normalizer',
         owner='bitianist',
-        model_type='manual',
+        is_automatic=False,
         model_details=model_details
     )
     response, error = post(normalizers_url, bitianist_normalizer)
@@ -350,12 +419,13 @@ def import_normalizers():
 
     # 2
     model_details = {
-        'state': 'not-trained'
+        'type': 'rule-based',
+        'state': 'ready'
     }
     refinement_normalizer = generate_tagger_dictionary(
         'refinement-normalizer',
         owner='bitianist',
-        model_type='rule-based',
+        is_automatic=True,
         model_details=model_details
     )
     response, error = post(normalizers_url, refinement_normalizer)
@@ -365,16 +435,47 @@ def import_normalizers():
 
     # 3
     model_details = {
-        'name': 'seq2seq',
-        'state': 'not-trained'
+        'type': 'stochastic',
+        'module': 'seq2seq',
+        'state': 'not-ready'
     }
     seq2seq_normalizer = generate_tagger_dictionary(
         'seq2seq-normalizer',
         owner='bitianist',
-        model_type='stochastic',
+        is_automatic=True,
         model_details=model_details
     )
     response, error = post(normalizers_url, seq2seq_normalizer)
+    if error:
+        return
+
+    # 4
+    model_details = {
+        'type': 'rule-based',
+        'state': 'ready'
+    }
+    replacement_normalizer = generate_tagger_dictionary(
+        'replacement-normalizer',
+        owner='bitianist',
+        is_automatic=True,
+        model_details=model_details
+    )
+    response, error = post(normalizers_url, replacement_normalizer)
+    if error:
+        return
+    
+    # 5
+    model_details = {
+        'type': 'rule-based',
+        'state': 'ready'
+    }
+    informal_normalizer = generate_tagger_dictionary(
+        'informal-normalizer',
+        owner='bitianist',
+        is_automatic=True,
+        model_details=model_details
+    )
+    response, error = post(normalizers_url, informal_normalizer)
     if error:
         return
 
@@ -405,35 +506,35 @@ def import_text_equivalents():
             break
         if i % 25 == 0:
             logger.info(f'> Item {i} imported.')
-    logger.info(f'> Items count : {i}')
+    logger.info(f'> Items count : {i+1}')
 
 @utils.time_usage(logger)
 def import_word_equivalents():
     df = pd.read_excel(word_equivalents_path, sheet_name='main')
-    text_content, normal_text_content = '', ''
-    text = None
+    word_content, normal_word_content = '', ''
+    word = None
     logger.info(f'>> Reading word_equivalents : {df.columns}')
-    ctr = 0
+    ctr = 1
     normalizer = 'bitianist-normalizer'
-    text_content_set = set()
+    word_content_set = set()
     for i in df.index:
 
-        text_content = df['کلمه غیر رسمی'][i].__str__().strip()
-        if text_content in text_content_set:
+        word_content = df['کلمه غیر رسمی'][i].__str__().strip()
+        if word_content in word_content_set:
             continue
         else:
-            text_content_set.add(text_content)
+            word_content_set.add(word_content)
 
-        if text_content == 'nan' or text_content.isspace():
+        if word_content == 'nan' or word_content.isspace():
             break
 
-        normal_text_content = df['کلمه رسمی'][i].__str__().strip()
-        if normal_text_content == 'nan' or normal_text_content.isspace():
+        normal_word_content = df['کلمه رسمی'][i].__str__().strip()
+        if normal_word_content == 'nan' or normal_word_content.isspace():
             break
 
-        text = generate_text_dictionary(text_content)
-        normal_text = generate_normal_text_dictionary(normal_text_content, normalizer, text)
-        response, error = post(normal_texts_url, normal_text)
+        word = generate_word_dictionary(word_content)
+        normal_word = generate_normal_word_dictionary(normal_word_content, normalizer, word)
+        response, error = post(normal_words_url, normal_word)
         if error:
             break
         ctr += 1
@@ -663,12 +764,13 @@ def import_refinement_patterns():
 
 def main():
     try:
-        import_tag_sets()
+        # import_tag_sets()
+        # import_validators()
         # import_normalizers()
         # import_taggers()
         # import_text_equivalents()
         # import_word_equivalents()
-        # import_bijankhan_data()
+        import_bijankhan_data()
 
 
         # import_tags()

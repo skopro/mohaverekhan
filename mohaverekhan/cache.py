@@ -6,8 +6,7 @@ repetition_pattern = re.compile(r"([^A-Za-z])\1{1,}")
 # debug_pattern = re.compile(r'[0-9۰۱۲۳۴۵۶۷۸۹]')
 # debug_pattern = re.compile(r'^گرون$|^میدون$|^خونه$|^نون$|^ارزون$|^اون$|^قلیون$')
 # debug_pattern = re.compile(r'هایمان')
-debug_pattern = re.compile(r'هفت‌هشت')
-
+debug_pattern = re.compile(r'باید|دنبال')
 
 logger = None
 token_set = set()
@@ -19,6 +18,8 @@ def cache_tokens():
     # tokens = TaggedSentence.objects.only('tokens__content')
     token_content, tag_name = '', ''
     sentence_tokens_list = TaggedSentence.objects.filter(is_valid=True).values_list('tokens', flat=True)
+    if sentence_tokens_list.count() == 0:
+        return
     for sentence_tokens in sentence_tokens_list:
         for token in sentence_tokens:
             token_content = token['content']
@@ -44,8 +45,16 @@ def cache_tokens():
     # tokens = TaggedSentence.objects.only('tokens__content').order_by('-tokens__content').distinct('tokens__content')
     # logger.info(f'tokens.count() : {tokens.count()}')
 
+bitianist_validator = None
+
+def cache_bitianist_validator():
+    global bitianist_validator
+    Validator = apps.get_model(app_label='mohaverekhan', model_name='Validator')
+    bitianist_validator = Validator.objects.filter(name='bitianist-validator').first()
+
 
 def init():
     global logger
     logger = logging.getLogger(__name__)
+    cache_bitianist_validator()
     cache_tokens()

@@ -64,6 +64,14 @@ class Validator(models.Model):
     name = models.SlugField(default='unknown-validator', unique=True)
     created = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        verbose_name = 'Validator'
+        verbose_name_plural = 'Validators'
+        ordering = ('-created',)
+    
+    def __str__(self):
+        return  self.name
+
     @property
     def total_normal_text_count(self):
         return self.normal_texts.count()
@@ -427,7 +435,8 @@ class Text(models.Model):
     content = models.TextField()
     normalizers = models.ManyToManyField(Normalizer, through='NormalText', related_name='texts', 
                             related_query_name='text', blank=True, through_fields=('text', 'normalizer'),)
-    is_normal = models.BooleanField(default=False, blank=True)
+    # is_normal = models.BooleanField(default=False, blank=True)
+    normalizers_sequence = ArrayField(models.CharField(max_length=200), blank=True, default=list)
 
     class Meta:
         verbose_name = 'Text'
@@ -449,7 +458,12 @@ class NormalText(Text):
         ordering = ('-created',)
 
     def save(self, *args, **kwargs):
-        self.is_normal = True
+        if self.text.normalizers_sequence:
+            if self.text.normalizers_sequence[-1] != self.normalizer.name:
+                self.normalizers_sequence = self.text.normalizers_sequence \
+                                                + self.normalizer.name
+        else:
+            self.normalizers_sequence = [self.normalizer.name]
         self.is_valid = False
         if self.normalizer:
             if not self.normalizer.is_automatic:
@@ -461,10 +475,11 @@ class NormalText(Text):
 class Word(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created = models.DateTimeField(auto_now_add=True)
-    content = models.SlugField(unique=True)
+    content = models.CharField(max_length=200)
     normalizers = models.ManyToManyField(Normalizer, through='NormalWord', related_name='words', 
                             related_query_name='word', blank=True, through_fields=('word', 'normalizer'),)
-    is_normal = models.BooleanField(default=False, blank=True)
+    # is_normal = models.BooleanField(default=False, blank=True)
+    normalizers_sequence = ArrayField(models.CharField(max_length=200), blank=True, default=list)
 
     class Meta:
         verbose_name = 'Word'
@@ -486,13 +501,22 @@ class NormalWord(Word):
         ordering = ('-created',)
 
     def save(self, *args, **kwargs):
-        self.is_normal = True
+        if self.word.normalizers_sequence:
+            if self.word.normalizers_sequence[-1] != self.normalizer.name:
+                self.normalizers_sequence = self.word.normalizers_sequence \
+                                                + self.normalizer.name
+        else:
+            self.normalizers_sequence = [self.normalizer.name]
         self.is_valid = False
         if self.normalizer:
             if not self.normalizer.is_automatic:
                 self.is_valid = True
                 self.validator = cache.bitianist_validator
         super(NormalWord, self).save(*args, **kwargs)
+    
+    def __str__(self):
+        return f'{self.content[:120]}{" ..." if len(self.content) > 120 else ""}'
+
 
 
 def get_unknown_tag():
@@ -796,7 +820,8 @@ class Sentence(models.Model):
     order = models.IntegerField(default=0, blank=True)
     normalizers = models.ManyToManyField(Normalizer, through='NormalSentence', related_name='sentences', 
                             related_query_name='sentence', blank=True, through_fields=('sentence', 'normalizer'),)
-    is_normal = models.BooleanField(default=False, blank=True)
+    # is_normal = models.BooleanField(default=False, blank=True)
+    normalizers_sequence = ArrayField(models.CharField(max_length=200), blank=True, default=list)
 
     class Meta:
         verbose_name = 'Sentence'
@@ -819,7 +844,12 @@ class NormalSentence(Sentence):
         ordering = ('-created',)
 
     def save(self, *args, **kwargs):
-        self.is_normal = True
+        if self.sentence.normalizers_sequence:
+            if self.sentence.normalizers_sequence[-1] != self.normalizer.name:
+                self.normalizers_sequence = self.sentence.normalizers_sequence \
+                                                + self.normalizer.name
+        else:
+            self.normalizers_sequence = [self.normalizer.name]
         self.is_valid = False
         if self.normalizer:
             if not self.normalizer.is_automatic:

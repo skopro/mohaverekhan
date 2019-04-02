@@ -97,8 +97,6 @@ class NormalTextViewSet(viewsets.ModelViewSet):
 class WordViewSet(viewsets.ModelViewSet):
     queryset = Word.objects.all()
     serializer_class = WordSerializer
-    lookup_field = 'content'
-    filterset_fields = ('id',)
 
 class NormalWordViewSet(viewsets.ModelViewSet):
     queryset = NormalWord.objects.all()

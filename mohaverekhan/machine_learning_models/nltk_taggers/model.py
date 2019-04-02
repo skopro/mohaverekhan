@@ -28,7 +28,7 @@ WORD_PATTERNS = [
     (r'^([^\w\._]*)(@[\w_]+).*$', 'S'), #hazm
     (r'^((https?|ftp):\/\/)?(?<!@)([wW]{3}\.)?(([\w-]+)(\.(\w){2,})+([-\w@:%_\+\/~#?&=]+)?)$', 'K'), #hazm forgot "="? lol
     (r'^[a-zA-Z0-9\._\+-]+@([a-zA-Z0-9-]+\.)+[A-Za-z]{2,}$', 'M'), #hazm
-    (r'^\#([\S]+)$', 'G'),
+    (r'^\#([\S]+)$', 'G'), #hazm
     # (r'.*ed$', 'VBD'),
     # (r'.*ness$', 'NN'),
     # (r'.*ment$', 'NN'),
@@ -75,9 +75,8 @@ def separate_train_and_test_data(data):
 def create_main_tagger(train_data, test_data):
     logger.info('>> Create main tagger')
     default_tagger = nltk.DefaultTagger('N')
-    # default_tagger = nltk.DefaultTagger('UNK')
     suffix_tagger = nltk.AffixTagger(train_data, backoff=default_tagger, affix_length=-3, min_stem_length=2, verbose=True)
-    # suffix_tagger = nltk.AffixTagger(train_data, affix_length=-3, min_stem_length=2, verbose=True)
+    logger.info(f'> suffix_tagger : \n{suffix_tagger.unicode_repr()}\n')
     affix_tagger = nltk.AffixTagger(train_data, backoff=suffix_tagger, affix_length=5, min_stem_length=1, verbose=True)
     regexp_tagger = nltk.RegexpTagger(WORD_PATTERNS, backoff=affix_tagger)
     unigram_tagger = nltk.UnigramTagger(train_data, backoff=regexp_tagger, verbose=True)
@@ -85,34 +84,7 @@ def create_main_tagger(train_data, test_data):
     trigram_tagger = nltk.TrigramTagger(train_data, backoff=bigram_tagger, verbose=True)
     # main_tagger = trigram_tagger
 
-    # affix_tagger = nltk.AffixTagger(train_data, backoff=default_tagger)
-    # unigram_tagger = nltk.UnigramTagger(train_data, backoff=affix_tagger)
-    # bigram_tagger = nltk.BigramTagger(train_data, backoff=unigram_tagger)
-    # trigram_tagger = nltk.TrigramTagger(train_data, backoff=bigram_tagger)
-    # regexp_tagger = nltk.RegexpTagger(WORD_PATTERNS, backoff=default_tagger)
-
     templates = brill.fntbl37()
-    # templates = [ 
-    #         brill.Template(brill.Pos([-1]), brill.Pos([0]), brill.Pos([1])), 
-    #         brill.Template(brill.Pos([-1, 0, 1])), 
-    #         # brill.Template(brill.Pos([1])), 
-    #         # brill.Template(brill.Pos([-2])), 
-    #         # brill.Template(brill.Pos([2])), 
-    #         # brill.Template(brill.Pos([-2, -1])), 
-    #         # brill.Template(brill.Pos([1, 2])), 
-    #         # brill.Template(brill.Pos([-3, -2, -1])), 
-    #         # brill.Template(brill.Pos([1, 2, 3])), 
-    #         # brill.Template(brill.Pos([-1]), brill.Pos([1])), 
-    #         # brill.Template(brill.Word([-1])), 
-    #         # brill.Template(brill.Word([1])), 
-    #         # brill.Template(brill.Word([-2])), 
-    #         # brill.Template(brill.Word([2])), 
-    #         # brill.Template(brill.Word([-2, -1])), 
-    #         # brill.Template(brill.Word([1, 2])), 
-    #         # brill.Template(brill.Word([-3, -2, -1])), 
-    #         # brill.Template(brill.Word([1, 2, 3])), 
-    #         # brill.Template(brill.Word([-1]), brill.Word([1])), 
-    #         ] 
     brill_trainer_result = brill_trainer.BrillTaggerTrainer( 
             trigram_tagger, templates, deterministic=True) 
     brill_tagger = brill_trainer_result.train(train_data, max_rules=300, min_score=10)
