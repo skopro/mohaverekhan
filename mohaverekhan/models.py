@@ -14,6 +14,7 @@ from django.db.models import Count
 from django.db.models import Q
 import time
 import datetime
+import random
 import re
 from mohaverekhan import cache
 
@@ -25,6 +26,7 @@ from django.contrib.postgres.forms.jsonb import (
 )
 
 sentence_splitter_pattern = re.compile(r'([!\.\?⸮؟]+)[ \n]+|[ \n]+([!\.\?⸮؟]+)')
+error_tag = {'name':'ERROR', 'persian':'خطا', 'color':'#FF0000'}
 
 def split_into_token_contents(text_content, delimiters='[ \n]+'):
     return re.split(delimiters, text_content)
@@ -49,20 +51,421 @@ class UTF8JSONField(JSONField):
             **kwargs,
         })
 
-MANUAL = 'manual'
-RULEBASED = 'rule-based'
-STOCHASTIC = 'stochastic'
-MODEL_TYPES = (
-    (MANUAL, MANUAL),
-    (RULEBASED, RULEBASED),
-    (STOCHASTIC, STOCHASTIC),
-)
-
 # باید فاصله تو توکن ها رو تبدیل به نیم فاصله کنم تو ایمورت داده ها
+
+class Word(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
+    content = models.CharField(max_length=200)
+    normalizers = models.ManyToManyField('Normalizer', through='WordNormal', related_name='words', 
+                            related_query_name='word', blank=True, through_fields=('word', 'normalizer'),)
+
+    class Meta:
+        verbose_name = 'Word'
+        verbose_name_plural = 'Words'
+        ordering = ('-created',)
+
+    def __str__(self):
+        return f'{self.content[:120]}{" ..." if len(self.content) > 120 else ""}'
+
+class WordNormal(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
+    content = models.CharField(max_length=200)
+    normalizer = models.ForeignKey('Normalizer', on_delete=models.CASCADE, related_name='word_normals', related_query_name='word_normal')
+    word = models.ForeignKey('Word', on_delete=models.CASCADE, related_name='word_normals', related_query_name='word_normal')
+    is_valid = models.BooleanField(default=None, blank=True, null=True)
+    validator = models.ForeignKey('Validator', on_delete=models.CASCADE, related_name='word_normals', related_query_name='word_normal', blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Word Normal'
+        verbose_name_plural = 'Word Normals'
+        ordering = ('-created',)
+
+    def check_validation(self):
+        if self.normalizer.name == 'bitianist-normalizer':
+            self.is_valid = True
+            self.validator = cache.bitianist_validator
+            
+
+    def save(self, *args, **kwargs):
+        self.check_validation()        
+        super(WordNormal, self).save(*args, **kwargs)
+    
+    def __str__(self):
+        return f'{self.content[:120]}{" ..." if len(self.content) > 120 else ""}'
+
+class Text(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created = models.DateTimeField(auto_now_add=True)
+    content = models.TextField()
+    normalizers = models.ManyToManyField('Normalizer', through='TextNormal', related_name='texts', 
+                            related_query_name='text', blank=True, through_fields=('text', 'normalizer'),)
+    normalizers_sequence = ArrayField(models.CharField(max_length=200), blank=True, default=list)
+
+    class Meta:
+        verbose_name = 'Text'
+        verbose_name_plural = 'Texts'
+        ordering = ('-created',)
+
+    def __str__(self):
+        return f'{self.content[:120]}{" ..." if len(self.content) > 120 else ""}'
+
+class TextNormal(Text):
+    normalizer = models.ForeignKey('Normalizer', on_delete=models.CASCADE, related_name='text_normals', related_query_name='text_normal')
+    text = models.ForeignKey('Text', on_delete=models.CASCADE, related_name='text_normals', related_query_name='text_normal')
+    is_valid = models.BooleanField(default=None, blank=True, null=True)
+    validator = models.ForeignKey('Validator', on_delete=models.CASCADE, related_name='text_normals', related_query_name='text_normal', blank=True, null=True)
+    
+    class Meta:
+        verbose_name = 'Text Normal'
+        verbose_name_plural = 'Text Normals'
+        ordering = ('-created',)
+
+    def check_validation(self):
+        if self.normalizer.name == 'bitianist-normalizer':
+            self.is_valid = True
+            self.validator = cache.bitianist_validator
+
+    def check_normalizers_sequence(self):
+        if self.text.normalizers_sequence:
+            if self.text.normalizers_sequence[-1] != self.normalizer.name:
+                self.normalizers_sequence = self.text.normalizers_sequence \
+                                                + self.normalizer.name
+        else:
+            self.normalizers_sequence = [self.normalizer.name]
+            
+    def save(self, *args, **kwargs):
+        self.check_validation()        
+        self.check_normalizers_sequence()
+        super(TextNormal, self).save(*args, **kwargs)
+
+
+class TextTag(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created = models.DateTimeField(auto_now_add=True)
+    tokenizer = models.ForeignKey('Tokenizer', on_delete=models.CASCADE, related_name='text_tags', related_query_name='text_tag')
+    tagger = models.ForeignKey('Tagger', on_delete=models.CASCADE, related_name='text_tags', related_query_name='text_tag')
+    text = models.ForeignKey('Text', on_delete=models.CASCADE, related_name='text_tags', related_query_name='text_tag')
+    tokens = UTF8JSONField(default=list) # contains list of token with it's tag
+    is_valid = models.BooleanField(default=None, blank=True, null=True)
+    validator = models.ForeignKey('Validator', on_delete=models.CASCADE, related_name='text_tags', related_query_name='text_tag', 
+                                        blank=True, null=True)
+    
+    class Meta:
+        verbose_name = 'Text Tag'
+        verbose_name_plural = 'Text Tags'
+        ordering = ('-created',)
+
+    # def is_tokens_valid(self):
+    #     is_valid = True
+    #     if not self.tokens:
+    #         is_valid = False
+    #         return is_valid
+    #     for token in self.tokens:
+    #         if 'is_valid' not in token:
+    #             token['is_valid'] = False
+    #         is_valid = is_valid and token['is_valid']
+    #         if not is_valid:
+    #             break
+    #     return is_valid
+    
+    def check_validation(self):
+        if self.tagger.name in ('bijankhan-tagger', 'bitianist-tagger'):
+            self.is_valid = True
+            self.validator = cache.bitianist_validator
+
+    def set_tag_details(self):
+        tag_details_dictionary = {tag.name:tag for tag in self.tagger.tag_set.tags.all()}
+        referenced_tag = None
+        for token in self.tokens:
+            if 'tag' in token and 'name' in token['tag']:
+                if token['tag']['name'] not in tag_details_dictionary:
+                    token['tag'] = error_tag
+                    # self.tagger.tag_set.add_to_unknown_tag_examples(token['content'])
+                    continue
+
+                referenced_tag = tag_details_dictionary[token['tag']['name']]
+                # referenced_tag.add_to_examples(token['content'])
+                token['tag']['persian'] = referenced_tag.persian
+                token['tag']['color'] = referenced_tag.color
+
+    def save(self, *args, **kwargs):
+        self.check_validation()
+        self.set_tag_details()
+        super(TextTag, self).save(*args, **kwargs)
+
+    def __unicode__(self):
+        rep = ""
+        if self.tokens:
+            for token in self.tokens:
+                rep += f'{token["content"]}_{token["tag"]["name"]} '
+        return rep
+
+# def get_unknown_tag():
+#     return {'name':'unk', 'persian':'نامشخص', 'color':'#FFFFFF', 'examples':[]}
+
+class TagSet(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
+    name = models.SlugField(default='unknown-tag-set', unique=True)
+    last_update = models.DateTimeField(auto_now=True)
+    # unknown_tag = UTF8JSONField(blank=True, default=get_unknown_tag)
+
+    def __str__(self):  
+        return self.name
+
+    @property
+    def total_text_tag_count(self):
+        return sum([tagger.total_text_tag_count for tagger in self.taggers.all()])
+    
+    @property
+    def total_valid_text_tag_count(self):
+        return sum([tagger.total_valid_text_tag_count for tagger in self.taggers.all()])
+    
+    @property
+    def number_of_tags(self):
+        return self.tags.count()
+
+    @property
+    def number_of_taggers(self):
+        return self.taggers.count()
+
+    # def add_to_unknown_tag_examples(self, token_content):
+    #     examples = self.unknown_tag['examples']
+    #     if (token_content not in examples 
+    #             and len(examples) < 15 ):
+    #         self.unknown_tag['examples'].append(token_content)
+    #         self.save(update_fields=['unknown_tag']) 
+
+    class Meta:
+        verbose_name = 'Tag Set'
+        verbose_name_plural = 'Tag Sets'
+        ordering = ('-created',)
+
+class Tag(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(max_length=15)
+    persian = models.CharField(max_length=30)
+    color = ColorField()
+    tag_set = models.ForeignKey(to='TagSet', on_delete=models.CASCADE, related_name='tags', related_query_name='tag')
+    # examples = ArrayField(models.CharField(max_length=30), blank=True, default=list)
+
+    def __str__(self):  
+        return self.name
+
+    class Meta:
+        verbose_name = 'Tag'
+        verbose_name_plural = 'Tags'
+        ordering = ('-created',)
+        unique_together = (("name", "tag_set"), ("persian", "tag_set"),)
+
+    @property
+    def examples(self):
+        text_tag_tokens = TextTag.objects.filter(tagger__tag_set=tag_set, is_valid=True, \
+            tokens__tag__contains={'name': self.name}).values_list('tokens', flat=True)[:300]
+        examples = []
+        
+        text_tag_tokens = random.sample(text_tag_tokens, min(len(text_tag_tokens), 20))
+        for text_tag_token in text_tag_tokens:
+            if text_tag_token['tag']['name'] == self.name:
+                examples.append(text_tag_token['content'])
+                if len(examples) >= 20:
+                    break
+
+        return examples
+
+    # def add_to_examples(self, token_content):
+    #     if (token_content not in self.examples 
+    #             and len(self.examples) < 15 ):
+    #         self.examples.append(token_content)
+    #         self.save(update_fields=['examples']) 
+
+
+class Normalizer(models.Model):
+    name = models.SlugField(default='unknown-normalizer', unique=True)
+    created = models.DateTimeField(auto_now_add=True)
+    owner = models.CharField(max_length=100, default='undefined')
+    is_automatic = models.BooleanField(default=False)
+    model_details = UTF8JSONField(default=dict, blank=True) # contains model training details
+    last_update = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Normalizer'
+        verbose_name_plural = 'Normalizers'
+        ordering = ('-created',)
+
+    def __str__(self):  
+        return self.name
+
+    @property
+    def total_text_normal_count(self):
+        return self.text_normals.count()
+
+    @property
+    def total_valid_text_normal_count(self):
+        return self.text_normals.filter(is_valid=True).count()
+
+    @property
+    def total_word_normal_count(self):
+        return self.word_normals.count()
+
+    @property
+    def total_valid_word_normal_count(self):
+        return self.word_normals.filter(is_valid=True).count()
+
+
+    def train(self):
+        pass
+
+    def normalize(self, text):
+        text_normal_content = text.content
+        text_normal, created = TextNormal.objects.update_or_create(
+            normalizer=self, text=text,
+            defaults={'content':text_normal_content},
+        )
+        logger.debug(f"> created : {created}")
+        return text_normal
+
+class Tokenizer(models.Model):
+    name = models.SlugField(default='unknown-normalizer', unique=True)
+    created = models.DateTimeField(auto_now_add=True)
+    owner = models.CharField(max_length=100, default='undefined')
+    is_automatic = models.BooleanField(default=False)
+    model_details = UTF8JSONField(default=dict, blank=True) # contains model training details
+    last_update = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Tokenizer'
+        verbose_name_plural = 'Tokenizers'
+        ordering = ('-created',)
+
+    def __str__(self):  
+        return self.name
+
+    @property
+    def total_text_tag_count(self):
+        return self.text_tags.count()
+
+    @property
+    def total_valid_text_tag_count(self):
+        return self.text_tags.filter(is_valid=True).count()
+
+class Tagger(models.Model):
+    name = models.SlugField(default='unknown-tagger', unique=True)
+    created = models.DateTimeField(auto_now_add=True)
+    owner = models.CharField(max_length=100, default='undefined')
+    is_automatic = models.BooleanField(default=False)
+    model_details = UTF8JSONField(default=dict, blank=True) # contains model training details
+    tag_set = models.ForeignKey(to=TagSet, on_delete=models.DO_NOTHING, related_name='taggers', related_query_name='tagger')
+    last_update = models.DateTimeField(auto_now=True)
+
+
+    class Meta:
+        verbose_name = 'Tagger'
+        verbose_name_plural = 'Taggers'
+        ordering = ('-created',)
+    
+    def __str__(self):  
+        return self.name
+
+    @property
+    def total_text_tag_count(self):
+        return self.text_tags.count()
+    
+    @property
+    def total_valid_text_tag_count(self):
+        return self.text_tags.filter(is_valid=True).count()
+    
+    def train(self):
+        num_epochs = 150
+        logger.info(f'Model is going to train for {num_epochs} epochs.')
+        seq2seq_model.train(False, num_epochs=num_epochs)
+
+    def tag(self, text):
+        if text.sentences.exists():
+            logger.debug(f'> sentence was exists')
+        else:
+            text.create_sentences()
+
+        for sentence in text.sentences:
+            self.tag_sentence(sentence)
+            
+            text_tag.split_to_tokens()
+
+        sentence_tokens = [
+            ("خیلی", "A"),
+            ("افتضاح", "A"),
+            ("است", "V"),
+            (".", "O")
+        ]
+        sentence_tokens = [
+            {
+                'content':token, 
+                'tag':
+                {
+                    'name': tag
+                }
+            } for token, tag in sentence_tokens]
+        logger.info(f'sentence_tokens : \n\n{sentence_tokens}\n')
+
+        obj, created = TaggedSentence.objects.update_or_create(
+            tagger=self, sentence=sentence,
+            defaults={'tokens': sentence_tokens},
+        )
+        logger.debug(f"> created : {created}")
+
+        # TaggedSentence.objects.create(
+        #     tagger=self,
+        #     sentence=sentence,
+        #     tokens=sentence_tokens
+        # )
+        return text
+
+    def infpost(self):
+        try:
+            logger.info(f'> Informal : {self.content}')
+            sentence_contents, token_tags = nltk_taggers_model.tag_text(self.content)
+            logger.info(f'> sentence_contents : {sentence_contents}')
+            logger.info(f'> token_tags : {token_tags}')
+            sentences, tokens = [], []
+            current_sentence, current_tag, current_token = None, None, None
+            for i, sentence_content in enumerate(sentence_contents):
+                print(f'> sentence_contents[{i}] : {sentence_content}')
+                current_sentence = Sentence(content=sentence_content)
+                print(f'> current_sentence : {current_sentence} {type(current_sentence)}')
+                tokens = []
+                for token_tag in token_tags[i]:
+                    print(f'> token_tag : {token_tag}')
+                    print(f'> token_tag[0] : {token_tag[0]}')
+                    print(f'> token_tag[1] : {token_tag[1]}')
+                    current_tag = Tag.objects.get(name=token_tag[1])
+                    logger.info(f'> current_tag : {current_tag}')
+                    current_token = Token(content=token_tag[0], tag=current_tag)
+                    current_token.save()
+                    tokens.append(current_token)
+                    logger.info(f'> current_token : {current_token}')
+
+                current_sentence.tokens = tokens
+                current_sentence.save()
+                logger.info(f'> current_sentence.tokens : {current_sentence.tokens}')
+                sentences.append(current_sentence)
+
+            self.sentences = sentences
+            logger.info(f'> self.sentences : {self.sentences}')
+            Text.objects.update_or_create(
+                content=self.content, 
+                defaults={'sentences': self.sentences},
+                )
+            # self.save()
+            logger.info(f'> Text : {self}')
+        except Exception as ex:
+            logger.exception(ex)
 
 class Validator(models.Model):
     name = models.SlugField(default='unknown-validator', unique=True)
     created = models.DateTimeField(auto_now_add=True)
+    owner = models.CharField(max_length=100, default='undefined')
+    is_automatic = models.BooleanField(default=False)
+    model_details = UTF8JSONField(default=dict, blank=True) # contains model training details
+    last_update = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = 'Validator'
@@ -73,74 +476,17 @@ class Validator(models.Model):
         return  self.name
 
     @property
-    def total_normal_text_count(self):
-        return self.normal_texts.count()
+    def total_text_normal_count(self):
+        return self.text_normals.count()
 
     @property
-    def total_normal_sentence_count(self):
-        return self.normal_sentences.count()
+    def total_word_normal_count(self):
+        return self.word_normals.count()
 
     @property
-    def total_normal_word_count(self):
-        return self.normal_words.count()
+    def total_text_tag_count(self):
+        return self.text_tags.count()
 
-    @property
-    def total_tagged_sentence_count(self):
-        return self.tagged_sentences.count()
-
-class Normalizer(models.Model):
-    name = models.SlugField(default='unknown-normalizer', unique=True)
-    created = models.DateTimeField(auto_now_add=True)
-    owner = models.CharField(max_length=100, default='undefined')
-    is_automatic = models.BooleanField(default=False, blank=True)
-    # model_type = models.CharField(max_length=15, choices=MODEL_TYPES, default=MANUAL)
-    last_update = models.DateTimeField(auto_now=True)
-    model_details = UTF8JSONField(default=dict, blank=True) # contains model training details
-
-    class Meta:
-        verbose_name = 'Normalizer'
-        verbose_name_plural = 'Normalizers'
-        ordering = ('-created',)
-    
-    def __str__(self):
-        return  self.name
-
-    @property
-    def total_normal_text_count(self):
-        return self.normal_texts.count()
-
-    @property
-    def total_valid_normal_text_count(self):
-        return self.normal_texts.filter(is_valid=True).count()
-
-    @property
-    def total_normal_sentence_count(self):
-        return self.normal_sentences.count()
-
-    @property
-    def total_valid_normal_sentence_count(self):
-        return self.normal_sentences.filter(is_valid=True).count()
-
-    @property
-    def total_normal_word_count(self):
-        return self.normal_words.count()
-
-    @property
-    def total_valid_normal_word_count(self):
-        return self.normal_words.filter(is_valid=True).count()
-
-
-    def train(self):
-        pass
-
-    def normalize(self, text):
-        normal_text_content = text.content
-        normal_text, created = NormalText.objects.update_or_create(
-            normalizer=self, text=text,
-            defaults={'content':normal_text_content},
-        )
-        logger.debug(f"> created : {created}")
-        return normal_text
 
 compile_patterns = lambda patterns: [(re.compile(pattern), repl) for pattern, repl in patterns]
 
@@ -164,23 +510,23 @@ class ReplacementNormalizer(Normalizer):
 
     def normalize(self, text):
         logger.info(f'>> RefinementRuleBasedNormalizer : \n{text}')
-        normal_text, created = NormalText.objects.get_or_create(
+        text_normal, created = TextNormal.objects.get_or_create(
             text=text, 
             normalizer=self
             )
-        normal_text.content = text.content.strip()
+        text_normal.content = text.content.strip()
         beg_ts = time.time()
         
         for pattern, replacement in self.replacement_patterns:
-            normal_text.content = pattern.sub(replacement, normal_text.content)
-            logger.info(f'> After {pattern} -> {replacement} : \n{normal_text.content}')
-        normal_text.content = normal_text.content.strip()
+            text_normal.content = pattern.sub(replacement, text_normal.content)
+            logger.info(f'> After {pattern} -> {replacement} : \n{text_normal.content}')
+        text_normal.content = text_normal.content.strip()
 
         end_ts = time.time()
         logger.info(f"> (Time)({end_ts - beg_ts:.6f})")
-        normal_text.save()
-        logger.info(f'{normal_text}')
-        return normal_text
+        text_normal.save()
+        logger.info(f'{text_normal}')
+        return text_normal
 
 class RefinementNormalizer(Normalizer):
     
@@ -408,297 +754,26 @@ class RefinementNormalizer(Normalizer):
 
     def normalize(self, text):
         logger.info(f'>> RefinementRuleBasedNormalizer : \n{text}')
-        normal_text, created = NormalText.objects.get_or_create(
+        text_normal, created = TextNormal.objects.get_or_create(
             text=text, 
             normalizer=self
             )
-        normal_text.content = text.content.strip()
+        text_normal.content = text.content.strip()
         beg_ts = time.time()
-        self.uniform_signs(normal_text)
-        self.remove_some_characters(normal_text)
-        self.refine_text(normal_text)
-        self.join_multipart_tokens(normal_text) # آرام کننده
-        self.fix_repetition_tokens(normal_text)
-        self.join_multipart_tokens(normal_text) # فرههههههههنگ سرا
-        self.fix_wrong_joined_undefined_tokens(normal_text) # آرامکننده کتابمن 
-        self.join_multipart_tokens(normal_text) # آرام کنندهخوبی
-        normal_text.content = normal_text.content.replace(' newline ','\n').strip()
+        self.uniform_signs(text_normal)
+        self.remove_some_characters(text_normal)
+        self.refine_text(text_normal)
+        self.join_multipart_tokens(text_normal) # آرام کننده
+        self.fix_repetition_tokens(text_normal)
+        self.join_multipart_tokens(text_normal) # فرههههههههنگ سرا
+        self.fix_wrong_joined_undefined_tokens(text_normal) # آرامکننده کتابمن 
+        self.join_multipart_tokens(text_normal) # آرام کنندهخوبی
+        text_normal.content = text_normal.content.replace(' newline ','\n').strip()
         end_ts = time.time()
         logger.info(f"> (Time)({end_ts - beg_ts:.6f})")
-        normal_text.save()
-        logger.info(f'{normal_text}')
-        return normal_text
-    
-class Text(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    created = models.DateTimeField(auto_now_add=True)
-    content = models.TextField()
-    normalizers = models.ManyToManyField(Normalizer, through='NormalText', related_name='texts', 
-                            related_query_name='text', blank=True, through_fields=('text', 'normalizer'),)
-    # is_normal = models.BooleanField(default=False, blank=True)
-    normalizers_sequence = ArrayField(models.CharField(max_length=200), blank=True, default=list)
-
-    class Meta:
-        verbose_name = 'Text'
-        verbose_name_plural = 'Texts'
-        ordering = ('-created',)
-
-    def __str__(self):
-        return f'{self.content[:120]}{" ..." if len(self.content) > 120 else ""}'
-
-class NormalText(Text):
-    validator = models.ForeignKey(Validator, on_delete=models.CASCADE, related_name='normal_texts', related_query_name='normal_text', blank=True, null=True)
-    is_valid = models.BooleanField(default=False, blank=True)
-    normalizer = models.ForeignKey(Normalizer, on_delete=models.CASCADE, related_name='normal_texts', related_query_name='normal_text')
-    text = models.ForeignKey(Text, on_delete=models.CASCADE, related_name='normal_texts', related_query_name='normal_text')
-
-    class Meta:
-        verbose_name = 'Normal Text'
-        verbose_name_plural = 'Normal Texts'
-        ordering = ('-created',)
-
-    def save(self, *args, **kwargs):
-        if self.text.normalizers_sequence:
-            if self.text.normalizers_sequence[-1] != self.normalizer.name:
-                self.normalizers_sequence = self.text.normalizers_sequence \
-                                                + self.normalizer.name
-        else:
-            self.normalizers_sequence = [self.normalizer.name]
-        self.is_valid = False
-        if self.normalizer:
-            if not self.normalizer.is_automatic:
-                self.is_valid = True
-                self.validator = cache.bitianist_validator
-        super(NormalText, self).save(*args, **kwargs)
-
-
-class Word(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    created = models.DateTimeField(auto_now_add=True)
-    content = models.CharField(max_length=200)
-    normalizers = models.ManyToManyField(Normalizer, through='NormalWord', related_name='words', 
-                            related_query_name='word', blank=True, through_fields=('word', 'normalizer'),)
-    # is_normal = models.BooleanField(default=False, blank=True)
-    normalizers_sequence = ArrayField(models.CharField(max_length=200), blank=True, default=list)
-
-    class Meta:
-        verbose_name = 'Word'
-        verbose_name_plural = 'Words'
-        ordering = ('-created',)
-
-    def __str__(self):
-        return f'{self.content[:120]}{" ..." if len(self.content) > 120 else ""}'
-
-class NormalWord(Word):
-    validator = models.ForeignKey(Validator, on_delete=models.CASCADE, related_name='normal_words', related_query_name='normal_word', blank=True, null=True)
-    is_valid = models.BooleanField(default=False, blank=True)
-    normalizer = models.ForeignKey(Normalizer, on_delete=models.CASCADE, related_name='normal_words', related_query_name='normal_word')
-    word = models.ForeignKey(Word, on_delete=models.CASCADE, related_name='normal_words', related_query_name='normal_word')
-
-    class Meta:
-        verbose_name = 'Normal Word'
-        verbose_name_plural = 'Normal Words'
-        ordering = ('-created',)
-
-    def save(self, *args, **kwargs):
-        if self.word.normalizers_sequence:
-            if self.word.normalizers_sequence[-1] != self.normalizer.name:
-                self.normalizers_sequence = self.word.normalizers_sequence \
-                                                + self.normalizer.name
-        else:
-            self.normalizers_sequence = [self.normalizer.name]
-        self.is_valid = False
-        if self.normalizer:
-            if not self.normalizer.is_automatic:
-                self.is_valid = True
-                self.validator = cache.bitianist_validator
-        super(NormalWord, self).save(*args, **kwargs)
-    
-    def __str__(self):
-        return f'{self.content[:120]}{" ..." if len(self.content) > 120 else ""}'
-
-
-
-def get_unknown_tag():
-    return {'name':'unk', 'persian':'نامشخص', 'color':'#FFFFFF', 'examples':[]}
-
-class TagSet(models.Model):
-    created = models.DateTimeField(auto_now_add=True)
-    name = models.SlugField(default='unknown-tag-set', unique=True)
-    unknown_tag = UTF8JSONField(blank=True, default=get_unknown_tag)
-
-    def __str__(self):  
-        return self.name
-
-    @property
-    def total_tagged_sentence_count(self):
-        return sum([tagger.total_tagged_sentence_count for tagger in self.taggers.all()])
-    
-    @property
-    def total_valid_tagged_sentence_count(self):
-        return sum([tagger.total_valid_tagged_sentence_count for tagger in self.taggers.all()])
-    
-    @property
-    def number_of_tags(self):
-        return self.tags.count()
-
-    @property
-    def number_of_taggers(self):
-        return self.taggers.count()
-
-    def add_to_unknown_tag_examples(self, token_content):
-        examples = self.unknown_tag['examples']
-        if (token_content not in examples 
-                and len(examples) < 15 ):
-            self.unknown_tag['examples'].append(token_content)
-            self.save(update_fields=['unknown_tag']) 
-
-    class Meta:
-        verbose_name = 'Tag Set'
-        verbose_name_plural = 'Tag Sets'
-        ordering = ('-created',)
-
-class Tag(models.Model):
-    created = models.DateTimeField(auto_now_add=True)
-    name = models.CharField(max_length=15, default='unk')
-    persian = models.CharField(max_length=30, default='نامشخص')
-    color = ColorField(default='#FF0000')
-    tag_set = models.ForeignKey(to=TagSet, on_delete=models.DO_NOTHING, related_name='tags', related_query_name='tag')
-    examples = ArrayField(models.CharField(max_length=30), blank=True, default=list)
-
-    def __str__(self):  
-        return self.name
-
-    class Meta:
-        verbose_name = 'Tag'
-        verbose_name_plural = 'Tags'
-        ordering = ('-created',)
-        unique_together = (("name", "tag_set"), ("persian", "tag_set"),)
-
-    def add_to_examples(self, token_content):
-        if (token_content not in self.examples 
-                and len(self.examples) < 15 ):
-            self.examples.append(token_content)
-            self.save(update_fields=['examples']) 
-
-class Tagger(models.Model):
-    name = models.SlugField(default='unknown-tagger', unique=True)
-    created = models.DateTimeField(auto_now_add=True)
-    owner = models.CharField(max_length=100, default='undefined')
-    is_automatic = models.BooleanField(default=False, blank=True)
-    # model_type = models.CharField(max_length=15, choices=MODEL_TYPES, default=MANUAL)
-    last_update = models.DateTimeField(auto_now=True)
-    model_details = UTF8JSONField(default=dict, blank=True) # contains model training details
-    tag_set = models.ForeignKey(to=TagSet, on_delete=models.DO_NOTHING, related_name='taggers', related_query_name='tagger')
-
-    class Meta:
-        verbose_name = 'Tagger'
-        verbose_name_plural = 'Taggers'
-        ordering = ('-created',)
-    
-    @property
-    def total_tagged_sentence_count(self):
-        return self.tagged_sentences.count()
-    
-    @property
-    def total_valid_tagged_sentence_count(self):
-        return self.tagged_sentences.filter(is_valid=True).count()
-    
-    def __str__(self):
-        return self.name
-
-    def train(self):
-        num_epochs = 150
-        logger.info(f'Model is going to train for {num_epochs} epochs.')
-        seq2seq_model.train(False, num_epochs=num_epochs)
-
-    
-    def tag_sentence(self, sentence):
-
-        tagged_sentence = TaggedSentence.objects.get_or_create(
-                tagger=self,
-                sentence=sentence,
-        )
-
-    def tag(self, text):
-        if text.sentences.exists():
-            logger.debug(f'> sentence was exists')
-        else:
-            text.create_sentences()
-
-        for sentence in text.sentences:
-            self.tag_sentence(sentence)
-            
-            tagged_sentence.split_to_tokens()
-
-        sentence_tokens = [
-            ("خیلی", "A"),
-            ("افتضاح", "A"),
-            ("است", "V"),
-            (".", "O")
-        ]
-        sentence_tokens = [
-            {
-                'content':token, 
-                'tag':
-                {
-                    'name': tag
-                }
-            } for token, tag in sentence_tokens]
-        logger.info(f'sentence_tokens : \n\n{sentence_tokens}\n')
-
-        obj, created = TaggedSentence.objects.update_or_create(
-            tagger=self, sentence=sentence,
-            defaults={'tokens': sentence_tokens},
-        )
-        logger.debug(f"> created : {created}")
-
-        # TaggedSentence.objects.create(
-        #     tagger=self,
-        #     sentence=sentence,
-        #     tokens=sentence_tokens
-        # )
-        return text
-
-    def infpost(self):
-        try:
-            logger.info(f'> Informal : {self.content}')
-            sentence_contents, token_tags = nltk_taggers_model.tag_text(self.content)
-            logger.info(f'> sentence_contents : {sentence_contents}')
-            logger.info(f'> token_tags : {token_tags}')
-            sentences, tokens = [], []
-            current_sentence, current_tag, current_token = None, None, None
-            for i, sentence_content in enumerate(sentence_contents):
-                print(f'> sentence_contents[{i}] : {sentence_content}')
-                current_sentence = Sentence(content=sentence_content)
-                print(f'> current_sentence : {current_sentence} {type(current_sentence)}')
-                tokens = []
-                for token_tag in token_tags[i]:
-                    print(f'> token_tag : {token_tag}')
-                    print(f'> token_tag[0] : {token_tag[0]}')
-                    print(f'> token_tag[1] : {token_tag[1]}')
-                    current_tag = Tag.objects.get(name=token_tag[1])
-                    logger.info(f'> current_tag : {current_tag}')
-                    current_token = Token(content=token_tag[0], tag=current_tag)
-                    current_token.save()
-                    tokens.append(current_token)
-                    logger.info(f'> current_token : {current_token}')
-
-                current_sentence.tokens = tokens
-                current_sentence.save()
-                logger.info(f'> current_sentence.tokens : {current_sentence.tokens}')
-                sentences.append(current_sentence)
-
-            self.sentences = sentences
-            logger.info(f'> self.sentences : {self.sentences}')
-            Text.objects.update_or_create(
-                content=self.content, 
-                defaults={'sentences': self.sentences},
-                )
-            # self.save()
-            logger.info(f'> Text : {self}')
-        except Exception as ex:
-            logger.exception(ex)
+        text_normal.save()
+        logger.info(f'{text_normal}')
+        return text_normal
 
 class NLTKTagger(Tagger):
     
@@ -811,121 +886,7 @@ class NLTKTagger(Tagger):
         # )
         # return text
 
-class Sentence(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    content = models.TextField()
-    created = models.DateTimeField(auto_now_add=True)
-    taggers = models.ManyToManyField(Tagger, through='TaggedSentence', related_name='sentences', related_query_name='sentence', blank=True)
-    text = models.ForeignKey(to=Text, on_delete=models.SET_NULL, related_name='sentences', related_query_name='sentence', blank=True, null=True)
-    order = models.IntegerField(default=0, blank=True)
-    normalizers = models.ManyToManyField(Normalizer, through='NormalSentence', related_name='sentences', 
-                            related_query_name='sentence', blank=True, through_fields=('sentence', 'normalizer'),)
-    # is_normal = models.BooleanField(default=False, blank=True)
-    normalizers_sequence = ArrayField(models.CharField(max_length=200), blank=True, default=list)
 
-    class Meta:
-        verbose_name = 'Sentence'
-        verbose_name_plural = 'Sentences'
-        ordering = ('order', '-created')
-
-    def __str__(self):
-        rep = f'{self.content[:200]}{" ..." if len(self.content) > 200 else ""}'
-        return rep
-
-class NormalSentence(Sentence):
-    validator = models.ForeignKey(Validator, on_delete=models.CASCADE, related_name='normal_sentences', related_query_name='normal_sentence', blank=True, null=True)
-    is_valid = models.BooleanField(default=False, blank=True)
-    normalizer = models.ForeignKey(Normalizer, on_delete=models.CASCADE, related_name='normal_sentences', related_query_name='normal_sentence')
-    sentence = models.ForeignKey(Sentence, on_delete=models.CASCADE, related_name='normal_sentences', related_query_name='normal_sentence')
-
-    class Meta:
-        verbose_name = 'Normal Sentence'
-        verbose_name_plural = 'Normal Sentences'
-        ordering = ('-created',)
-
-    def save(self, *args, **kwargs):
-        if self.sentence.normalizers_sequence:
-            if self.sentence.normalizers_sequence[-1] != self.normalizer.name:
-                self.normalizers_sequence = self.sentence.normalizers_sequence \
-                                                + self.normalizer.name
-        else:
-            self.normalizers_sequence = [self.normalizer.name]
-        self.is_valid = False
-        if self.normalizer:
-            if not self.normalizer.is_automatic:
-                self.is_valid = True
-                self.validator = cache.bitianist_validator
-        super(NormalSentence, self).save(*args, **kwargs)
-
-class TaggedSentence(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    created = models.DateTimeField(auto_now_add=True)
-    tagger = models.ForeignKey(Tagger, on_delete=models.CASCADE, related_name='tagged_sentences', related_query_name='tagged_sentence')
-    sentence = models.ForeignKey(Sentence, on_delete=models.CASCADE, related_name='tagged_sentences', related_query_name='tagged_sentence')
-    tokens = UTF8JSONField(default=list) # contains list of token with it's tag
-    validator = models.ForeignKey(Validator, on_delete=models.CASCADE, related_name='tagged_sentences', related_query_name='tagged_sentence', blank=True, null=True)
-    is_valid = models.BooleanField(default=False, blank=True)
-    
-    class Meta:
-        verbose_name = 'Tagged Sentence'
-        verbose_name_plural = 'Tagged Sentences'
-        ordering = ('-created',)
-
-    def is_tokens_valid(self):
-        is_valid = True
-        if not self.tokens:
-            is_valid = False
-            return is_valid
-        for token in self.tokens:
-            if 'is_valid' not in token:
-                token['is_valid'] = False
-            is_valid = is_valid and token['is_valid']
-            if not is_valid:
-                break
-        return is_valid
-    
-    def check_validation(self):
-        self.is_valid = False
-        if self.tagger:
-            if not self.tagger.is_automatic:
-                self.is_valid = True
-                for token in self.tokens:
-                    token['is_valid'] = True
-                    token['validator'] = cache.bitianist_validator.name
-            else:
-                self.is_valid = self.is_tokens_valid()
-
-    def set_tag_details(self):
-        tag_details_dictionary = {tag.name:tag for tag in self.tagger.tag_set.tags.all()}
-        referenced_tag = None
-        for token in self.tokens:
-            if ('tag' not in token 
-                or 'name' not in token['tag'] 
-                or token['tag']['name'] not in tag_details_dictionary):
-                
-                token['tag'] = self.tagger.tag_set.unknown_tag
-                self.tagger.tag_set.add_to_unknown_tag_examples(token['content'])
-                continue
-
-            referenced_tag = tag_details_dictionary[token['tag']['name']]
-            referenced_tag.add_to_examples(token['content'])
-            token['tag']['persian'] = referenced_tag.persian
-            token['tag']['color'] = referenced_tag.color
-
-    def save(self, *args, **kwargs):
-        self.check_validation()
-        self.set_tag_details()
-        super(TaggedSentence, self).save(*args, **kwargs)
-
-    def __unicode__(self):
-        rep = ""
-        if self.tokens:
-            for token in self.tokens:
-                rep += f'{token["content"]}_{token["tag"]["name"]} '
-        return rep
-    
-    def split_to_tokens(self):
-        pass
 
 # class TranslationCharacter(models.Model):
 #     created = models.DateTimeField(auto_now_add=True)
@@ -972,26 +933,74 @@ def init():
     global logger
     logger = logging.getLogger(__name__)
 
-    # logger.info(f'> count of normal text list : {NormalText.objects.count()}')
+    # logger.info(f'> count of normal text list : {TextNormal.objects.count()}')
     # logger.info(f'> count of text list : {Text.objects.count()}')
 
-    # same_text_count = NormalText.objects.order_by('text_id').distinct('text').count()
+    # same_text_count = TextNormal.objects.order_by('text_id').distinct('text').count()
     # logger.info(f'> same_text_count : {same_text_count}')
     # logger.info(f'> same_text_count : {same_text_count.count()}')
 
-    # same_text = Text.objects.values('normal_text')
-    # same_text = same_text.annotate(same_text_count=Count('normal_text'))
-    # same_text = Text.objects.annotate(Count('normal_text'))
-    # same_text = same_text.filter(normal_text__count__gt=1)
+    # same_text = Text.objects.values('text_normal')
+    # same_text = same_text.annotate(same_text_count=Count('text_normal'))
+    # same_text = Text.objects.annotate(Count('text_normal'))
+    # same_text = same_text.filter(text_normal__count__gt=1)
     # logger.info(f'> same_text : {same_text.values("id", "content")}')
     
-    # empty_text = NormalText.objects.filter(text__exact=None)
+    # empty_text = TextNormal.objects.filter(text__exact=None)
     # logger.info(f'> empty_text : {empty_text}')
     
     # text = Text.objects.get(id='eb3bc179-7a8c-4a5e-b6bc-9556983fd45c')
     # logger.info(f'> text : {text}') 
     # for sentence in text.sentences.all():
     #     logger.info(f'> sentence : {sentence.content}') 
+
+
+
+# class Sentence(models.Model):
+#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+#     content = models.TextField()
+#     created = models.DateTimeField(auto_now_add=True)
+#     taggers = models.ManyToManyField(Tagger, through='TaggedSentence', related_name='sentences', related_query_name='sentence', blank=True)
+#     text = models.ForeignKey(to=Text, on_delete=models.SET_NULL, related_name='sentences', related_query_name='sentence', blank=True, null=True)
+#     order = models.IntegerField(default=0, blank=True)
+#     normalizers = models.ManyToManyField(Normalizer, through='NormalSentence', related_name='sentences', 
+#                             related_query_name='sentence', blank=True, through_fields=('sentence', 'normalizer'),)
+#     # is_normal = models.BooleanField(default=False, blank=True)
+#     normalizers_sequence = ArrayField(models.CharField(max_length=200), blank=True, default=list)
+
+#     class Meta:
+#         verbose_name = 'Sentence'
+#         verbose_name_plural = 'Sentences'
+#         ordering = ('order', '-created')
+
+#     def __str__(self):
+#         rep = f'{self.content[:200]}{" ..." if len(self.content) > 200 else ""}'
+#         return rep
+
+# class NormalSentence(Sentence):
+#     validator = models.ForeignKey(Validator, on_delete=models.CASCADE, related_name='normal_sentences', related_query_name='normal_sentence', blank=True, null=True)
+#     is_valid = models.BooleanField(default=False, blank=True)
+#     normalizer = models.ForeignKey(Normalizer, on_delete=models.CASCADE, related_name='normal_sentences', related_query_name='normal_sentence')
+#     sentence = models.ForeignKey(Sentence, on_delete=models.CASCADE, related_name='normal_sentences', related_query_name='normal_sentence')
+
+#     class Meta:
+#         verbose_name = 'Normal Sentence'
+#         verbose_name_plural = 'Normal Sentences'
+#         ordering = ('-created',)
+
+#     def save(self, *args, **kwargs):
+#         if self.sentence.normalizers_sequence:
+#             if self.sentence.normalizers_sequence[-1] != self.normalizer.name:
+#                 self.normalizers_sequence = self.sentence.normalizers_sequence \
+#                                                 + self.normalizer.name
+#         else:
+#             self.normalizers_sequence = [self.normalizer.name]
+#         self.is_valid = False
+#         if self.normalizer:
+#                 self.is_valid = True
+#                 self.validator = cache.bitianist_validator
+#         super(NormalSentence, self).save(*args, **kwargs)
+
 
 """
 from mohaverekhan.models import Text, Sentence, Tag, Token

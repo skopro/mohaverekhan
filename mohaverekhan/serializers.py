@@ -1,31 +1,66 @@
 from rest_framework import serializers
 from rest_framework_recursive.fields import RecursiveField
-from .models import (Validator, Normalizer, Text, NormalText,
-            Word, NormalWord,
-            TagSet, Tag, Tagger,
-            Sentence, NormalSentence, TaggedSentence)
+from .models import (
+            Word, WordNormal,
+            Text, TextNormal, TextTag,
+            TagSet, Tag,
+            Normalizer, Tokenizer,
+            Tagger, Validator
+            )
 import logging
 
 logger = None
 
 
+class NormalizerSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Normalizer
+        fields = ('id', 'name', 'owner', 'is_automatic', 'created', 
+            'last_update', 'model_details',
+            'total_text_normal_count', 
+            'total_valid_text_normal_count',
+            'total_word_normal_count',
+            'total_valid_word_normal_count',
+            )
+        read_only_fields = (
+            'total_text_normal_count', 
+            'total_valid_text_normal_count',
+            'total_word_normal_count',
+            'total_valid_word_normal_count',
+            )
+
+
+
+class TaggerSerializer(serializers.ModelSerializer):
+    tag_set = serializers.SlugRelatedField(slug_field='name', 
+            queryset=TagSet.objects.all())
+
+    class Meta:
+        model = Tagger
+        fields = ('id', 'name', 'owner', 'is_automatic', 'created', 
+                'tag_set', 'last_update', 'model_details',
+                'total_text_tag_count', 
+                'total_valid_text_tag_count', )
+        read_only_fields = ('total_text_tag_count',
+                 'total_valid_text_tag_count')
+
+
 class ValidatorSerializer(serializers.ModelSerializer):
-    # normal_text = NormalTextSerializer(required=False)
-    # normal_texts = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Validator
-        fields = ('id', 'name', 'created', 
-            'total_normal_text_count', 
-            'total_normal_sentence_count',
-            'total_normal_word_count',
-            'total_tagged_sentence_count'
+        fields = ('id', 'name', 'owner', 'is_automatic', 'created', 
+            'last_update', 'model_details',
+            'total_text_normal_count', 
+            'total_word_normal_count',
+            'total_text_tag_count',
             )
         read_only_fields = (
-            'total_normal_text_count', 
-            'total_normal_sentence_count',
-            'total_normal_word_count',
-            'total_tagged_sentence_count')
+            'total_text_normal_count', 
+            'total_word_normal_count',
+            'total_text_tag_count',
+            )
 
 
 class TagInTagSetSerializer(serializers.ModelSerializer):
@@ -33,23 +68,25 @@ class TagInTagSetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ('id', 'name', 'persian', 
-            'color')
+            'color', 'examples')
+        read_only_fields = ('examples',
+                    )
 
 class TagSetSerializer(serializers.ModelSerializer):
     tags = TagInTagSetSerializer(many=True, required=False)
 
     class Meta:
         model = TagSet
-        fields = ('id', 'name', 'created', 
+        fields = ('id', 'name', 'created', 'last_update',
             'number_of_tags', 'number_of_taggers',
-            'total_tagged_sentence_count',
-            'total_valid_tagged_sentence_count',
-            'unknown_tag', 'tags')
+            'total_text_tag_count',
+            'total_valid_text_tag_count',
+            'tags')
         read_only_fields = ('number_of_tags',
             'number_of_taggers',
-            'total_tagged_sentence_count',
-            'total_valid_tagged_sentence_count',
-                    )
+            'total_text_tag_count',
+            'total_valid_text_tag_count',
+            )
     
     def create(self, validated_data):
         tags_data = validated_data.pop('tags', None)
@@ -64,6 +101,8 @@ class TagSetSerializer(serializers.ModelSerializer):
 
         return tag_set
 
+
+
 class TagSerializer(serializers.ModelSerializer):
     tag_set = serializers.SlugRelatedField(slug_field='name', 
             queryset=TagSet.objects.all())
@@ -76,45 +115,158 @@ class TagSerializer(serializers.ModelSerializer):
         read_only_fields = ('examples',
                     )
 
-class NormalizerSerializer(serializers.ModelSerializer):
-    # normal_text = NormalTextSerializer(required=False)
-    # normal_texts = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
+class TextNormalInTextSerializer(serializers.ModelSerializer):
+    normalizer = serializers.SlugRelatedField(slug_field='name', 
+            read_only=True)
+    validator = serializers.SlugRelatedField(slug_field='name', 
+            read_only=True)
 
     class Meta:
-        model = Normalizer
-        fields = ('id', 'name', 'owner', 'is_automatic', 'created', 
-            'last_update', 'model_details',
-            'total_normal_text_count', 
-            'total_valid_normal_text_count',
-            'total_normal_sentence_count',
-            'total_valid_normal_sentence_count',
-            'total_normal_word_count',
-            'total_valid_normal_word_count',
-            )
-        read_only_fields = (
-                    'total_normal_text_count', 
-                    'total_valid_normal_text_count',
-                    'total_normal_sentence_count',
-                    'total_valid_normal_sentence_count',
-                    'total_normal_word_count',
-                    'total_valid_normal_word_count', 
-                    'texts', 
-                    'normal_texts')
+        model = TextNormal
+        fields = ('id', 'created', 'content', 'normalizer', 'is_valid', 
+                    'validator')
+        read_only_fields = ('is_valid',)       
 
-class TaggerSerializer(serializers.ModelSerializer):
-    # tagged_sentences = serializers.PrimaryKeyRelatedField(
-    #         many=True, read_only=True)
-    tag_set = serializers.SlugRelatedField(slug_field='name', 
-            queryset=TagSet.objects.all())
+class TextTagInTextSerializer(serializers.ModelSerializer):
+    tokenizer = serializers.SlugRelatedField(slug_field='name', 
+            queryset=Tokenizer.objects.all())
+    tagger = serializers.SlugRelatedField(slug_field='name', 
+            queryset=Tagger.objects.all())
+    validator = serializers.SlugRelatedField(slug_field='name', 
+            read_only=True)
 
     class Meta:
-        model = Tagger
-        fields = ('id', 'name', 'owner', 'is_automatic', 'created', 
-                'tag_set', 'last_update', 'model_details',
-                'total_tagged_sentence_count', 
-                'total_valid_tagged_sentence_count', )
-        read_only_fields = ('total_tagged_sentence_count',
-                 'total_valid_tagged_sentence_count')
+        model = TextTag
+        fields = ('id', 'created', 'tokenizer', 'tagger', 
+            'tokens', 'is_valid', 'validator')
+        read_only_fields = ('is_valid',)    
+
+
+class TextSerializer(serializers.ModelSerializer):
+    text_normals = TextNormalInTextSerializer()
+    text_tags = TextNormalInTextSerializer()
+    normalizers = serializers.SlugRelatedField(many=True, slug_field='name', 
+                                read_only=True)
+
+    class Meta:
+        model = Text
+        fields = ('id', 'created', 'content', 'normalizers_sequence',
+            'normalizers', 'text_normals', 'text_tags')
+        read_only_fields = ('normalizers_sequence', 'normalizers', 
+                'text_normals', 'text_tags')
+
+class TextInTextNormalOrTextTag(serializers.ModelSerializer):
+
+    class Meta:
+        model = Text
+        fields = ('id', 'created', 'content', 'normalizers_sequence')
+        read_only_fields = ('normalizers_sequence',)
+
+class TextNormalSerializer(serializers.ModelSerializer):
+    normalizer = serializers.SlugRelatedField(slug_field='name', 
+        queryset=Normalizer.objects.all())
+    text = TextInTextNormalOrTextTag()
+    validator = serializers.SlugRelatedField(slug_field='name', 
+            read_only=True)
+
+    class Meta:
+        model = TextNormal
+        fields = ('id', 'created', 'content', 
+            'normalizer', 'text', 
+            'is_valid', 'validator',)
+        read_only_fields = ('is_valid',)
+
+    def create(self, validated_data):
+        text_data = validated_data.pop('text')
+        text = None
+        text_id = text_data.pop('id', None)
+        if text_id:
+            text = Text.objects.get(id=text_id)
+        else:
+            text = Text.objects.create(**text_data)
+        text_normal = TextNormal.objects.create(text=text, **validated_data)
+        return text_normal
+
+
+class TextTagSerializer(serializers.ModelSerializer):
+    tokenizer = serializers.SlugRelatedField(slug_field='name', 
+            queryset=Tokenizer.objects.all())
+    tagger = serializers.SlugRelatedField(slug_field='name', 
+            queryset=Tagger.objects.all(), required=False)
+    text = TextInTextNormalOrTextTag()
+    validator = serializers.SlugRelatedField(slug_field='name', 
+            read_only=True)
+        
+    class Meta:
+        model = TextTag
+        fields = ('id', 'created', 
+            'tokenizer', 'tagger', 'text', 
+            'tokens', 'is_valid', 'validator')
+        read_only_fields = ('is_valid',)
+    
+    def create(self, validated_data):
+        text_data = validated_data.pop('text')
+        text = None
+        text_id = text_data.pop('id', None)
+        if text_id:
+            text = Text.objects.get(id=text_id)
+        else:
+            text = Text.objects.create(**text_data)
+        tagged_text = TaggedText.objects.create(text=text, **validated_data)
+        return tagged_text
+
+
+
+
+
+class WordSerializer(serializers.ModelSerializer):
+    normalizers = serializers.SlugRelatedField(many=True, slug_field='name', 
+                                read_only=True)
+
+    class Meta:
+        model = Word
+        fields = ('id', 'created', 'normalizers_sequence', 'content', 
+            'normalizers')
+        read_only_fields = ('normalizers_sequence', 'normalizers', 
+                'word_normals')
+
+    # def to_representation(self, instance):
+    #     instance.sentences.set(instance.sentences.order_by('order'))
+    #     data = super(WordSerializer, self).to_representation(instance)
+    #     return data
+
+class WordNormalSerializer(serializers.ModelSerializer):
+    normalizer = serializers.SlugRelatedField(slug_field='name', 
+        queryset=Normalizer.objects.all())
+    word = WordSerializer()
+    validator = serializers.SlugRelatedField(slug_field='name', 
+            read_only=True)
+
+    class Meta:
+        model = WordNormal
+        fields = ('id', 'created', 'content', 
+            'validator', 'is_valid', 'normalizer', 'word')
+        read_only_fields = ('validator', 'is_valid')
+
+    def create(self, validated_data):
+        word_data = validated_data.pop('word')
+        word = None
+        word_id = word_data.pop('id', None)
+        if word_id:
+            word = Word.objects.get(id=word_id)
+        else:
+            word = Word.objects.create(**word_data)
+        word_normal = WordNormal.objects.create(word=word, **validated_data)
+        return word_normal
+
+
+
+
+
+
+
+
 
 
 class SentenceInTaggedSentenceSerializer(serializers.Serializer):
@@ -149,17 +301,6 @@ class TaggedSentenceSerializer(serializers.ModelSerializer):
         tagged_sentence = TaggedSentence.objects.create(sentence=sentence, **validated_data)
         return tagged_sentence
 
-class TaggedSentenceInSentenceSerializer(serializers.ModelSerializer):
-    tagger = serializers.SlugRelatedField(slug_field='name', 
-            queryset=Tagger.objects.all())
-    validator = serializers.SlugRelatedField(slug_field='name', 
-            read_only=True)
-
-    class Meta:
-        model = TaggedSentence
-        fields = ('id', 'created', 'tagger', 'sentence', 
-            'tokens', 'validator', 'is_valid')
-        read_only_fields = ('validator', 'is_valid',)       
 
 class TextInSentenceSerializer(serializers.ModelSerializer):
 
@@ -228,89 +369,17 @@ class SentenceInTextSerializer(serializers.ModelSerializer):
 
 
 
-class TextSerializer(serializers.ModelSerializer):
-    sentences = SentenceInTextSerializer(many=True, required=False)
-    normalizers = serializers.SlugRelatedField(many=True, slug_field='name', 
-                                read_only=True)
 
-    class Meta:
-        model = Text
-        fields = ('id', 'created', 'normalizers_sequence', 'content', 
-            'normalizers', 'sentences')
-        read_only_fields = ('normalizers_sequence', 'normalizers', 
-                'normal_texts', 'sentences')
+
+
+
+
+
 
     # def to_representation(self, instance):
     #     instance.sentences.set(instance.sentences.order_by('order'))
     #     data = super(TextSerializer, self).to_representation(instance)
     #     return data
-
-class NormalTextSerializer(serializers.ModelSerializer):
-    normalizer = serializers.SlugRelatedField(slug_field='name', 
-        queryset=Normalizer.objects.all())
-    text = TextSerializer()
-    sentences = SentenceSerializer(many=True, required=False)
-    validator = serializers.SlugRelatedField(slug_field='name', 
-            read_only=True)
-
-    class Meta:
-        model = NormalText
-        fields = ('id', 'created', 'content', 
-            'normalizer', 'text', 
-            'validator', 'is_valid', 'sentences')
-        read_only_fields = ('validator', 'is_valid', 'sentences')
-
-    def create(self, validated_data):
-        text_data = validated_data.pop('text')
-        text = None
-        text_id = text_data.pop('id', None)
-        if text_id:
-            text = Text.objects.get(id=text_id)
-        else:
-            text = Text.objects.create(**text_data)
-        normal_text = NormalText.objects.create(text=text, **validated_data)
-        return normal_text
-
-class WordSerializer(serializers.ModelSerializer):
-    normalizers = serializers.SlugRelatedField(many=True, slug_field='name', 
-                                read_only=True)
-
-    class Meta:
-        model = Word
-        fields = ('id', 'created', 'normalizers_sequence', 'content', 
-            'normalizers')
-        read_only_fields = ('normalizers_sequence', 'normalizers', 
-                'normal_words')
-
-    # def to_representation(self, instance):
-    #     instance.sentences.set(instance.sentences.order_by('order'))
-    #     data = super(WordSerializer, self).to_representation(instance)
-    #     return data
-
-class NormalWordSerializer(serializers.ModelSerializer):
-    normalizer = serializers.SlugRelatedField(slug_field='name', 
-        queryset=Normalizer.objects.all())
-    word = WordSerializer()
-    validator = serializers.SlugRelatedField(slug_field='name', 
-            read_only=True)
-
-    class Meta:
-        model = NormalWord
-        fields = ('id', 'created', 'content', 
-            'validator', 'is_valid', 'normalizer', 'word')
-        read_only_fields = ('validator', 'is_valid')
-
-    def create(self, validated_data):
-        word_data = validated_data.pop('word')
-        word = None
-        word_id = word_data.pop('id', None)
-        if word_id:
-            word = Word.objects.get(id=word_id)
-        else:
-            word = Word.objects.create(**word_data)
-        normal_word = NormalWord.objects.create(word=word, **validated_data)
-        return normal_word
-
 
 
 
