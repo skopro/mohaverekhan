@@ -22,5 +22,5 @@ class MohaverekhanConfig(AppConfig):
         # tokenizer.init()
         # sentence_splitter.init()
         
-        from mohaverekhan.machine_learning_models.nltk_taggers import model as nltk_taggers_model
-        nltk_taggers_model.init()
+        # from mohaverekhan.machine_learning_models.nltk_taggers import model as nltk_taggers_model
+        # nltk_taggers_model.init()

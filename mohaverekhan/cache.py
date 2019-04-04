@@ -14,14 +14,14 @@ repetition_word_set = set()
 
 def cache_tokens():
     # tokens = set()
-    TaggedSentence = apps.get_model(app_label='mohaverekhan', model_name='TaggedSentence')
+    TextTag = apps.get_model(app_label='mohaverekhan', model_name='TextTag')
     # tokens = TaggedSentence.objects.only('tokens__content')
     token_content, tag_name = '', ''
-    sentence_tokens_list = TaggedSentence.objects.filter(is_valid=True).values_list('tokens', flat=True)
-    if sentence_tokens_list.count() == 0:
+    text_tokens_list = TextTag.objects.filter(is_valid=True).values_list('tokens', flat=True)
+    if text_tokens_list.count() == 0:
         return
-    for sentence_tokens in sentence_tokens_list:
-        for token in sentence_tokens:
+    for text_tokens in text_tokens_list:
+        for token in text_tokens:
             token_content = token['content']
             tag_name = token['tag']['name']
             if debug_pattern.search(token_content):
@@ -34,8 +34,9 @@ def cache_tokens():
     for token in token_set:
         if repetition_pattern.search(token):
             repetition_word_set.add(token)
-    logger.info(f'> len(repetition_word_set) : {len(repetition_word_set)}')
-    logger.info(f'> repetition_word_set samples: {set(random.sample(repetition_word_set, 100))}')
+    if len(repetition_word_set) != 0:
+        logger.info(f'> len(repetition_word_set) : {len(repetition_word_set)}')
+        logger.info(f'> repetition_word_set samples: {set(random.sample(repetition_word_set, min(len(repetition_word_set), 100)))}')
 
 
     # logger.info(f'> debug_pattern : {debug_pattern}')
@@ -50,7 +51,11 @@ bitianist_validator = None
 def cache_bitianist_validator():
     global bitianist_validator
     Validator = apps.get_model(app_label='mohaverekhan', model_name='Validator')
-    bitianist_validator = Validator.objects.filter(name='bitianist-validator').first()
+    q = Validator.objects.filter(name='bitianist-validator')
+    if q:
+        bitianist_validator = q.first()
+    else:
+        logger.error("> There isn't bitianist-validator!")
 
 
 def init():

@@ -17,6 +17,7 @@ import datetime
 import random
 import re
 from mohaverekhan import cache
+from django.utils.html import format_html
 
 logger = None
 
@@ -109,6 +110,14 @@ class Text(models.Model):
     def __str__(self):
         return f'{self.content[:120]}{" ..." if len(self.content) > 120 else ""}'
 
+    @property
+    def total_text_tag_count(self):
+        return self.text_tags.count()
+    
+    @property
+    def total_text_normal_count(self):
+        return self.text_normals.count()
+
 class TextNormal(Text):
     normalizer = models.ForeignKey('Normalizer', on_delete=models.CASCADE, related_name='text_normals', related_query_name='text_normal')
     text = models.ForeignKey('Text', on_delete=models.CASCADE, related_name='text_normals', related_query_name='text_normal')
@@ -149,25 +158,47 @@ class TextTag(models.Model):
     is_valid = models.BooleanField(default=None, blank=True, null=True)
     validator = models.ForeignKey('Validator', on_delete=models.CASCADE, related_name='text_tags', related_query_name='text_tag', 
                                         blank=True, null=True)
-    
+
     class Meta:
         verbose_name = 'Text Tag'
         verbose_name_plural = 'Text Tags'
         ordering = ('-created',)
 
-    # def is_tokens_valid(self):
-    #     is_valid = True
-    #     if not self.tokens:
-    #         is_valid = False
-    #         return is_valid
-    #     for token in self.tokens:
-    #         if 'is_valid' not in token:
-    #             token['is_valid'] = False
-    #         is_valid = is_valid and token['is_valid']
-    #         if not is_valid:
-    #             break
-    #     return is_valid
-    
+    @property
+    def tags_html(self):
+        html = format_html('')
+        if self.tokens:
+            for token in self.tokens:
+                if 'tag' in token:
+                    if token["tag"]["name"] == '\n':
+                        html += format_html(f'<br />')
+                    else:
+                        # html += format_html(f'<div>hello</div>')
+                        html += format_html('''
+<div style="color:{0};display: inline-block;">
+    {1}_{2}&nbsp;&nbsp;&nbsp;
+</div>
+                        ''', token["tag"]["color"], token["content"], token["tag"]["name"])
+
+        html = format_html('''
+            <div style="background-color: #44444e !important;direction: rtl !important;text-align: right;padding: 0.5vh 1.0vw 0.5vh 1.0vw;">
+                {}
+            </div>
+            ''', html)               
+        return html
+   
+    # @property
+    # def tags_html(self):
+    #     html = ""
+    #     if self.tokens:
+    #         for token in self.tokens:
+    #             if 'tag' in token:
+    #                 if token["tag"]["name"] == '\n':
+    #                     html += '<br />'
+    #                 else:
+    #                     html += f'''<div>aaa</div>'''
+    #     return format_html(f'''<div>aaa</div>''')
+
     def check_validation(self):
         if self.tagger.name in ('bijankhan-tagger', 'bitianist-tagger'):
             self.is_valid = True
@@ -200,6 +231,19 @@ class TextTag(models.Model):
                 rep += f'{token["content"]}_{token["tag"]["name"]} '
         return rep
 
+ # def is_tokens_valid(self):
+    #     is_valid = True
+    #     if not self.tokens:
+    #         is_valid = False
+    #         return is_valid
+    #     for token in self.tokens:
+    #         if 'is_valid' not in token:
+    #             token['is_valid'] = False
+    #         is_valid = is_valid and token['is_valid']
+    #         if not is_valid:
+    #             break
+    #     return is_valid
+    
 # def get_unknown_tag():
 #     return {'name':'unk', 'persian':'نامشخص', 'color':'#FFFFFF', 'examples':[]}
 
@@ -259,24 +303,55 @@ class Tag(models.Model):
 
     @property
     def examples(self):
-        text_tag_tokens = TextTag.objects.filter(tagger__tag_set=tag_set, is_valid=True, \
+        examples = set()
+        text_tag_tokens = TextTag.objects.filter(tagger__tag_set=self.tag_set, is_valid=True, \
             tokens__tag__contains={'name': self.name}).values_list('tokens', flat=True)[:300]
-        examples = []
+        if not text_tag_tokens:
+            return list(examples)
         
         text_tag_tokens = random.sample(text_tag_tokens, min(len(text_tag_tokens), 20))
         for text_tag_token in text_tag_tokens:
             if text_tag_token['tag']['name'] == self.name:
-                examples.append(text_tag_token['content'])
+                examples.add(text_tag_token['content'])
                 if len(examples) >= 20:
                     break
 
-        return examples
+        return list(examples)
 
     # def add_to_examples(self, token_content):
     #     if (token_content not in self.examples 
     #             and len(self.examples) < 15 ):
     #         self.examples.append(token_content)
     #         self.save(update_fields=['examples']) 
+
+class Validator(models.Model):
+    name = models.SlugField(default='unknown-validator', unique=True)
+    created = models.DateTimeField(auto_now_add=True)
+    owner = models.CharField(max_length=100, default='undefined')
+    # is_automatic = models.BooleanField(default=False)
+    # model_details = UTF8JSONField(default=dict, blank=True) # contains model training details
+    # last_update = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Validator'
+        verbose_name_plural = 'Validators'
+        ordering = ('-created',)
+    
+    def __str__(self):
+        return  self.name
+
+    @property
+    def total_text_normal_count(self):
+        return self.text_normals.count()
+
+    @property
+    def total_word_normal_count(self):
+        return self.word_normals.count()
+
+    @property
+    def total_text_tag_count(self):
+        return self.text_tags.count()
+
 
 
 class Normalizer(models.Model):
@@ -458,34 +533,6 @@ class Tagger(models.Model):
             logger.info(f'> Text : {self}')
         except Exception as ex:
             logger.exception(ex)
-
-class Validator(models.Model):
-    name = models.SlugField(default='unknown-validator', unique=True)
-    created = models.DateTimeField(auto_now_add=True)
-    owner = models.CharField(max_length=100, default='undefined')
-    is_automatic = models.BooleanField(default=False)
-    model_details = UTF8JSONField(default=dict, blank=True) # contains model training details
-    last_update = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = 'Validator'
-        verbose_name_plural = 'Validators'
-        ordering = ('-created',)
-    
-    def __str__(self):
-        return  self.name
-
-    @property
-    def total_text_normal_count(self):
-        return self.text_normals.count()
-
-    @property
-    def total_word_normal_count(self):
-        return self.word_normals.count()
-
-    @property
-    def total_text_tag_count(self):
-        return self.text_tags.count()
 
 
 compile_patterns = lambda patterns: [(re.compile(pattern), repl) for pattern, repl in patterns]

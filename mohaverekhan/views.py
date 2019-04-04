@@ -11,18 +11,22 @@ from rest_framework import status
 from django_filters.rest_framework import DjangoFilterBackend
 from django.urls import reverse
 
-from .serializers import (ValidatorSerializer, NormalizerSerializer, 
-            TextSerializer, NormalTextSerializer, 
-            WordSerializer, NormalWordSerializer,
-            TagSetSerializer, TagSerializer, TaggerSerializer,
-            SentenceSerializer, NormalSentenceSerializer,
-            TaggedSentenceSerializer)
-from .models import (Validator, Normalizer, 
-            Text, NormalText, 
-            Word, NormalWord,
-            TagSet, Tag, Tagger, 
-            Sentence, NormalSentence, TaggedSentence, 
-            RefinementNormalizer, ReplacementNormalizer, NLTKTagger)
+from .serializers import (
+            WordSerializer, WordNormalSerializer,
+            TextSerializer, TextNormalSerializer, TextTagSerializer,
+            TagSetSerializer, TagSerializer,
+            NormalizerSerializer, TokenizerSerializer,
+            TaggerSerializer, ValidatorSerializer,
+            )
+
+from .models import (
+            Word, WordNormal,
+            Text, TextNormal, TextTag,
+            TagSet, Tag,
+            Normalizer, Tokenizer,
+            Tagger, Validator
+            )
+
 from django.views.decorators.csrf import csrf_exempt
 import threading 
 import json
@@ -43,18 +47,47 @@ class HomePageView(TemplateView):
         # context['latest_articles'] = Article.objects.all()[:5]
         return context
 
+class WordViewSet(viewsets.ModelViewSet):
+    queryset = Word.objects.all()
+    serializer_class = WordSerializer
+
+class WordNormalViewSet(viewsets.ModelViewSet):
+    queryset = WordNormal.objects.all()
+    serializer_class = WordNormalSerializer
+
+class TextViewSet(viewsets.ModelViewSet):
+    queryset = Text.objects.all()
+    serializer_class = TextSerializer
+
+class TextNormalViewSet(viewsets.ModelViewSet):
+    queryset = TextNormal.objects.all()
+    serializer_class = TextNormalSerializer
+
+class TextTagViewSet(viewsets.ModelViewSet):
+    queryset = TextTag.objects.all()
+    serializer_class = TextTagSerializer
+
+class TagSetViewSet(viewsets.ModelViewSet):
+    queryset = TagSet.objects.all()
+    serializer_class = TagSetSerializer
+    lookup_field = 'name'
+
+class TagViewSet(viewsets.ModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+
 
 class ValidatorViewSet(viewsets.ModelViewSet):
     queryset = Validator.objects.all()
     serializer_class = ValidatorSerializer
     lookup_field = 'name'
 
-
 class NormalizerViewSet(viewsets.ModelViewSet):
     queryset = Normalizer.objects.all()
     serializer_class = NormalizerSerializer
     lookup_field = 'name'
-    # filterset_fields = ('is_manual',)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('is_automatic',)
 
     @action(detail=False, methods=['get',], url_name='train')
     @csrf_exempt
@@ -81,42 +114,33 @@ class NormalizerViewSet(viewsets.ModelViewSet):
             normalizer = self.get_object()
         text_id = request.GET.get('text-id', None)
         text = Text.objects.get(id=text_id)
-        normal_text = normalizer.normalize(text)
-        serializer = NormalTextSerializer(normal_text)
+        text_normal = normalizer.normalize(text)
+        serializer = TextNormalSerializer(text_normal)
         return Response(serializer.data)
 
-class TextViewSet(viewsets.ModelViewSet):
-    queryset = Text.objects.all()
-    serializer_class = TextSerializer
-    filterset_fields = ('id',)
-
-class NormalTextViewSet(viewsets.ModelViewSet):
-    queryset = NormalText.objects.all()
-    serializer_class = NormalTextSerializer
-
-class WordViewSet(viewsets.ModelViewSet):
-    queryset = Word.objects.all()
-    serializer_class = WordSerializer
-
-class NormalWordViewSet(viewsets.ModelViewSet):
-    queryset = NormalWord.objects.all()
-    serializer_class = NormalWordSerializer
-
-class TagSetViewSet(viewsets.ModelViewSet):
-    queryset = TagSet.objects.all()
-    serializer_class = TagSetSerializer
+class TokenizerViewSet(viewsets.ModelViewSet):
+    queryset = Tokenizer.objects.all()
+    serializer_class = TokenizerSerializer
     lookup_field = 'name'
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('is_automatic',)
 
-class TagViewSet(viewsets.ModelViewSet):
-    queryset = Tag.objects.all()
-    serializer_class = TagSerializer
+    @action(detail=False, methods=['get',], url_name='train')
+    @csrf_exempt
+    def train(self, request):
+        pass
+
+    @action(detail=True, methods=['get',], url_name='tokenize', renderer_classes=[renderers.JSONRenderer,])
+    @csrf_exempt
+    def tokenize(self, request, name=None):
+        pass
 
 class TaggerViewSet(viewsets.ModelViewSet):
     queryset = Tagger.objects.all()
     serializer_class = TaggerSerializer
     lookup_field = 'name'
     filter_backends = (DjangoFilterBackend,)
-    # filterset_fields = ('is_manual', 'model_name')
+    filterset_fields = ('is_automatic',)
 
     @action(detail=True, methods=['get',], url_name='train')
     @csrf_exempt
@@ -167,16 +191,16 @@ class TaggerViewSet(viewsets.ModelViewSet):
             serializer = TextSerializer(text)
             return Response(serializer.data)
 
-        normal_text_id = request.GET.get('normal-text-id', None)
-        logger.debug(f'>> normal_text_id {normal_text_id} ')
-        if normal_text_id:
-            normal_text = NormalText.objects.get(id=text_id) 
-            tagger.tag_normal_text(normal_text)
-            serializer = NormalTextSerializer(normal_text)
+        text_normal_id = request.GET.get('normal-text-id', None)
+        logger.debug(f'>> text_normal_id {text_normal_id} ')
+        if text_normal_id:
+            text_normal = TextNormal.objects.get(id=text_id) 
+            tagger.tag_text_normal(text_normal)
+            serializer = TextNormalSerializer(text_normal)
             return Response(serializer.data)
 
         raise ParseError(detail='Query parameters [text-id] or [normal-text-id] is required.')
-        # return Response(f'text_id : {text_id}\nnormal_text_id : {normal_text_id}')
+        # return Response(f'text_id : {text_id}\ntext_normal_id : {text_normal_id}')
 
         # tagger = Tagger.objects.get(name=name)
         # text = tagger.tag(request.data['text'])
@@ -197,18 +221,23 @@ class TaggerViewSet(viewsets.ModelViewSet):
         
         content = {'state': 'finished'}
         return Response(content)
-        
-class SentenceViewSet(viewsets.ModelViewSet):
-    queryset = Sentence.objects.all()
-    serializer_class = SentenceSerializer
 
-class NormalSentenceViewSet(viewsets.ModelViewSet):
-    queryset = NormalSentence.objects.all()
-    serializer_class = NormalSentenceSerializer
 
-class TaggedSentenceViewSet(viewsets.ModelViewSet):
-    queryset = TaggedSentence.objects.all()
-    serializer_class = TaggedSentenceSerializer
+
+
+
+
+# class SentenceViewSet(viewsets.ModelViewSet):
+#     queryset = Sentence.objects.all()
+#     serializer_class = SentenceSerializer
+
+# class NormalSentenceViewSet(viewsets.ModelViewSet):
+#     queryset = NormalSentence.objects.all()
+#     serializer_class = NormalSentenceSerializer
+
+# class TaggedSentenceViewSet(viewsets.ModelViewSet):
+#     queryset = TaggedSentence.objects.all()
+#     serializer_class = TaggedSentenceSerializer
 
 # class TranslationCharacterViewSet(viewsets.ModelViewSet):
 #     queryset = TranslationCharacter.objects.all()

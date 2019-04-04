@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'colorfield',
+    'admin_reorder',
     # 'request',
 ]
 
@@ -55,6 +56,7 @@ MIDDLEWARE = [
     # 'request.middleware.RequestMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'admin_reorder.middleware.ModelAdminReorder',
 ]
 
 ROOT_URLCONF = 'root.urls'
@@ -145,6 +147,71 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
 }
+
+# MOHAVEREKHAN = 'mohaverekhan'
+# AUTH = 'auth'
+# ADMIN_REORDER = (
+#     (MOHAVEREKHAN, (
+#                         f'{MOHAVEREKHAN}word', f'{MOHAVEREKHAN}wordnormal', 
+#                         f'{MOHAVEREKHAN}text', f'{MOHAVEREKHAN}textnormal', f'{MOHAVEREKHAN}texttag'
+#                         f'{MOHAVEREKHAN}tagset', f'{MOHAVEREKHAN}tag', 
+#                         f'{MOHAVEREKHAN}normalizer', f'{MOHAVEREKHAN}tokenizer', 
+#                         f'{MOHAVEREKHAN}tagger', f'{MOHAVEREKHAN}validator', 
+#                     )
+#     ),
+#     (AUTH, (f'{AUTH}group', f'{AUTH}user')),
+# )
+
+MOHAVEREKHAN = 'mohaverekhan'
+AUTH = 'auth'
+ADMIN_REORDER = (
+    # # Keep original label and models
+    # 'sites',
+    # Reorder app models
+    {
+        'app': MOHAVEREKHAN, 
+        'label': 'Word',
+        'models': (
+                f'{MOHAVEREKHAN}.Word', f'{MOHAVEREKHAN}.WordNormal',
+            )
+    },
+    {
+        'app': MOHAVEREKHAN, 
+        'label': 'Text',
+        'models': (
+                f'{MOHAVEREKHAN}.Text', f'{MOHAVEREKHAN}.TextNormal', 
+                f'{MOHAVEREKHAN}.TextTag',
+            )
+    },
+    {
+        'app': MOHAVEREKHAN, 
+        'label': 'Tag',
+        'models': (
+                f'{MOHAVEREKHAN}.Tag', f'{MOHAVEREKHAN}.TagSet',
+            )
+    },
+    {
+        'app': MOHAVEREKHAN, 
+        'label': 'Operator',
+        'models': (
+                f'{MOHAVEREKHAN}.Normalizer', f'{MOHAVEREKHAN}.Tokenizer', 
+                f'{MOHAVEREKHAN}.Tagger', f'{MOHAVEREKHAN}.Validator', 
+            )
+    },
+    # {
+    #     'app': MOHAVEREKHAN, 
+    #     'label': 'Text',
+    #     'models': (f'{MOHAVEREKHAN}.Word', f'{MOHAVEREKHAN}.WordNormal', 
+    #             f'{MOHAVEREKHAN}.Text', f'{MOHAVEREKHAN}.TextNormal', f'{MOHAVEREKHAN}.TextTag',
+    #             f'{MOHAVEREKHAN}.Tag', f'{MOHAVEREKHAN}.TagSet', 
+    #             f'{MOHAVEREKHAN}.Normalizer', f'{MOHAVEREKHAN}.Tokenizer', 
+    #             f'{MOHAVEREKHAN}.Tagger', f'{MOHAVEREKHAN}.Validator', 
+    #                 )
+    # },
+
+    {'app': AUTH, 'models': (f'{AUTH}.User', f'{AUTH}.Group')},
+
+)
 
 import datetime
 import os

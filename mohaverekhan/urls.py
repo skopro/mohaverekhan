@@ -1,43 +1,41 @@
 from django.urls import path, include
 from django.conf.urls import url, re_path
 #from rest_framework.urlpatterns import format_suffix_patterns
-from .views import (HomePageView, ValidatorViewSet, 
-        NormalizerViewSet, TextViewSet, NormalTextViewSet, 
-        WordViewSet, NormalWordViewSet,
-        TagViewSet, TagSetViewSet,
-        TaggerViewSet, SentenceViewSet, 
-        NormalSentenceViewSet, TaggedSentenceViewSet)
+from .views import (HomePageView, 
+            WordViewSet, WordNormalViewSet,
+            TextViewSet, TextNormalViewSet, TextTagViewSet, 
+            TagSetViewSet, TagViewSet, 
+            ValidatorViewSet, NormalizerViewSet, 
+            TokenizerViewSet, TaggerViewSet,
+            )
 from rest_framework.routers import DefaultRouter, SimpleRouter
 
-# class OptionalSlashRouter(SimpleRouter):
-
-#     def __init__(self):
-#         self.trailing_slash = '/?'
-#         super().__init__()
-#         # super(SimpleRouter, self).__init__()
 
 class OptionalSlashRouter(DefaultRouter): 
     def __init__(self, *args, **kwargs): 
         super().__init__(*args, **kwargs)
-        # super(DefaultRouter, self).__init__(*args, **kwargs) 
         self.trailing_slash = '/?'
 
 router = OptionalSlashRouter()
-# router.register(r'', HomeViewSet, basename='home')
-# router.register(r'api', router.APIRootView, basename='api')
-# router.register(r'schema', router.APISchemaView, basename='schema')
+router.register(r'words', WordViewSet)
+router.register(r'word-normals', WordNormalViewSet)
+
+router.register(r'texts', TextViewSet)
+router.register(r'text-normals', TextNormalViewSet)
+router.register(r'text-tags', TextTagViewSet)
+
+router.register(r'tag-sets', TagSetViewSet)
+router.register(r'tags', TagViewSet)
+
 router.register(r'validators', ValidatorViewSet)
 router.register(r'normalizers', NormalizerViewSet)
-router.register(r'texts', TextViewSet)
-router.register(r'normal-texts', NormalTextViewSet)
-router.register(r'words', WordViewSet)
-router.register(r'normal-words', NormalWordViewSet)
-router.register(r'tags', TagViewSet)
-router.register(r'tag-sets', TagSetViewSet)
+router.register(r'tokenizers', TokenizerViewSet)
 router.register(r'taggers', TaggerViewSet)
-router.register(r'sentences', SentenceViewSet)
-router.register(r'normal-sentences', NormalSentenceViewSet)
-router.register(r'tagged-sentences', TaggedSentenceViewSet)
+
+
+# router.register(r'sentences', SentenceViewSet)
+# router.register(r'normal-sentences', NormalSentenceViewSet)
+# router.register(r'tagged-sentences', TaggedSentenceViewSet)
 # router.register(r'rules/translation-characters', TranslationCharacterViewSet)
 # router.register(r'rules/refinement-patt/erns', RefinementPatternViewSet)
 
@@ -56,3 +54,14 @@ urlpatterns = [
 
 #urlpatterns = format_suffix_patterns(urlpatterns)
 
+
+# class OptionalSlashRouter(SimpleRouter):
+
+#     def __init__(self):
+#         self.trailing_slash = '/?'
+#         super().__init__()
+#         # super(SimpleRouter, self).__init__()
+
+# router.register(r'', HomeViewSet, basename='home')
+# router.register(r'api', router.APIRootView, basename='api')
+# router.register(r'schema', router.APISchemaView, basename='schema')
