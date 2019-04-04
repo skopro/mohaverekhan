@@ -55,19 +55,16 @@ bitianist_validator = None
 def cache_bitianist_validator():
     global bitianist_validator
     Validator = apps.get_model(app_label='mohaverekhan', model_name='Validator')
-    q = Validator.objects.filter(name='bitianist-validator')
-    if q:
-        bitianist_validator = q.first()
-    else:
+    bitianist_validator = Validator.objects.filter(name='bitianist-validator').first()
+    if not bitianist_validator:
         logger.error("> There isn't bitianist-validator!")
 
 def cache_validators():
     global validators
     Validator = apps.get_model(app_label='mohaverekhan', model_name='Validator')
 
-    q = Validator.objects.filter(name='bitianist-validator')
-    if q:
-        validators['bitianist-validator'] = q.first()
+    validators['bitianist-validator'] = Validator.objects.filter(
+        name='bitianist-validator').first()
 
     logger.info(f'>> Cached validators : {list(validators.keys)}')
 
@@ -76,13 +73,11 @@ def cache_normalizers():
     RefinementNormalizer = apps.get_model(app_label='mohaverekhan', model_name='RefinementNormalizer')
     ReplacementNormalizer = apps.get_model(app_label='mohaverekhan', model_name='ReplacementNormalizer')
 
-    q = RefinementNormalizer.objects.filter(name='refinement-normalizer')
-    if q:
-        normalizers['refinement-normalizer'] = q.first()
+    normalizers['refinement-normalizer'] = RefinementNormalizer.objects.filter(
+        name='refinement-normalizer').first()
 
-    q = ReplacementNormalizer.objects.filter(name='replacement-normalizer')
-    if q:
-        normalizers['replacement-normalizer'] = q.first()
+    normalizers['replacement-normalizer'] = ReplacementNormalizer.objects.filter(
+        name='replacement-normalizer').first()
     
     logger.info(f'>> Cached normalizers : {list(normalizers.keys)}')
 
@@ -90,9 +85,8 @@ def cache_tokenizers():
     global tokenizers
     BitianistTokenizer = apps.get_model(app_label='mohaverekhan', model_name='BitianistTokenizer')
 
-    q = BitianistTokenizer.objects.filter(name='bitianist-tokenizer')
-    if q:
-        tokenizers['bitianist-tokenizer'] = q.first()
+    tokenizers['bitianist-tokenizer'] = BitianistTokenizer.objects.filter(
+        name='bitianist-tokenizer').first()
 
     logger.info(f'>> Cached tokenizers : {list(tokenizers.keys)}')
 
@@ -101,13 +95,11 @@ def cache_taggers():
     FormalTagger = apps.get_model(app_label='mohaverekhan', model_name='FormalTagger')
     InformalTagger = apps.get_model(app_label='mohaverekhan', model_name='InformalTagger')
 
-    q = FormalTagger.objects.filter(name='formal-tagger')
-    if q:
-        taggers['formal-tagger'] = q.first()
+    taggers['formal-tagger'] = FormalTagger.objects.filter(
+        name='formal-tagger').first()
 
-    q = InformalTagger.objects.filter(name='informal-tagger')
-    if q:
-        taggers['informal-tagger'] = q.first()
+    taggers['informal-tagger'] = InformalTagger.objects.filter(
+        name='informal-tagger').first()
     
     logger.info(f'>> Cached taggers : {list(taggers.keys)}')
 
