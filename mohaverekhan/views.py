@@ -1,5 +1,5 @@
 from rest_framework.response import Response
-from rest_framework.exceptions import ParseError
+from rest_framework.exceptions import ParseError, NotFound
 from rest_framework.request import Request
 from django.views.generic.base import TemplateView
 from rest_framework.renderers import TemplateHTMLRenderer
@@ -90,9 +90,6 @@ class ValidatorViewSet(viewsets.ModelViewSet):
     lookup_field = 'name'
 
 
-
-
-
 class NormalizerViewSet(viewsets.ModelViewSet):
     queryset = Normalizer.objects.all()
     serializer_class = NormalizerSerializer
@@ -100,31 +97,34 @@ class NormalizerViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('is_automatic',)
 
-    @action(detail=False, methods=['get',], url_name='train')
+    @action(detail=True, methods=['get',], url_name='train', renderer_classes=[renderers.JSONRenderer,])
     @csrf_exempt
-    def train(self, request):
-        logger.debug('train')
-        text = Text()
-        thread = threading.Thread(target=text.learn_model)
-        logger.debug('start parallel')
-        thread.start()  
-        logger.debug('next line after thread.start()')
-        
-        content = {'state': 'finished'}
-        return Response(content)
+    def train(self, request, name=None):
+        normalizer = cache.normalizers.get(name, None)
+        if not normalizer:
+            raise NotFound(detail="Error 404, normalizer not found", code=404)
+        normalizer.model_details['state'] = 'training'
+        normalizer.save(update_fields=['model_details'])
+        thread = threading.Thread(target=normalizer.train)
+        logger.debug(f'> Start training normalizer {name} in parallel ...')
+        thread.start()
+        serializer = NormalizerSerializer(normalizer)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['get',], url_name='normalize', renderer_classes=[renderers.JSONRenderer,])
     @csrf_exempt
     def normalize(self, request, name=None):
-        normalizer = normalizers.get(name, self.get_object())
-        # if name == 'refinement-normalizer':
-        #     normalizer = RefinementNormalizer.objects.get(name=name)
-        # elif name == 'replacement-normalizer':
-        #     normalizer = ReplacementNormalizer.objects.get(name=name)
-        # else:
-        #     normalizer = self.get_object()
+        normalizer = cache.normalizers.get(name, None)
+        if not normalizer:
+            raise NotFound(detail="Error 404, normalizer not found", code=404)
+
         text_id = request.GET.get('text-id', None)
-        text = Text.objects.get(id=text_id)
+        if not text_id:
+            raise ParseError(detail="Error 400, text-id not found", code=400)
+
+        text = Text.objects.filter(id=text_id).first()
+        if not text:
+            raise NotFound(detail="Error 404, text not found", code=404)
         text_normal = normalizer.normalize(text)
         serializer = TextNormalSerializer(text_normal)
         return Response(serializer.data)
@@ -136,15 +136,37 @@ class TokenizerViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('is_automatic',)
 
-    @action(detail=False, methods=['get',], url_name='train')
+    @action(detail=True, methods=['get',], url_name='train', renderer_classes=[renderers.JSONRenderer,])
     @csrf_exempt
-    def train(self, request):
-        pass
+    def train(self, request, name=None):
+        tokenizer = cache.tokenizers.get(name, None)
+        if not tokenizer:
+            raise NotFound(detail="Error 404, tokenizer not found", code=404)
+        tokenizer.model_details['state'] = 'training'
+        tokenizer.save(update_fields=['model_details'])
+        thread = threading.Thread(target=tokenizer.train)
+        logger.debug(f'> Start training tokenizer {name} in parallel ...')
+        thread.start()
+        serializer = TokenizerSerializer(tokenizer)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['get',], url_name='tokenize', renderer_classes=[renderers.JSONRenderer,])
     @csrf_exempt
     def tokenize(self, request, name=None):
-        pass
+        tokenizer = cache.tokenizers.get(name, None)
+        if not tokenizer:
+            raise NotFound(detail="Error 404, tokenizer not found", code=404)
+
+        text_id = request.GET.get('text-id', None)
+        if not text_id:
+            raise ParseError(detail="Error 400, text-id not found", code=400)
+
+        text = Text.objects.filter(id=text_id).first()
+        if not text:
+            raise NotFound(detail="Error 404, text not found", code=404)
+        text_tag = tokenizer.tokenize(text)
+        serializer = TextTagSerializer(text_tag)
+        return Response(serializer.data)
 
 class TaggerViewSet(viewsets.ModelViewSet):
     queryset = Tagger.objects.all()
@@ -156,88 +178,48 @@ class TaggerViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get',], url_name='train')
     @csrf_exempt
     def train(self, request, name=None):
-        tagger = None
-        if name == 'nltk-tagger':
-            tagger = NLTKTagger.objects.get(name=name)
-        else:
-            tagger = self.get_object()
+        tagger = cache.taggers.get(name, None)
+        if not tagger:
+            raise NotFound(detail="Error 404, tagger not found", code=404)
 
         tagger.model_details['state'] = 'training'
         tagger.save(update_fields=['model_details'])
         thread = threading.Thread(target=tagger.train)
         logger.debug(f'> Start training tagger {name} in parallel ...')
         thread.start()  
-        logger.debug(f'> End training tagger {name} in parallel.')
-        
         serializer = TaggerSerializer(tagger)
         return Response(serializer.data)
 
     @action(detail=True, methods=['get',], url_name='tag')
     @csrf_exempt
     def tag(self, request, name=None):
-        tagger = None
-        if name == 'nltk-tagger':
-            tagger = NLTKTagger.objects.get(name=name)
-        else:
-            tagger = self.get_object()
+        tagger = cache.taggers.get(name, None)
+        if not tagger:
+            raise NotFound(detail="Error 404, tagger not found", code=404)
 
-        text_id = request.GET.get('text-id', None)
-        logger.debug(f'text_id : {text_id}')
-        text = Text.objects.get(id=text_id)
-        # if tagger not in text.sentences[0].taggers:
-        text = tagger.tag(text)
-        serializer = TextSerializer(text)
+        text_tag_id = request.GET.get('text-tag-id', None)
+        if not text_tag_id:
+            raise ParseError(detail="Error 400, text-tag-id not found", code=400)
+
+        logger.debug(f'text_tag_id : {text_tag_id}')
+        text_tag = TextTag.objects.filter(id=text_tag_id).first()
+        if not text_tag:
+            raise NotFound(detail="Error 404, text tag not found", code=404)
+
+        text_tag = tagger.tag(text_tag)
+        serializer = TextTagSerializer(text_tag)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['get',], url_name='tag2', renderer_classes=[renderers.JSONRenderer,])
-    @csrf_exempt
-    def tag2(self, request, name=None):
-        tagger = self.get_object()
-        logger.debug(f'>> name {name} ')
-        text_id = request.GET.get('text-id', None)
-        logger.debug(f'>> text_id {text_id} ')
-        if text_id:
-            text = Text.objects.get(id=text_id) 
-            tagger.tag_text(text)
-            serializer = TextSerializer(text)
-            return Response(serializer.data)
-
-        text_normal_id = request.GET.get('normal-text-id', None)
-        logger.debug(f'>> text_normal_id {text_normal_id} ')
-        if text_normal_id:
-            text_normal = TextNormal.objects.get(id=text_id) 
-            tagger.tag_text_normal(text_normal)
-            serializer = TextNormalSerializer(text_normal)
-            return Response(serializer.data)
-
-        raise ParseError(detail='Query parameters [text-id] or [normal-text-id] is required.')
-        # return Response(f'text_id : {text_id}\ntext_normal_id : {text_normal_id}')
-
-        # tagger = Tagger.objects.get(name=name)
-        # text = tagger.tag(request.data['text'])
-
-        # serializer = TextSerializer(instance=text)
-        # logger.info(f'> Serializer.data : {serializer.data}')
-        # return Response(serializer.data)
-
-    @action(detail=False, methods=['get',], url_name='learn_model')
-    @csrf_exempt
-    def learn_model(self, request):
-        logger.debug('learn_model')
-        text = Text()
-        thread = threading.Thread(target=text.learn_model)
-        logger.debug('start parallel')
-        thread.start()  
-        logger.debug('next line after thread.start()')
-        
-        content = {'state': 'finished'}
-        return Response(content)
 
 
 
 
-
-
+ # if name == 'refinement-normalizer':
+        #     normalizer = RefinementNormalizer.objects.get(name=name)
+        # elif name == 'replacement-normalizer':
+        #     normalizer = ReplacementNormalizer.objects.get(name=name)
+        # else:
+        #     normalizer = self.get_object()
 # class SentenceViewSet(viewsets.ModelViewSet):
 #     queryset = Sentence.objects.all()
 #     serializer_class = SentenceSerializer
