@@ -9,6 +9,10 @@ repetition_pattern = re.compile(r"([^A-Za-z])\1{1,}")
 debug_pattern = re.compile(r'باید|دنبال')
 
 logger = None
+normalizers = {}
+validators = {}
+tokenizers = {}
+taggers = {}
 token_set = set()
 repetition_word_set = set()
 
@@ -57,9 +61,63 @@ def cache_bitianist_validator():
     else:
         logger.error("> There isn't bitianist-validator!")
 
+def cache_validators():
+    global validators
+    Validator = apps.get_model(app_label='mohaverekhan', model_name='Validator')
+
+    q = Validator.objects.filter(name='bitianist-validator')
+    if q:
+        validators['bitianist-validator'] = q.first()
+
+    logger.info(f'>> Cached validators : {list(validators.keys)}')
+
+def cache_normalizers():
+    global normalizers
+    RefinementNormalizer = apps.get_model(app_label='mohaverekhan', model_name='RefinementNormalizer')
+    ReplacementNormalizer = apps.get_model(app_label='mohaverekhan', model_name='ReplacementNormalizer')
+
+    q = RefinementNormalizer.objects.filter(name='refinement-normalizer')
+    if q:
+        normalizers['refinement-normalizer'] = q.first()
+
+    q = ReplacementNormalizer.objects.filter(name='replacement-normalizer')
+    if q:
+        normalizers['replacement-normalizer'] = q.first()
+    
+    logger.info(f'>> Cached normalizers : {list(normalizers.keys)}')
+
+def cache_tokenizers():
+    global tokenizers
+    BitianistTokenizer = apps.get_model(app_label='mohaverekhan', model_name='BitianistTokenizer')
+
+    q = BitianistTokenizer.objects.filter(name='bitianist-tokenizer')
+    if q:
+        tokenizers['bitianist-tokenizer'] = q.first()
+
+    logger.info(f'>> Cached tokenizers : {list(tokenizers.keys)}')
+
+def cache_taggers():
+    global taggers
+    FormalTagger = apps.get_model(app_label='mohaverekhan', model_name='FormalTagger')
+    InformalTagger = apps.get_model(app_label='mohaverekhan', model_name='InformalTagger')
+
+    q = FormalTagger.objects.filter(name='formal-tagger')
+    if q:
+        taggers['formal-tagger'] = q.first()
+
+    q = InformalTagger.objects.filter(name='informal-tagger')
+    if q:
+        taggers['informal-tagger'] = q.first()
+    
+    logger.info(f'>> Cached taggers : {list(taggers.keys)}')
+
 
 def init():
     global logger
     logger = logging.getLogger(__name__)
-    cache_bitianist_validator()
+    # cache_bitianist_validator()
+    cache_validators()
+    cache_normalizers()
+    cache_tokenizers()
+    cache_taggers()
     cache_tokens()

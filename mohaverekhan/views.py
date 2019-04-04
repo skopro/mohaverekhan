@@ -27,9 +27,16 @@ from .models import (
             Tagger, Validator
             )
 
+from .models import (
+            RefinementNormalizer,
+            ReplacementNormalizer,
+            NLTKTagger
+            )
+
 from django.views.decorators.csrf import csrf_exempt
 import threading 
 import json
+from . import cache
 
 
 import logging
@@ -82,6 +89,10 @@ class ValidatorViewSet(viewsets.ModelViewSet):
     serializer_class = ValidatorSerializer
     lookup_field = 'name'
 
+
+
+
+
 class NormalizerViewSet(viewsets.ModelViewSet):
     queryset = Normalizer.objects.all()
     serializer_class = NormalizerSerializer
@@ -105,13 +116,13 @@ class NormalizerViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get',], url_name='normalize', renderer_classes=[renderers.JSONRenderer,])
     @csrf_exempt
     def normalize(self, request, name=None):
-        normalizer = None
-        if name == 'refinement-normalizer':
-            normalizer = RefinementNormalizer.objects.get(name=name)
-        elif name == 'replacement-normalizer':
-            normalizer = ReplacementNormalizer.objects.get(name=name)
-        else:
-            normalizer = self.get_object()
+        normalizer = normalizers.get(name, self.get_object())
+        # if name == 'refinement-normalizer':
+        #     normalizer = RefinementNormalizer.objects.get(name=name)
+        # elif name == 'replacement-normalizer':
+        #     normalizer = ReplacementNormalizer.objects.get(name=name)
+        # else:
+        #     normalizer = self.get_object()
         text_id = request.GET.get('text-id', None)
         text = Text.objects.get(id=text_id)
         text_normal = normalizer.normalize(text)
