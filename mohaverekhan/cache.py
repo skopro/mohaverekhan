@@ -7,7 +7,7 @@ repetition_pattern = re.compile(r"([^A-Za-z])\1{1,}")
 # debug_pattern = re.compile(r'[0-9۰۱۲۳۴۵۶۷۸۹]')
 # debug_pattern = re.compile(r'^گرون$|^میدون$|^خونه$|^نون$|^ارزون$|^اون$|^قلیون$')
 # debug_pattern = re.compile(r'هایمان')
-debug_pattern = re.compile(r'باید|دنبال')
+debug_pattern = re.compile(r'$کننده')
 
 logger = None
 # Word, WordNormal, Text, TextNormal = None, None, None, None
@@ -20,7 +20,9 @@ taggers = {}
 token_set = set()
 repetition_word_set = set()
 compile_patterns = lambda patterns: [(re.compile(pattern), repl) for pattern, repl in patterns]
-
+punctuations = r'\.:!،؛؟»\]\)\}«\[\(\{\'\"…'
+numbers = r'۰۱۲۳۴۵۶۷۸۹'
+persians = 'اآب‌پتثجچحخدذرزژسشصضطظعغفقکگلمنوهی'
 # def cache_models():
 #     global Word, WordNormal, Text, TextNormal
 #     global TextTag, TagSet, Tag, Validator
@@ -88,34 +90,44 @@ def cache_validators():
     logger.info(f'>> Cached validators : {list(validators.keys())}')
 
 def cache_normalizers():
-    RefinementNormalizer = apps.get_model(app_label='mohaverekhan', model_name='RefinementNormalizer')
-    ReplacementNormalizer = apps.get_model(app_label='mohaverekhan', model_name='ReplacementNormalizer')
+    BitianistInformalRefinementNormalizer = apps.get_model(
+        app_label='mohaverekhan', model_name='BitianistInformalRefinementNormalizer')
+    BitianistInformalReplacementNormalizer = apps.get_model(
+        app_label='mohaverekhan', model_name='BitianistInformalReplacementNormalizer')
+    BitianistInformalSeq2SeqNormalizer = apps.get_model(
+        app_label='mohaverekhan', model_name='BitianistInformalSeq2SeqNormalizer')
 
-    normalizers['refinement-normalizer'] = RefinementNormalizer.objects.filter(
-        name='refinement-normalizer').first()
+    normalizers['bitianist-informal-refinement-normalizer'] = BitianistInformalRefinementNormalizer.objects.filter(
+        name='bitianist-informal-refinement-normalizer').first()
 
-    normalizers['replacement-normalizer'] = ReplacementNormalizer.objects.filter(
-        name='replacement-normalizer').first()
+    normalizers['bitianist-informal-replacement-normalizer'] = BitianistInformalReplacementNormalizer.objects.filter(
+        name='bitianist-informal-replacement-normalizer').first()
+
+    normalizers['bitianist-informal-seq2seq-normalizer'] = BitianistInformalSeq2SeqNormalizer.objects.filter(
+        name='bitianist-informal-seq2seq-normalizer').first()
     
     logger.info(f'>> Cached normalizers : {list(normalizers.keys())}')
 
 def cache_tokenizers():
-    BitianistTokenizer = apps.get_model(app_label='mohaverekhan', model_name='BitianistTokenizer')
+    BitianistInformalTokenizer = apps.get_model(
+        app_label='mohaverekhan', model_name='BitianistInformalTokenizer')
 
-    tokenizers['bitianist-tokenizer'] = BitianistTokenizer.objects.filter(
-        name='bitianist-tokenizer').first()
+    tokenizers['bitianist-informal-tokenizer'] = BitianistInformalTokenizer.objects.filter(
+        name='bitianist-informal-tokenizer').first()
 
     logger.info(f'>> Cached tokenizers : {list(tokenizers.keys())}')
 
 def cache_taggers():
-    FormalTagger = apps.get_model(app_label='mohaverekhan', model_name='FormalTagger')
-    InformalTagger = apps.get_model(app_label='mohaverekhan', model_name='InformalTagger')
+    BitianistFormalNLTKTagger = apps.get_model(
+        app_label='mohaverekhan', model_name='BitianistFormalNLTKTagger')
+    BitianistInformalNLTKTagger = apps.get_model(
+        app_label='mohaverekhan', model_name='BitianistInformalNLTKTagger')
 
-    taggers['formal-tagger'] = FormalTagger.objects.filter(
-        name='formal-tagger').first()
+    taggers['bitianist-formal-nltk-tagger'] = BitianistFormalNLTKTagger.objects.filter(
+        name='bitianist-formal-nltk-tagger').first()
 
-    taggers['informal-tagger'] = InformalTagger.objects.filter(
-        name='informal-tagger').first()
+    taggers['bitianist-informal-nltk-tagger'] = BitianistInformalNLTKTagger.objects.filter(
+        name='bitianist-informal-nltk-tagger').first()
     
     logger.info(f'>> Cached taggers : {list(taggers.keys())}')
 

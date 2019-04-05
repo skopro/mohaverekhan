@@ -7,7 +7,7 @@ from mohaverekhan import cache
 logger = None
 
 
-class RefinementNormalizer(Normalizer):
+class BitianistInformalRefinementNormalizer(Normalizer):
     
     class Meta:
         proxy = True
@@ -53,10 +53,6 @@ class RefinementNormalizer(Normalizer):
 
     translation_characters = {tc[0]:tc[1] for tc in translation_characters}
 
-    punctuations = r'\.:!،؛؟»\]\)\}«\[\(\{\'\"…'
-    numbers = r'۰۱۲۳۴۵۶۷۸۹'
-    persians = 'اآب‌پتثجچحخدذرزژسشصضطظعغفقکگلمنوهی'
-
     remove_character_patterns = (
         (r'[\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652]', r'', 'remove FATHATAN, DAMMATAN, KASRATAN, FATHA, DAMMA, KASRA, SHADDA, SUKUN', 0, 'hazm', 'true'),
         (r'[ـ\r]', r'', r'remove keshide, \r', 0, 'hazm', 'true'),
@@ -67,30 +63,22 @@ class RefinementNormalizer(Normalizer):
 
     refinement_patterns = (
         (r'([^\.]|^)(\.\.\.)([^\.]|$)', r'\1…\3', 'replace 3 dots with …', 0, 'bitianist', 'true'),
-        (rf'([{punctuations}])\1+', r'\1', 'remove punctuations repetitions', 0, 'bitianist', 'true'),
+        (rf'([{cache.punctuations}])\1+', r'\1', 'remove cache.punctuations repetitions', 0, 'bitianist', 'true'),
         (r'"([^\n"]+)"', r'«\1»', 'replace quotation with gyoome', 0, 'hazm', 'true'),
-        # (rf'(?<=[^a-zA-Z{numbers}])([{punctuations}])(?=[^a-zA-Z]|$)', r' \1 ', 'add extra space before and after of punctuations', 0, 'bitianist', 'true'),
-        (rf'([{punctuations}])(?=[{persians}\n ]|$)|(?<=[{persians}\n ])([{punctuations}])', r' \1\2 ', 'add extra space before and after of punctuations', 0, 'bitianist', 'true'),
-        # (rf'([^a-zA-Z {numbers}]+)([{numbers}]+)|([{numbers}]+)([^a-zA-Z {numbers}]+)', r'\1 \2\3 \4', '', 0, 'bitianist', 'true'),
-        (rf'([{persians}]+)([{numbers}]+)|([{numbers}]+)([{persians}]+)', r'\1 \2\3 \4', '', 0, 'bitianist', 'true'),
+        # (rf'(?<=[^a-zA-Z{cache.numbers}])([{cache.punctuations}])(?=[^a-zA-Z]|$)', r' \1 ', 'add extra space before and after of cache.punctuations', 0, 'bitianist', 'true'),
+        (rf'([{cache.punctuations}])(?=[{cache.persians}\n ]|$)|(?<=[{cache.persians}\n ])([{cache.punctuations}])', r' \1\2 ', 'add extra space before and after of cache.punctuations', 0, 'bitianist', 'true'),
+        # (rf'([^a-zA-Z {cache.numbers}]+)([{cache.numbers}]+)|([{cache.numbers}]+)([^a-zA-Z {cache.numbers}]+)', r'\1 \2\3 \4', '', 0, 'bitianist', 'true'),
+        (rf'([{cache.persians}]+)([{cache.numbers}]+)|([{cache.numbers}]+)([{cache.persians}]+)', r'\1 \2\3 \4', '', 0, 'bitianist', 'true'),
         (r'\n+', r'\n', 'remove extra newlines', 0, 'bitianist', 'true'),
         (r'\n', r' newline ', 'replace \n to newline for changing back', 0, 'bitianist', 'true'),
         (r' +', r' ', 'remove extra spaces', 0, 'hazm', 'true'),
 
         (r'([^ ]ه) ی ', r'\1‌ی ', 'between ی and ه - replace space with non-joiner ', 0, 'hazm', 'true'),
         (r'(^| )(ن?می) ', r'\1\2‌', 'after می،نمی - replace space with non-joiner ', 0, 'hazm', 'true'),
-        (rf'(?<=[^\n\d {punctuations}]{{2}}) (تر(ین?)?|گری?|های?)(?=[ \n{punctuations}]|$)', r'‌\1', 'before تر, تری, ترین, گر, گری, ها, های - replace space with non-joiner', 0, 'hazm', 'true'),
-        (rf'([^ ]ه) (ا(م|یم|ش|ند|ی|ید|ت))(?=[ \n{punctuations}]|$)', r'\1‌\2', 'before ام, ایم, اش, اند, ای, اید, ات - replace space with non-joiner', 0, 'hazm', 'true'),  
-
-
+        (rf'(?<=[^\n\d {cache.punctuations}]{{2}}) (تر(ین?)?|گری?|های?)(?=[ \n{cache.punctuations}]|$)', r'‌\1', 'before تر, تری, ترین, گر, گری, ها, های - replace space with non-joiner', 0, 'hazm', 'true'),
+        (rf'([^ ]ه) (ا(م|یم|ش|ند|ی|ید|ت))(?=[ \n{cache.punctuations}]|$)', r'\1‌\2', 'before ام, ایم, اش, اند, ای, اید, ات - replace space with non-joiner', 0, 'hazm', 'true'),  
 
         # (rf'([^{repetition_characters}])\1{{1,}}', r'\1', 'remove repetitions except ی و', 0, 'bitianist', 'true'),
-            
-        # (r'', r'', '', 0, 'hazm', 'true'),
-        # (r'', r'', '', 0, 'hazm', 'true'),
-        # (r'', r'', '', 0, 'hazm', 'true'),
-        # (r'', r'', '', 0, 'hazm', 'true'),
-        # (r'', r'', '', 0, 'hazm', 'true'),
         # (r'', r'', '', 0, 'hazm', 'true'),
     )
     refinement_patterns = [(rp[0], rp[1]) for rp in refinement_patterns]

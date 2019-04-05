@@ -347,13 +347,13 @@ def import_normalizers():
     model_details = {
        'type': 'manual'
     }
-    bitianist_normalizer = generate_normalizer_dictionary(
-        'bitianist-normalizer',
+    bitianist_informal_bitianist_normalizer = generate_normalizer_dictionary(
+        'bitianist-informal-manual-normalizer',
         owner='bitianist',
         is_automatic=False,
         model_details=model_details
     )
-    response, error = post(normalizers_url, bitianist_normalizer)
+    response, error = post(normalizers_url, bitianist_informal_bitianist_normalizer)
     if error:
         return
 
@@ -363,13 +363,13 @@ def import_normalizers():
         'type': 'rule-based',
         'state': 'ready'
     }
-    refinement_normalizer = generate_tagger_dictionary(
-        'refinement-normalizer',
+    bitianist_informal_refinement_normalizer = generate_tagger_dictionary(
+        'bitianist-informal-refinement-normalizer',
         owner='bitianist',
         is_automatic=True,
         model_details=model_details
     )
-    response, error = post(normalizers_url, refinement_normalizer)
+    response, error = post(normalizers_url, bitianist_informal_refinement_normalizer)
     if error:
         return
 
@@ -380,13 +380,13 @@ def import_normalizers():
         'module': 'seq2seq',
         'state': 'not-ready'
     }
-    seq2seq_normalizer = generate_tagger_dictionary(
-        'seq2seq-normalizer',
+    bitianist_informal_seq2seq_normalizer = generate_tagger_dictionary(
+        'bitianist-informal-seq2seq-normalizer',
         owner='bitianist',
         is_automatic=True,
         model_details=model_details
     )
-    response, error = post(normalizers_url, seq2seq_normalizer)
+    response, error = post(normalizers_url, bitianist_informal_seq2seq_normalizer)
     if error:
         return
 
@@ -395,13 +395,13 @@ def import_normalizers():
         'type': 'rule-based',
         'state': 'ready'
     }
-    replacement_normalizer = generate_tagger_dictionary(
-        'replacement-normalizer',
+    bitianist_informal_replacement_normalizer = generate_tagger_dictionary(
+        'bitianist-informal-replacement-normalizer',
         owner='bitianist',
         is_automatic=True,
         model_details=model_details
     )
-    response, error = post(normalizers_url, replacement_normalizer)
+    response, error = post(normalizers_url, bitianist_informal_replacement_normalizer)
     if error:
         return
     
@@ -410,13 +410,13 @@ def import_normalizers():
         'type': 'rule-based',
         'state': 'ready'
     }
-    informal_normalizer = generate_tagger_dictionary(
-        'informal-normalizer',
+    bitianist_informal_transformation_normalizer = generate_tagger_dictionary(
+        'bitianist-informal-transformation-normalizer',
         owner='bitianist',
         is_automatic=True,
         model_details=model_details
     )
-    response, error = post(normalizers_url, informal_normalizer)
+    response, error = post(normalizers_url, bitianist_informal_transformation_normalizer)
     if error:
         return
 
@@ -427,14 +427,14 @@ def import_tokenizers():
     #     'type': 'rule-based',
     #     'state': 'ready'
     # }
-    # bitianist_tokenizer = generate_tokenizer_dictionary(
-    #     'bitianist-tokenizer',
+    # bitianist_informal_tokenizer = generate_tokenizer_dictionary(
+    #     'bitianist-informal-tokenizer',
     #     owner='bitianist',
     #     is_automatic=True,
     #     model_details=model_details
     # )
 
-    # response, error = post(tokenizers_url, bitianist_tokenizer)
+    # response, error = post(tokenizers_url, bitianist_informal_tokenizer)
     # if error:
     #     return 0
     
@@ -442,14 +442,14 @@ def import_tokenizers():
     model_details = {
         'type': 'manual',
     }
-    bijankhan_tokenizer = generate_tokenizer_dictionary(
-        'bijankhan-tokenizer',
+    bijankhan_formal_tokenizer = generate_tokenizer_dictionary(
+        'bijankhan-formal-tokenizer',
         owner='bijankhan',
         is_automatic=False,
         model_details=model_details
     )
 
-    response, error = post(tokenizers_url, bijankhan_tokenizer)
+    response, error = post(tokenizers_url, bijankhan_formal_tokenizer)
     if error:
         return 0
 
@@ -462,15 +462,15 @@ def import_taggers():
        'type': 'manual'
     }
 
-    bijankhan_tagger = generate_tagger_dictionary(
-        'bijankhan-tagger',
+    bijankhan_formal_tagger = generate_tagger_dictionary(
+        'bijankhan-formal-tagger',
         owner='bijankhan',
         tag_set='bijankhan-tag-set',
         is_automatic=False,
         model_details=model_details
     )
 
-    response, error = post(taggers_url, bijankhan_tagger)
+    response, error = post(taggers_url, bijankhan_formal_tagger)
     if error:
         return 0
 
@@ -483,15 +483,15 @@ def import_taggers():
         'state': 'not-ready',
     }
 
-    formal_tagger = generate_tagger_dictionary(
-        'formal-tagger',
+    bitianist_formal_nltk_tagger = generate_tagger_dictionary(
+        'bitianist-formal-nltk-tagger',
         owner='bitianist',
         tag_set='bitianist-tag-set',
         is_automatic=True,
         model_details=model_details
     )
 
-    response, error = post(taggers_url, formal_tagger)
+    response, error = post(taggers_url, bitianist_formal_nltk_tagger)
     if error:
         return 0
 
@@ -504,15 +504,15 @@ def import_taggers():
         'state': 'not-ready',
     }
 
-    informal_tagger = generate_tagger_dictionary(
-        'informal-tagger',
+    bitianist_informal_nltk_tagger = generate_tagger_dictionary(
+        'bitianist-informal-nltk-tagger',
         owner='bitianist',
         tag_set='bitianist-tag-set',
         is_automatic=True,
         model_details=model_details
     )
 
-    response, error = post(taggers_url, informal_tagger)
+    response, error = post(taggers_url, bitianist_informal_nltk_tagger)
     if error:
         return 0
 
@@ -524,15 +524,15 @@ def import_taggers():
        'description': "For validation"
     }
 
-    test_tagger = generate_tagger_dictionary(
-        'test-tagger',
+    bitianist_informal_test_tagger = generate_tagger_dictionary(
+        'bitianist-informal-test-tagger',
         owner='bitianist',
         tag_set='bitianist-tag-set',
         is_automatic=False,
         model_details=model_details
     )
 
-    response, error = post(taggers_url, test_tagger)
+    response, error = post(taggers_url, bitianist_informal_test_tagger)
     if error:
         return 0
 
@@ -544,7 +544,7 @@ def import_text_equivalents():
     text_content, text_normal_content = '', ''
     text = None
     logger.info(f'>> Reading text_equivalents : {df.columns}')
-    normalizer = 'bitianist-normalizer'
+    normalizer = 'bitianist-informal-manual-normalizer'
     # manual_normalizer = generate_normalizer_dictionary('manual-normalizer')
     i = 0
     for i in df.index:
@@ -573,7 +573,7 @@ def import_word_equivalents():
     word = None
     logger.info(f'>> Reading word_equivalents : {df.columns}')
     ctr = 1
-    normalizer = 'bitianist-normalizer'
+    normalizer = 'bitianist-informal-manual-normalizer'
     word_content_set = set()
     for i in df.index:
 
@@ -627,8 +627,8 @@ def read_bijankhan_xml_file(xml_file):
             text = generate_text_dictionary(text_content)
             text_tag = generate_text_tag_dictionary(
                         tokens=text_tag_tokens,
-                        tokenizer='bijankhan-tokenizer',
-                        tagger='bijankhan-tagger', 
+                        tokenizer='bijankhan-formal-tokenizer',
+                        tagger='bijankhan-formal-tagger', 
                         text=text)
 
             logger.info(f'> File {file_name} reading finished.')
@@ -708,7 +708,7 @@ if __name__ == "__main__": main()
 #                     sentence = generate_sentence_dictionary(sentence_content)
 #                     tagged_sentence = generate_tagged_sentence_dictionary(
 #                                 tokens=sentence_tokens,
-#                                 tagger='bijankhan-tagger', 
+#                                 tagger='bijankhan-formal-tagger', 
 #                                 sentence=sentence)
 #                     tagged_sentences.append(tagged_sentence)
 #                     # sentences_count += 1

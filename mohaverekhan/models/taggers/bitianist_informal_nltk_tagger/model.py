@@ -14,9 +14,6 @@ logger = None
 # logger = utils.get_logger(logger_name='nltk_taggers')
 # logger.info('-------------------------------------------------------------------')
 
-
-
-
 punctuations = r'\.:!،؛؟»\]\)\}«\[\(\{\'\"…'
 numbers = r'۰۱۲۳۴۵۶۷۸۹'
 persians = 'اآب‌پتثجچحخدذرزژسشصضطظعغفقکگلمنوهی'
@@ -130,8 +127,7 @@ def tag(tokens):
     # logger.info(f'>brill_tagger.print_template_statistics() : \n{MAIN_TAGGER.print_template_statistics(printunused=False)}')
     return tags
 
-
-class FormalTagger(Tagger):
+class BitianistInformalNLTKTagger(Tagger):
     
     class Meta:
         proxy = True
@@ -241,7 +237,6 @@ class FormalTagger(Tagger):
         #     tokens=sentence_tokens
         # )
         # return text
-
 
 def init():
     global logger

@@ -7,7 +7,7 @@ from mohaverekhan import cache
 logger = None
 
 
-class ReplacementNormalizer(Normalizer):
+class BitianistInformalReplacementNormalizer(Normalizer):
     
     class Meta:
         proxy = True

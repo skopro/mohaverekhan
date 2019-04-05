@@ -15,14 +15,14 @@ class MohaverekhanConfig(AppConfig):
         from mohaverekhan import models
         models.base_models.init()
         
-        models.normalizers.refinement.model.init()
-        models.normalizers.replacement.model.init()
-        models.normalizers.seq2seq.model.init()
+        models.normalizers.bitianist_informal_refinement_normalizer.model.init()
+        models.normalizers.bitianist_informal_replacement_normalizer.model.init()
+        models.normalizers.bitianist_informal_seq2seq_normalizer.model.init()
 
-        models.tokenizers.bitianist.model.init()
+        models.tokenizers.bitianist_informal_tokenizer.model.init()
 
-        models.taggers.formal.model.init()
-        models.taggers.informal.model.init()
+        models.taggers.bitianist_formal_nltk_tagger.model.init()
+        models.taggers.bitianist_informal_nltk_tagger.model.init()
 
         cache.init()
         

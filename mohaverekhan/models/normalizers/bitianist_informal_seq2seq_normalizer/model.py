@@ -321,7 +321,7 @@ def main():
 
 
 
-class Seq2SeqNormalizer(Normalizer):
+class BitianistInformalSeq2SeqNormalizer(Normalizer):
 
     class Meta:
         proxy = True
