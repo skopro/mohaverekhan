@@ -11,12 +11,28 @@ class MohaverekhanConfig(AppConfig):
 
         from mohaverekhan import utils, cache
         utils.init()
+
+        from mohaverekhan import models
+        models.base_models.init()
+        
+        models.normalizers.refinement.model.init()
+        models.normalizers.replacement.model.init()
+        models.normalizers.seq2seq.model.init()
+
+        models.tokenizers.bitianist.model.init()
+
+        models.taggers.formal.model.init()
+        models.taggers.informal.model.init()
+
         cache.init()
         
-        from mohaverekhan import serializers, models, views
+
+
+        from mohaverekhan import serializers, views
         serializers.init()
-        models.init()
         views.init()
+
+
 
         # normalizer.init()
         # tokenizer.init()

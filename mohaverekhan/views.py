@@ -27,12 +27,6 @@ from .models import (
             Tagger, Validator
             )
 
-from .models import (
-            RefinementNormalizer,
-            ReplacementNormalizer,
-            NLTKTagger
-            )
-
 from django.views.decorators.csrf import csrf_exempt
 import threading 
 import json

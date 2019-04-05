@@ -1,7 +1,8 @@
-from django.apps import apps
 import logging
 import random
 import re
+from django.apps import apps
+
 repetition_pattern = re.compile(r"([^A-Za-z])\1{1,}")
 # debug_pattern = re.compile(r'[0-9۰۱۲۳۴۵۶۷۸۹]')
 # debug_pattern = re.compile(r'^گرون$|^میدون$|^خونه$|^نون$|^ارزون$|^اون$|^قلیون$')
@@ -9,18 +10,36 @@ repetition_pattern = re.compile(r"([^A-Za-z])\1{1,}")
 debug_pattern = re.compile(r'باید|دنبال')
 
 logger = None
+# Word, WordNormal, Text, TextNormal = None, None, None, None
+# TextTag, TagSet, Tag, Validator = None, None, None, None
+# Normalizer, Tokenizer, Tagger = None, None, None
 normalizers = {}
 validators = {}
 tokenizers = {}
 taggers = {}
 token_set = set()
 repetition_word_set = set()
+compile_patterns = lambda patterns: [(re.compile(pattern), repl) for pattern, repl in patterns]
+
+# def cache_models():
+#     global Word, WordNormal, Text, TextNormal
+#     global TextTag, TagSet, Tag, Validator
+#     global Normalizer, Tokenizer, Tagger
+#     Word = apps.get_model(app_label='mohaverekhan', model_name='Word')
+#     WordNormal = apps.get_model(app_label='mohaverekhan', model_name='WordNormal')
+#     Text = apps.get_model(app_label='mohaverekhan', model_name='Text')
+#     TextNormal = apps.get_model(app_label='mohaverekhan', model_name='TextNormal')
+#     TextTag = apps.get_model(app_label='mohaverekhan', model_name='TextTag')
+#     TagSet = apps.get_model(app_label='mohaverekhan', model_name='TagSet')
+#     Tag = apps.get_model(app_label='mohaverekhan', model_name='Tag')
+#     Validator = apps.get_model(app_label='mohaverekhan', model_name='Validator')
+#     Normalizer = apps.get_model(app_label='mohaverekhan', model_name='Normalizer')
+#     Tokenizer = apps.get_model(app_label='mohaverekhan', model_name='Tokenizer')
+#     Tagger = apps.get_model(app_label='mohaverekhan', model_name='Tagger')
 
 def cache_tokens():
-    # tokens = set()
-    TextTag = apps.get_model(app_label='mohaverekhan', model_name='TextTag')
-    # tokens = TaggedSentence.objects.only('tokens__content')
     token_content, tag_name = '', ''
+    TextTag = apps.get_model(app_label='mohaverekhan', model_name='TextTag')
     text_tokens_list = TextTag.objects.filter(is_valid=True).values_list('tokens', flat=True)
     if text_tokens_list.count() == 0:
         return
@@ -50,26 +69,25 @@ def cache_tokens():
     # tokens = TaggedSentence.objects.only('tokens__content').order_by('-tokens__content').distinct('tokens__content')
     # logger.info(f'tokens.count() : {tokens.count()}')
 
-bitianist_validator = None
+# bitianist_validator = None
 
-def cache_bitianist_validator():
-    global bitianist_validator
-    Validator = apps.get_model(app_label='mohaverekhan', model_name='Validator')
-    bitianist_validator = Validator.objects.filter(name='bitianist-validator').first()
-    if not bitianist_validator:
-        logger.error("> There isn't bitianist-validator!")
+
+# def cache_bitianist_validator():
+#     global bitianist_validator
+#     Validator = apps.get_model(app_label='mohaverekhan', model_name='Validator')
+#     bitianist_validator = Validator.objects.filter(name='bitianist-validator').first()
+#     if not bitianist_validator:
+#         logger.error("> There isn't bitianist-validator!")
 
 def cache_validators():
-    global validators
     Validator = apps.get_model(app_label='mohaverekhan', model_name='Validator')
 
     validators['bitianist-validator'] = Validator.objects.filter(
         name='bitianist-validator').first()
 
-    logger.info(f'>> Cached validators : {list(validators.keys)}')
+    logger.info(f'>> Cached validators : {list(validators.keys())}')
 
 def cache_normalizers():
-    global normalizers
     RefinementNormalizer = apps.get_model(app_label='mohaverekhan', model_name='RefinementNormalizer')
     ReplacementNormalizer = apps.get_model(app_label='mohaverekhan', model_name='ReplacementNormalizer')
 
@@ -79,19 +97,17 @@ def cache_normalizers():
     normalizers['replacement-normalizer'] = ReplacementNormalizer.objects.filter(
         name='replacement-normalizer').first()
     
-    logger.info(f'>> Cached normalizers : {list(normalizers.keys)}')
+    logger.info(f'>> Cached normalizers : {list(normalizers.keys())}')
 
 def cache_tokenizers():
-    global tokenizers
     BitianistTokenizer = apps.get_model(app_label='mohaverekhan', model_name='BitianistTokenizer')
 
     tokenizers['bitianist-tokenizer'] = BitianistTokenizer.objects.filter(
         name='bitianist-tokenizer').first()
 
-    logger.info(f'>> Cached tokenizers : {list(tokenizers.keys)}')
+    logger.info(f'>> Cached tokenizers : {list(tokenizers.keys())}')
 
 def cache_taggers():
-    global taggers
     FormalTagger = apps.get_model(app_label='mohaverekhan', model_name='FormalTagger')
     InformalTagger = apps.get_model(app_label='mohaverekhan', model_name='InformalTagger')
 
@@ -101,13 +117,15 @@ def cache_taggers():
     taggers['informal-tagger'] = InformalTagger.objects.filter(
         name='informal-tagger').first()
     
-    logger.info(f'>> Cached taggers : {list(taggers.keys)}')
+    logger.info(f'>> Cached taggers : {list(taggers.keys())}')
+
 
 
 def init():
     global logger
     logger = logging.getLogger(__name__)
     # cache_bitianist_validator()
+    # cache_models()
     cache_validators()
     cache_normalizers()
     cache_tokenizers()

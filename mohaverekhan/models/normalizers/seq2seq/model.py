@@ -7,6 +7,7 @@ References
 http://suriyadeepan.github.io/2016-12-31-practical-seq2seq/
 """
 import time
+import logging
 import os
 
 import numpy as np
@@ -20,13 +21,13 @@ from tensorlayer.layers import DenseLayer, EmbeddingInputlayer, Seq2Seq, retriev
 from . import data
 from mohaverekhan import utils
 
-logger = utils.get_logger(logger_name='seq2seq')
-logger.info('-------------------------------------------------------------------')
-CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
-logger.info(f'CURRENT_DIR : {CURRENT_DIR}')
-MODEL_PATH = os.path.join(utils.DATA_PATH, 'persian_informal_to_formal_seq2seq_model.npz')
+from mohaverekhan.models import Normalizer, Text, TextNormal
+from mohaverekhan import cache
 
-sess_config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
+logger = None
+# logger = utils.get_logger(logger_name='seq2seq')
+CURRENT_DIR, MODEL_PATH = '', ''
+sess_config = None
 inference, cleanup = None, None
 """
 Training model
@@ -318,11 +319,26 @@ def main():
         logger.exception(e)
         logger.error(' >> Error <<')
 
-if os.path.isfile(MODEL_PATH):
-    train()
 
-if __name__ == '__main__':
-    logger.info(f'this is main, {__name__}')
-else:
-    logger.info(f'this is not main, {__name__}')
-    # main()
+
+class Seq2SeqNormalizer(Normalizer):
+
+    class Meta:
+        proxy = True
+
+    def train(self):
+        pass
+
+    def normalizer(self):
+        pass
+
+def init():
+    global logger, CURRENT_DIR, MODEL_PATH, sess_config
+    logger = logging.getLogger(__name__)
+    CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
+    logger.info(f'CURRENT_DIR : {CURRENT_DIR}')
+    MODEL_PATH = os.path.join(utils.DATA_PATH, 'persian_informal_to_formal_seq2seq_model.npz')
+
+    sess_config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
+    if os.path.isfile(MODEL_PATH):
+        train()
