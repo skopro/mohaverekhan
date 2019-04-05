@@ -151,7 +151,7 @@ textarea {
 .select-button {
     top: 12% !important;
     direction: ltr !important;
-    width: 20vw !important;
+    width: 100% !important;
     height: 6vh !important;
     font-size: 2.0rem;
     /* font-weight: bold; */

@@ -43,7 +43,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
         (r'إ', r'ا', '', 'hazm', 'true'),
         (r'أ', r'ا', '', 'hazm', 'true'),
         (r'ة', r'ه', '', 'hazm', 'true'),
-        (r'هٔ', r'ه', '', 'hazm', 'true'),
+        # (r'هٔ', r'ه', '', 'hazm', 'true'),
         (r'“', r'"', '', 'hazm', 'true'),
         (r'”', r'"', '', 'hazm', 'true'),
         (r'%', r'٪', '', 'bitianist', 'true'),
@@ -56,6 +56,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
     remove_character_patterns = (
         (r'[\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652]', r'', 'remove FATHATAN, DAMMATAN, KASRATAN, FATHA, DAMMA, KASRA, SHADDA, SUKUN', 0, 'hazm', 'true'),
         (r'[ـ\r]', r'', r'remove keshide, \r', 0, 'hazm', 'true'),
+        (r'ٔ', r'', r'remove  ٔ ', 0, 'bitianist', 'true'),
 
     )
     remove_character_patterns = [(rc[0], rc[1]) for rc in remove_character_patterns]

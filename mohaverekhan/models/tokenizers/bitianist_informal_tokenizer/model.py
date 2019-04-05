@@ -27,7 +27,7 @@ class BitianistInformalTokenizer(Tokenizer):
         return fixed_token_contents
 
     def tokenize(self, text):
-        text_normal = cache.normalizers['refinement-normalizer']\
+        text_normal = cache.normalizers['bitianist-informal-refinement-normalizer']\
                             .normalize(text)
         token_contents = text.content.split(' ')
         token_contents = self.split_multi_token_words(token_contents)
