@@ -91,7 +91,9 @@ class NormalizerViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('is_automatic',)
 
-    @action(detail=True, methods=['get',], url_name='train', renderer_classes=[renderers.JSONRenderer,])
+    # , renderer_classes=[renderers.JSONRenderer,]
+
+    @action(detail=True, methods=['get',], url_name='train')
     @csrf_exempt
     def train(self, request, name=None):
         normalizer = cache.normalizers.get(name, None)
@@ -105,7 +107,7 @@ class NormalizerViewSet(viewsets.ModelViewSet):
         serializer = NormalizerSerializer(normalizer)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['get',], url_name='normalize', renderer_classes=[renderers.JSONRenderer,])
+    @action(detail=True, methods=['get',], url_name='normalize')
     @csrf_exempt
     def normalize(self, request, name=None):
         normalizer = cache.normalizers.get(name, None)
@@ -130,7 +132,7 @@ class TokenizerViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('is_automatic',)
 
-    @action(detail=True, methods=['get',], url_name='train', renderer_classes=[renderers.JSONRenderer,])
+    @action(detail=True, methods=['get',], url_name='train')
     @csrf_exempt
     def train(self, request, name=None):
         tokenizer = cache.tokenizers.get(name, None)
@@ -144,7 +146,7 @@ class TokenizerViewSet(viewsets.ModelViewSet):
         serializer = TokenizerSerializer(tokenizer)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['get',], url_name='tokenize', renderer_classes=[renderers.JSONRenderer,])
+    @action(detail=True, methods=['get',], url_name='tokenize')
     @csrf_exempt
     def tokenize(self, request, name=None):
         tokenizer = cache.tokenizers.get(name, None)
@@ -191,16 +193,16 @@ class TaggerViewSet(viewsets.ModelViewSet):
         if not tagger:
             raise NotFound(detail="Error 404, tagger not found", code=404)
 
-        text_tag_id = request.GET.get('text-tag-id', None)
-        if not text_tag_id:
-            raise ParseError(detail="Error 400, text-tag-id not found", code=400)
+        text_id = request.GET.get('text-id', None)
+        if not text_id:
+            raise ParseError(detail="Error 400, text-id not found", code=400)
 
-        logger.debug(f'text_tag_id : {text_tag_id}')
-        text_tag = TextTag.objects.filter(id=text_tag_id).first()
-        if not text_tag:
-            raise NotFound(detail="Error 404, text tag not found", code=404)
+        logger.debug(f'text_id : {text_id}')
+        text = Text.objects.filter(id=text_id).first()
+        if not text:
+            raise NotFound(detail="Error 404, text not found", code=404)
 
-        text_tag = tagger.tag(text_tag)
+        text_tag = tagger.tag(text)
         serializer = TextTagSerializer(text_tag)
         return Response(serializer.data)
 

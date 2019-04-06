@@ -85,23 +85,26 @@ class BitianistInformalRefinementNormalizer(Normalizer):
     refinement_patterns = [(rp[0], rp[1]) for rp in refinement_patterns]
     refinement_patterns = cache.compile_patterns(refinement_patterns)
 
+    def split_into_token_contents(self, text, delimiters='[ ]+'):
+        return re.split(delimiters, text.content)
+
 
     def uniform_signs(self, text):
         text.content = text.content.translate(text.content.maketrans(self.translation_characters))
-        text.content = text.content.strip()
+        text.content = text.content.strip(' ')
         # logger.info(f'> After uniform_signs : \n{text.content}')
 
     def remove_some_characters(self, text):
         for pattern, replacement in self.remove_character_patterns:
             text.content = pattern.sub(replacement, text.content)
             # logger.info(f'> after {pattern} -> {replacement} : \n{text.content}')
-        text.content = text.content.strip()
+        text.content = text.content.strip(' ')
 
     def refine_text(self, text):
         for pattern, replacement in self.refinement_patterns:
             text.content = pattern.sub(replacement, text.content)
             # logger.info(f'> after {pattern} -> {replacement} : \n{text.content}')
-        text.content = text.content.strip()
+        text.content = text.content.strip(' ')
 
 
     repetition_pattern = re.compile(r"(.)\1{1,}")
@@ -129,24 +132,24 @@ class BitianistInformalRefinementNormalizer(Normalizer):
 
     def fix_repetition_tokens(self, text):
         logger.info(f'>> fix_repetition_tokens')
-        token_contents = self.split_into_token_contents(text.content)
+        token_contents = self.split_into_token_contents(text)
         fixed_text_content = ''
         fixed_token_content = ''
         for token_content in token_contents:
-            fixed_token_content = token_content.strip()
+            fixed_token_content = token_content.strip(' ')
             if fixed_token_content not in cache.token_set:
                 fixed_token_content = self.fix_repetition_token(fixed_token_content)
             
-            fixed_text_content += fixed_token_content.strip() + " "
+            fixed_text_content += fixed_token_content.strip(' ') + " "
         text.content = fixed_text_content[:-1]
-        text.content = text.content.strip()
+        text.content = text.content.strip(' ')
 
     move_limit = 3
     def join_multipart_tokens(self, text):
         logger.debug(f'>> join_multipart_tokens')
         logger.debug(f'{text.content}')
 
-        token_contents = self.split_into_token_contents(text.content)
+        token_contents = self.split_into_token_contents(text)
         logger.debug(f'token_contents : {token_contents}')
         fixed_text_content = ''
         fixed_token_content = ''
@@ -182,7 +185,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                     fixed_text_content += fixed_token_content + ' '
                     break
 
-        text.content = fixed_text_content.strip()
+        text.content = fixed_text_content.strip(' ')
         logger.debug(f'{text.content}')
 
 
@@ -217,20 +220,20 @@ class BitianistInformalRefinementNormalizer(Normalizer):
         logger.debug(f'>> fix_wrong_joined_undefined_tokens')
         logger.debug(f'{text.content}')
 
-        token_contents = self.split_into_token_contents(text.content)
+        token_contents = self.split_into_token_contents(text)
         logger.debug(f'> token_contents : {token_contents}')
         fixed_text_content = ''
         fixed_token_content = ''
 
         for token_content in token_contents:
-            fixed_token_content = token_content.strip()
+            fixed_token_content = token_content.strip(' ')
             if fixed_token_content not in cache.token_set:
                 logger.debug(f'> {fixed_token_content} not in token set!')
                 fixed_token_content = self.fix_wrong_joined_undefined_token(fixed_token_content)
             
-            fixed_text_content += fixed_token_content.strip() + " "
+            fixed_text_content += fixed_token_content.strip(' ') + " "
         text.content = fixed_text_content[:-1]
-        text.content = text.content.strip()
+        text.content = text.content.strip(' ')
 
     def normalize(self, text):
         logger.info(f'>> RefinementRuleBasedNormalizer : \n{text}')
@@ -238,7 +241,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
             text=text, 
             normalizer=self
             )
-        text_normal.content = text.content.strip()
+        text_normal.content = text.content.strip(' ')
         beg_ts = time.time()
         self.uniform_signs(text_normal)
         self.remove_some_characters(text_normal)
@@ -248,7 +251,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
         self.join_multipart_tokens(text_normal) # فرههههههههنگ سرا
         self.fix_wrong_joined_undefined_tokens(text_normal) # آرامکننده کتابمن 
         self.join_multipart_tokens(text_normal) # آرام کنندهخوبی
-        text_normal.content = text_normal.content.replace(' newline ','\n').strip()
+        text_normal.content = text_normal.content.replace(' newline ','\n').strip(' ')
         end_ts = time.time()
         logger.info(f"> (Time)({end_ts - beg_ts:.6f})")
         text_normal.save()

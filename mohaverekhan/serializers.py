@@ -16,7 +16,7 @@ class NormalizerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Normalizer
-        fields = ('id', 'name', 'owner', 'is_automatic', 
+        fields = ('id', 'name', 'show_name', 'owner', 'is_automatic', 
             'created', 'last_update', 'model_details',
             'total_text_normal_count',
             'total_valid_text_normal_count',
@@ -35,7 +35,7 @@ class TokenizerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tokenizer
-        fields = ('id', 'name', 'owner', 'is_automatic', 
+        fields = ('id', 'name', 'show_name', 'owner', 'is_automatic', 
                 'created', 'last_update', 'model_details',
                 'total_text_tag_count', 
                 'total_valid_text_tag_count', )
@@ -48,7 +48,7 @@ class TaggerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tagger
-        fields = ('id', 'name', 'owner', 'is_automatic', 'created', 
+        fields = ('id', 'name', 'show_name', 'owner', 'is_automatic', 'created', 
                 'tag_set', 'last_update', 'model_details',
                 'total_text_tag_count', 
                 'total_valid_text_tag_count', )
@@ -60,7 +60,7 @@ class ValidatorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Validator
-        fields = ('id', 'name', 'owner', 'created', 
+        fields = ('id', 'name', 'show_name', 'owner', 'created', 
             'total_text_normal_count', 
             'total_word_normal_count',
             'total_text_tag_count',
@@ -147,8 +147,8 @@ class TextTagInTextSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TextTag
-        fields = ('id', 'created', 'tokenizer', 'tagger', 
-            'is_valid', 'validator', 'tokens', 'tags_html')
+        fields = ('id', 'created', 'tokenizer', 'tagger', 'accuracy', 'true_text_tag',
+            'is_valid', 'validator', 'tokens', 'tags_html', 'tokens_string')
         read_only_fields = ('is_valid',)    
 
 
@@ -197,6 +197,13 @@ class TextNormalSerializer(serializers.ModelSerializer):
         text_normal = TextNormal.objects.create(text=text, **validated_data)
         return text_normal
 
+class TrueTextTagSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = TextTag
+        fields = ('id', 'created', 
+            'tagger', 'accuracy', 
+            'tokens', 'tags_html')
 
 class TextTagSerializer(serializers.ModelSerializer):
     tokenizer = serializers.SlugRelatedField(slug_field='name', 
@@ -206,13 +213,15 @@ class TextTagSerializer(serializers.ModelSerializer):
     text = TextInTextNormalOrTextTag()
     validator = serializers.SlugRelatedField(slug_field='name', 
             read_only=True)
+    true_text_tag = TrueTextTagSerializer()
         
     class Meta:
         model = TextTag
         fields = ('id', 'created', 
-            'tokenizer', 'tagger', 'text', 
-            'is_valid', 'validator', 'tokens', 'tags_html')
-        read_only_fields = ('is_valid',)
+            'tokenizer', 'tagger', 'text', 'accuracy', 'true_text_tag', 
+            'is_valid', 'validator', 'tokens', 
+            'tags_html', 'tokens_string')
+        read_only_fields = ('is_valid', 'accuracy', 'true_text_tag')
     
     def create(self, validated_data):
         text_data = validated_data.pop('text')

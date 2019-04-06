@@ -29,13 +29,17 @@ class BitianistInformalTokenizer(Tokenizer):
     def tokenize(self, text):
         text_normal = cache.normalizers['bitianist-informal-refinement-normalizer']\
                             .normalize(text)
-        token_contents = text.content.split(' ')
+        text_tag, created = TextTag.objects.get_or_create(
+            text=text_normal, 
+            tokenizer=self
+            )
+        token_contents = text_normal.content.split(' ')
         token_contents = self.split_multi_token_words(token_contents)
         text_tag_tokens = []
         for token_content in token_contents:
             text_tag_tokens.append({'content': token_content})
-        text_tag = TextTag.objects.create(text=text, 
-                Tokenizer=self, tokens=text_tag_tokens)
+        text_tag.tokens = text_tag_tokens
+        text_tag.save()
         return text_tag
 
 def init():

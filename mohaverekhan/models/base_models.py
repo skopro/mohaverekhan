@@ -145,14 +145,15 @@ class TextNormal(Text):
         self.check_normalizers_sequence()
         super(TextNormal, self).save(*args, **kwargs)
 
-
 class TextTag(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created = models.DateTimeField(auto_now_add=True)
     tokenizer = models.ForeignKey('Tokenizer', on_delete=models.CASCADE, related_name='text_tags', related_query_name='text_tag')
-    tagger = models.ForeignKey('Tagger', on_delete=models.CASCADE, related_name='text_tags', related_query_name='text_tag')
+    tagger = models.ForeignKey('Tagger', on_delete=models.CASCADE, related_name='text_tags', related_query_name='text_tag', blank=True, null=True)
     text = models.ForeignKey('Text', on_delete=models.CASCADE, related_name='text_tags', related_query_name='text_tag')
     tokens = UTF8JSONField(default=list) # contains list of token with it's tag
+    accuracy = models.FloatField(default=0, blank=True)
+    true_text_tag = models.ForeignKey('self', on_delete=models.CASCADE, related_name='+', blank=True, null=True)
     is_valid = models.BooleanField(default=None, blank=True, null=True)
     validator = models.ForeignKey('Validator', on_delete=models.CASCADE, related_name='text_tags', related_query_name='text_tag', 
                                         blank=True, null=True)
@@ -161,6 +162,16 @@ class TextTag(models.Model):
         verbose_name = 'Text Tag'
         verbose_name_plural = 'Text Tags'
         ordering = ('-created',)
+
+    
+    @property
+    def tokens_string(self):
+        tokens_string = ''
+        if self.tokens:
+            for token in self.tokens:
+                tokens_string += token['content'] + ' ' 
+        return tokens_string.strip()
+
 
     @property
     def tags_html(self):
@@ -186,11 +197,15 @@ class TextTag(models.Model):
         return html
 
     def check_validation(self):
-        if self.tagger and self.tagger.name in ('bijankhan-tagger', 'bitianist-tagger'):
+        if self.tagger is not None and self.tagger.name in ('bijankhan-formal-tagger', 
+                                                'bitianist-informal-test-tagger'):
             self.is_valid = True
             self.validator = cache.bitianist_validator
+            # self.accuracy = 100
 
     def set_tag_details(self):
+        if not self.tagger:
+            return
         tag_details_dictionary = {tag.name:tag for tag in self.tagger.tag_set.tags.all()}
         referenced_tag = None
         for token in self.tokens:
@@ -312,6 +327,7 @@ class Tag(models.Model):
 
 class Validator(models.Model):
     name = models.SlugField(default='unknown-validator', unique=True)
+    show_name = models.CharField(max_length=200, default='اعتبارسنج نامشخص')
     created = models.DateTimeField(auto_now_add=True)
     owner = models.CharField(max_length=100, default='undefined')
     # is_automatic = models.BooleanField(default=False)
@@ -342,6 +358,7 @@ class Validator(models.Model):
 
 class Normalizer(models.Model):
     name = models.SlugField(default='unknown-normalizer', unique=True)
+    show_name = models.CharField(max_length=200, default='نرمال‌کننده نامشخص')
     created = models.DateTimeField(auto_now_add=True)
     owner = models.CharField(max_length=100, default='undefined')
     is_automatic = models.BooleanField(default=False)
@@ -387,6 +404,7 @@ class Normalizer(models.Model):
 
 class Tokenizer(models.Model):
     name = models.SlugField(default='unknown-normalizer', unique=True)
+    show_name = models.CharField(max_length=200, default='قطعه‌کننده نامشخص')
     created = models.DateTimeField(auto_now_add=True)
     owner = models.CharField(max_length=100, default='undefined')
     is_automatic = models.BooleanField(default=False)
@@ -411,6 +429,7 @@ class Tokenizer(models.Model):
 
 class Tagger(models.Model):
     name = models.SlugField(default='unknown-tagger', unique=True)
+    show_name = models.CharField(max_length=200, default='برچسب‌زن نامشخص')
     created = models.DateTimeField(auto_now_add=True)
     owner = models.CharField(max_length=100, default='undefined')
     is_automatic = models.BooleanField(default=False)
@@ -436,49 +455,16 @@ class Tagger(models.Model):
         return self.text_tags.filter(is_valid=True).count()
     
     def train(self):
-        num_epochs = 150
-        logger.info(f'Model is going to train for {num_epochs} epochs.')
-        seq2seq_model.train(False, num_epochs=num_epochs)
+        pass
+        # num_epochs = 150
+        # logger.info(f'Model is going to train for {num_epochs} epochs.')
+        # seq2seq_model.train(False, num_epochs=num_epochs)
 
     def tag(self, text):
-        if text.sentences.exists():
-            logger.debug(f'> sentence was exists')
-        else:
-            text.create_sentences()
+        pass
 
-        for sentence in text.sentences:
-            self.tag_sentence(sentence)
-            
-            text_tag.split_to_tokens()
-
-        sentence_tokens = [
-            ("خیلی", "A"),
-            ("افتضاح", "A"),
-            ("است", "V"),
-            (".", "O")
-        ]
-        sentence_tokens = [
-            {
-                'content':token, 
-                'tag':
-                {
-                    'name': tag
-                }
-            } for token, tag in sentence_tokens]
-        logger.info(f'sentence_tokens : \n\n{sentence_tokens}\n')
-
-        obj, created = TaggedSentence.objects.update_or_create(
-            tagger=self, sentence=sentence,
-            defaults={'tokens': sentence_tokens},
-        )
-        logger.debug(f"> created : {created}")
-
-        # TaggedSentence.objects.create(
-        #     tagger=self,
-        #     sentence=sentence,
-        #     tokens=sentence_tokens
-        # )
-        return text
+    def evaluate(self, prediction_text_tag, true_text_tag):
+        pass
 
     def infpost(self):
         try:

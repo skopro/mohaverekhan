@@ -79,10 +79,11 @@ class WordNormalAdmin(admin.ModelAdmin):
 
 
 class TextTagAdmin(admin.ModelAdmin):
-    list_per_page = 15
-    list_display = ('tags_html', 'get_text_content', 'is_valid',
+    list_per_page = 10
+    list_display = ('tags_html', 'get_text_content', 'is_valid', 
+                    'accuracy', 
                     'get_tokenizer_name', 'get_tagger_name', 
-                    'get_validator_name', 'created')
+                    'get_validator_name', 'true_text_tag', 'created')
     search_fields = ['text__content']
     list_filter = ['is_valid', 'tagger__name', 'tokenizer__name']
     ordering = ('-created',)
@@ -91,7 +92,7 @@ class TextTagAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
             'fields': ('id', 'created', 'get_text_content',
-             'tokens', 'tags_html', 'is_valid')
+             'tokens', 'tags_html', 'is_valid', 'accuracy',)
         }),
         ('Relations', {
             'fields': ('text', 'tokenizer', 'tagger', 'validator'),
@@ -146,7 +147,7 @@ class TextTagAdmin(admin.ModelAdmin):
 
 class TextTagInTextInline(admin.TabularInline):
     model = TextTag
-    fields = ('id', 'tokens', 'is_valid', 
+    fields = ('id', 'tokens', 'is_valid', 'accuracy', 'true_text_tag',
         'tokenizer', 'tagger', 'validator', 'created')
     readonly_fields = ['created', 'id', 'tokenizer', 'tagger', 'validator']
     extra = 0
@@ -296,7 +297,7 @@ class TagSetAdmin(admin.ModelAdmin):
 
 
 class NormalizerAdmin(admin.ModelAdmin):
-    list_display = ('name', 'owner', 'is_automatic', 
+    list_display = ('name', 'show_name', 'owner', 'is_automatic', 
                 'total_text_normal_count', 
                 'total_valid_text_normal_count',
                 'total_word_normal_count',
@@ -313,7 +314,7 @@ class NormalizerAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('id', 'created', 'last_update', 'name', 
+            'fields': ('id', 'created', 'last_update', 'name', 'show_name', 
                 'owner', 'is_automatic', 'model_details' )
         }),
         ('Rank', {
@@ -335,7 +336,7 @@ class NormalizerAdmin(admin.ModelAdmin):
     get_model_details.short_description = 'Model Details'
 
 class TokenizerAdmin(admin.ModelAdmin):
-    list_display = ('name', 'owner', 'is_automatic', 
+    list_display = ('name', 'show_name', 'owner', 'is_automatic', 
                 'total_text_tag_count', 
                 'total_valid_text_tag_count',
                 'get_model_details', 'last_update', 'created')
@@ -348,7 +349,7 @@ class TokenizerAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('id', 'created', 'last_update', 'name', 
+            'fields': ('id', 'created', 'last_update', 'name', 'show_name', 
                 'owner', 'is_automatic', 'model_details' )
         }),
         ('Rank', {
@@ -368,7 +369,7 @@ class TokenizerAdmin(admin.ModelAdmin):
     get_model_details.short_description = 'Model Details'
 
 class TaggerAdmin(admin.ModelAdmin):
-    list_display = ('name', 'owner', 'is_automatic', 'tag_set', 
+    list_display = ('name', 'show_name', 'owner', 'is_automatic', 'tag_set', 
                 'total_text_tag_count', 
                 'total_valid_text_tag_count', 
                 'get_model_details', 'last_update', 'created')
@@ -381,7 +382,7 @@ class TaggerAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('id', 'created', 'last_update', 'name',
+            'fields': ('id', 'created', 'last_update', 'name', 'show_name',
                     'owner', 'is_automatic', 'model_details', 'tag_set')
         }),
         ('Rank', {
@@ -405,7 +406,7 @@ class TaggerAdmin(admin.ModelAdmin):
     get_model_details.short_description = 'Model Details'
 
 class ValidatorAdmin(admin.ModelAdmin):
-    list_display = ('name', 'owner',
+    list_display = ('name', 'show_name', 'owner',
                 'total_text_normal_count', 
                 'total_word_normal_count',
                 'total_text_tag_count',
@@ -416,11 +417,11 @@ class ValidatorAdmin(admin.ModelAdmin):
                 'total_word_normal_count',
                 'total_text_tag_count',
                 ]
-    list_filter = ['name',]
+    list_filter = ['name', 'show_name',]
 
     fieldsets = (
         (None, {
-            'fields': ('id', 'created', 'name'
+            'fields': ('id', 'created', 'name', 'show_name',
                     )
         }),
         ('Rank', {

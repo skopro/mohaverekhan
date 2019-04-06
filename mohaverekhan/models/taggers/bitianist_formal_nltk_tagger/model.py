@@ -151,6 +151,7 @@ class BitianistFormalNLTKTagger(Tagger):
     def tag(self, text):
         text_tag = cache.tokenizers['bitianist-informal-tokenizer']\
                             .tokenize(text)
+        text_tag.tagger = self
         token_contents = [token['content'] for token in text_tag.tokens]
         if not self.main_tagger:
             if os.path.isfile(self.main_tagger_path):
@@ -162,7 +163,7 @@ class BitianistFormalNLTKTagger(Tagger):
         for i in range(len(text_tag.tokens)):
             text_tag.tokens[i]['tag'] = {'name': tagged_tokens[i][1]}
         text_tag.save()
-        logger.info(f'{text_tag.__unicode__()}')
+        logger.info(f'text tags : {text_tag.__unicode__()}')
         return text_tag
 
 def init():

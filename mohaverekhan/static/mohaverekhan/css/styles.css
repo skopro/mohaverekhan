@@ -37,7 +37,7 @@ html, body {
     width: 100%;
     /* right: 50%; */
     /* margin-left: -50%; */
-    padding: 50px 0px 50px 0px;
+    padding: 40px 0px 30px 0px;
     margin: 0 0 0 0;
 }
 
@@ -94,13 +94,13 @@ textarea {
     background-color: #44444e;
     margin-left: auto;
     margin-right: auto;
-    height: 275px;
+    height: 310px;
     border-width: 0;
     /* border: solid; */
     /* border-color: blue; */
     /* white-space: pre; */
     /* white-space: pre-line; */
-    white-space: pre-wrap;
+    /* white-space: pre-wrap; */
     /* direction: rtl !important; */
     direction: rtl !important;
     /* text-align: right; */
@@ -109,7 +109,7 @@ textarea {
     font-size: 2rem;
     font-weight: 500;
     padding: 1.7vh 1.7vw 1.7vh 1.7vw;
-    word-wrap: break-word;
+    /* word-wrap: break-word; */
     overflow: auto;
     /* overflow-y: auto; */
 }
@@ -134,31 +134,53 @@ textarea {
   outline: 1px solid slategrey;
 }
 
+
+
 .change-button {
-    width: 20vw;
+    width: 100% !important;
     height: 6vh;
     font-size: 2.2rem;
     font-weight: bold;
     border-width: 0;
     /* border-radius: 40px; */
-    margin: 1vh 3vw 1vh 3vw;
-    background-color: #045D56;
+    margin-top: auto !important;
+    margin-bottom: auto !important;
+    /* margin: 1vh 3vw 1vh 3vw; */
+    background-color: rgb(46, 143, 207);
+    /* background-color: #045D56; */
     /* background-color: #FFCF44; */
     /* color: black; */
 }
 
 
+
+
+.select-button * {
+    font-size: 2.2rem !important;
+    font-weight: 50 !important;
+    /* font-weight: bold; */
+    border-width: 0 !important;
+    border-image-width: 0 !important;
+    direction: ltr !important;
+    background-color: inherit !important;
+    margin: 0;
+    background-image: none;
+    text-align: center;
+    /* transition: width 2s;   */
+    /* -webkit-transition: width 2s; */
+}
+
 .select-button {
-    top: 12% !important;
+    /* top: 12% !important; */
     direction: ltr !important;
     width: 100% !important;
     height: 6vh !important;
-    font-size: 2.0rem;
+    font-size: 2.5rem;
     /* font-weight: bold; */
     border-width: 0;
     /* border-radius: 40px; */
     /* margin: 1vh 3vw 1vh 3vw; */
-    background-color: #045D56;
+    background-color: #045D56 !important;
     /* background-color: #FFCF44; */
     /* color: black; */
     display: inline-block !important;
@@ -167,19 +189,18 @@ textarea {
     margin-bottom: auto !important;
     outline-color: rgb(134, 7, 13) !important;
     border-radius: 4px !important;
+    /* transition: width 2s; */
+    /* -webkit-transition: width 2s; */
 }
 
-.select-button * {
-    font-size: 2.0rem !important;
-    /* font-weight: bold; */
-    border-width: 0 !important;
-    border-image-width: 0 !important;
-    direction: ltr !important;
-    background-color: inherit !important;
-    margin: 0;
-    background-image: none;
-    text-align: center;  
+.selected-button {
+    background-color: rgb(4, 126, 10) !important;
 }
+
+.not-selected-button {
+    /* background-color: #045D56 !important; */
+}
+
 
 .bootstrap-select .dropdown-toggle:focus, .bootstrap-select>select.mobile-device:focus+.dropdown-toggle {
     outline-color: rgb(36, 138, 5) !important;

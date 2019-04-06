@@ -166,10 +166,11 @@ def post(url, data_dictionary, log_it=False):
 
 
 
-def generate_normalizer_dictionary(name, is_automatic=False, 
+def generate_normalizer_dictionary(name, show_name, is_automatic=False, 
                                 owner=None, model_details=None, id=None):
     d = {}
     d['name'] = name
+    d['show_name'] = show_name
     d['is_automatic'] = is_automatic
     if owner:
         d['owner'] = owner
@@ -180,10 +181,11 @@ def generate_normalizer_dictionary(name, is_automatic=False,
     return d
 
 
-def generate_tokenizer_dictionary(name, is_automatic=False, 
+def generate_tokenizer_dictionary(name, show_name, is_automatic=False, 
                                 owner=None, model_details=None, id=None):
     d = {}
     d['name'] = name
+    d['show_name'] = show_name
     d['is_automatic'] = is_automatic
     if owner:
         d['owner'] = owner
@@ -194,10 +196,11 @@ def generate_tokenizer_dictionary(name, is_automatic=False,
     return d
 
 
-def generate_tagger_dictionary(name, is_automatic=False, owner=None,
+def generate_tagger_dictionary(name, show_name, is_automatic=False, owner=None,
                              model_details=None, tag_set=None, id=None):
     d = {}
     d['name'] = name
+    d['show_name'] = show_name
     d['is_automatic'] = is_automatic
     if owner:
         d['owner'] = owner
@@ -211,9 +214,10 @@ def generate_tagger_dictionary(name, is_automatic=False, owner=None,
 
 
 
-def generate_validator_dictionary(name, owner=None, id=None):
+def generate_validator_dictionary(name, show_name, owner=None, id=None):
     d = {}
     d['name'] = name
+    d['show_name'] = show_name
     if owner:
         d['owner'] = owner
     if id:
