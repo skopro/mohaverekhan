@@ -25,6 +25,7 @@ class BitianistFormalNLTKTagger(Tagger):
     Tag => G
     """
     word_patterns = [
+        (r'^\\n$', 'O'), #bitianist
         (rf'^-?[0-9{cache.numbers}]+([.,][0-9{cache.numbers}]+)?$', 'U'),
         (r'^[\.:!،؛؟»\]\)\}«\[\(\{\'\"…#+*,$@]+$', 'O'),
         (rf'^بی‌[{cache.persians}]+$|^بی [{cache.persians}]+$', 'A'),
@@ -117,10 +118,12 @@ class BitianistFormalNLTKTagger(Tagger):
 
     def train(self):
         bijankhan_tag_set = TagSet.objects.get(name='bijankhan-tag-set')
-        text_tokens_list = TextTag.objects.filter(
-            Q(is_valid=True) &
-            (Q(tagger__tag_set=self.tag_set) | Q(tagger__tag_set=bijankhan_tag_set))
-        ).values_list('tokens', flat=True)
+        text_tokens_list = TextTag.objects.filter(tagger__tag_set=bijankhan_tag_set).values_list('tokens', flat=True)
+            # Q(is_valid=True) &
+            # (Q(tagger__tag_set=self.tag_set) | 
+            # Q(tagger__tag_set=bijankhan_tag_set)
+        # )
+        # ).values_list('tokens', flat=True)
         logger.info(f'> text_tokens_list.count() : {text_tokens_list.count()}')
         if text_tokens_list.count() == 0:
             logger.error(f'> text_tokens_list count == 0 !!!')

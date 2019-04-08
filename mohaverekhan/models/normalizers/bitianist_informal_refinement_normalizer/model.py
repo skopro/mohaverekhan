@@ -40,9 +40,10 @@ class BitianistInformalRefinementNormalizer(Normalizer):
         (r'ي', r'ی', '', 'hazm', 'true'),
         (r'ئ', r'ی', '', 'hazm', 'true'),
         (r'ؤ', r'و', '', 'hazm', 'true'),
-        (r'إ', r'ا', '', 'hazm', 'true'),
-        (r'أ', r'ا', '', 'hazm', 'true'),
-        (r'ة', r'ه', '', 'hazm', 'true'),
+        # (r'آ', r'ا', '', 'bitianist', 'true'),
+        (r'إ', r'ا', '', 'bitianist', 'true'),
+        (r'أ', r'ا', '', 'bitianist', 'true'),
+        (r'ة', r'ه', '', 'bitianist', 'true'),
         # (r'هٔ', r'ه', '', 'hazm', 'true'),
         (r'“', r'"', '', 'hazm', 'true'),
         (r'”', r'"', '', 'hazm', 'true'),
@@ -66,10 +67,24 @@ class BitianistInformalRefinementNormalizer(Normalizer):
         (r'([^\.]|^)(\.\.\.)([^\.]|$)', r'\1…\3', 'replace 3 dots with …', 0, 'bitianist', 'true'),
         (rf'([{cache.punctuations}])\1+', r'\1', 'remove cache.punctuations repetitions', 0, 'bitianist', 'true'),
         (r'"([^\n"]+)"', r'«\1»', 'replace quotation with gyoome', 0, 'hazm', 'true'),
+        # (r'(-?[0-9۰۱۲۳۴۵۶۷۸۹]+([.,][0-9۰۱۲۳۴۵۶۷۸۹]+)?)', r' \1 ', 'number', 0, 'bitianist', 'true'),
+        (rf'({cache.emoji})(?=[{cache.persians}{cache.punctuations}])', r'\1 ', '', 0, 'bitianist', 'true'),
+        (rf'({cache.link})(?=[{cache.persians}{cache.punctuations}{cache.emoji}])', r'\1 ', '', 0, 'bitianist', 'true'),
+        (rf'({cache.email})(?=[{cache.persians}{cache.punctuations}{cache.emoji}])', r'\1 ', '', 0, 'bitianist', 'true'),
+        (rf'({cache.id})(?=[{cache.persians}{cache.punctuations}{cache.emoji}])', r'\1 ', '', 0, 'bitianist', 'true'),
+        (rf'({cache.tag})(?=[{cache.persians}{cache.punctuations}{cache.emoji}])', r'\1 ', '', 0, 'bitianist', 'true'),
+        # (rf'({cache.link}|{cache.emoji}|{cache.email}|{cache.id}|{cache.tag})(?=[{cache.persians}{cache.punctuations}])', r'\1 ', '', 0, 'bitianist', 'true'),
+        (rf'(?<=[{cache.persians}{cache.punctuations}])({cache.emoji})', r' \1', '', 0, 'bitianist', 'true'),
+        (rf'(?<=[{cache.persians}{cache.punctuations}])({cache.link})', r' \1', '', 0, 'bitianist', 'true'),
+        (rf'(?<=[{cache.persians}{cache.punctuations}])({cache.email})', r' \1', '', 0, 'bitianist', 'true'),
+        (rf'(?<=[{cache.persians}{cache.punctuations}])({cache.id})', r' \1', '', 0, 'bitianist', 'true'),
+        (rf'(?<=[{cache.persians}{cache.punctuations}])({cache.tag})', r' \1', '', 0, 'bitianist', 'true'),
+        # (rf'(?<=[{cache.persians}{cache.punctuations}])({cache.link}|{cache.emoji}|{cache.email}|{cache.id}|{cache.tag})', r' \1', '', 0, 'bitianist', 'true'),
         # (rf'(?<=[^a-zA-Z{cache.numbers}])([{cache.punctuations}])(?=[^a-zA-Z]|$)', r' \1 ', 'add extra space before and after of cache.punctuations', 0, 'bitianist', 'true'),
-        (rf'([{cache.punctuations}])(?=[{cache.persians}\n ]|$)|(?<=[{cache.persians}\n ])([{cache.punctuations}])', r' \1\2 ', 'add extra space before and after of cache.punctuations', 0, 'bitianist', 'true'),
+        (rf'([{cache.punctuations}]|[{cache.numbers}]+)(?=[{cache.persians}])', r'\1 ', 'add extra space before and after of cache.punctuations', 0, 'bitianist', 'true'),
+        (rf'(?<=[{cache.persians}])([{cache.punctuations}]|[{cache.numbers}]+)', r' \1', 'add extra space before and after of cache.punctuations', 0, 'bitianist', 'true'),
         # (rf'([^a-zA-Z {cache.numbers}]+)([{cache.numbers}]+)|([{cache.numbers}]+)([^a-zA-Z {cache.numbers}]+)', r'\1 \2\3 \4', '', 0, 'bitianist', 'true'),
-        (rf'([{cache.persians}]+)([{cache.numbers}]+)|([{cache.numbers}]+)([{cache.persians}]+)', r'\1 \2\3 \4', '', 0, 'bitianist', 'true'),
+        # (rf'([{cache.persians}]+)([{cache.numbers}]+|[{cache.punctuations}]+|cache.link_pattern)|([{cache.numbers}]+)([{cache.persians}]+)', r'\1 \2\3 \4', '', 0, 'bitianist', 'true'),
         (r'\n+', r'\n', 'remove extra newlines', 0, 'bitianist', 'true'),
         (r'\n', r' newline ', 'replace \n to newline for changing back', 0, 'bitianist', 'true'),
         (r' +', r' ', 'remove extra spaces', 0, 'hazm', 'true'),
@@ -126,6 +141,20 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                 logger.info(f'> found repetition token {token_content} -> {fixed_token_content}')
                 return fixed_token_content
             
+            # عاااالیه
+            logger.info(f'> fix_repetition_token token_content[0:-1] : {token_content[0:-1]}')
+            fixed_token_content = self.repetition_pattern.sub(r'\1\1', token_content[0:-1])
+            if fixed_token_content in cache.token_set:
+                fixed_token_content += token_content[-1]
+                logger.info(f'> found repetition token {token_content} -> {fixed_token_content}')
+                return fixed_token_content
+
+            fixed_token_content = self.repetition_pattern.sub(r'\1', token_content[0:-1])
+            if fixed_token_content in cache.token_set:
+                fixed_token_content += token_content[-1]
+                logger.info(f'> found repetition token {token_content} -> {fixed_token_content}')
+                return fixed_token_content
+            
             fixed_token_content = token_content
             
         return fixed_token_content
@@ -158,7 +187,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
         i = 0
         while i < token_length:
             move_count = min(token_length - (i+1), self.move_limit)
-            logger.debug(f'> i : {i} | move_count : {move_count}')
+            # logger.debug(f'> i : {i} | move_count : {move_count}')
 
             # end
             if move_count == 0:
@@ -177,13 +206,15 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                     fixed_text_content += fixed_token_content + ' '
                     break
 
-                fixed_token_content = ''.join(token_contents[i:i+move_count+1])
-                if fixed_token_content in cache.token_set or move_count == 0:
-                    logger.debug(f'> empty [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
-                    # logger.debug(f'> Found => move_count : {move_count} | fixed_token_content : {fixed_token_content}')
-                    i = i + move_count + 1
-                    fixed_text_content += fixed_token_content + ' '
-                    break
+                #دو بار بری رو داشت جمع میکردی دو باربری
+                #باید جدول توکن ها درست کنم که براساس تگ تصمیم بگیرم بچسبونم یا نه
+                # fixed_token_content = ''.join(token_contents[i:i+move_count+1])
+                # if fixed_token_content in cache.token_set or move_count == 0:
+                #     logger.debug(f'> empty [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
+                #     # logger.debug(f'> Found => move_count : {move_count} | fixed_token_content : {fixed_token_content}')
+                #     i = i + move_count + 1
+                #     fixed_text_content += fixed_token_content + ' '
+                #     break
 
         text.content = fixed_text_content.strip(' ')
         logger.debug(f'{text.content}')
@@ -192,10 +223,10 @@ class BitianistInformalRefinementNormalizer(Normalizer):
     def fix_wrong_joined_undefined_token(self, token_content):
         nj_pattern = re.compile(r'‌')
         if nj_pattern.search(token_content):
-            logger.debug(f'> nj found in token.')
+            logger.debug(f'> nj found in token : {token_content}')
             fixed_token_content = token_content.replace('‌', '')
             if fixed_token_content in cache.token_set:
-                logger.debug(f'> nj replaced with empty')
+                logger.debug(f'> nj replaced with empty : {fixed_token_content}')
                 return fixed_token_content
 
         part1, part2, nj_joined, sp_joined = '', '', '', ''
@@ -213,7 +244,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
         #         logger.debug(f'> Found sp_joined : {sp_joined}')
         #         return sp_joined
 
-        logger.debug(f"> Can't fix {token_content}")
+        # logger.debug(f"> Can't fix {token_content}")
         return token_content
 
     def fix_wrong_joined_undefined_tokens(self, text):
@@ -255,7 +286,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
         end_ts = time.time()
         logger.info(f"> (Time)({end_ts - beg_ts:.6f})")
         text_normal.save()
-        logger.info(f'{text_normal}')
+        logger.info(f'> Result : \n{text_normal.content}')
         return text_normal
 
 

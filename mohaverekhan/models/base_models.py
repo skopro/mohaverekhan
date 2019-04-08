@@ -14,6 +14,8 @@ import time
 import datetime
 import random
 import re
+from nltk.metrics import accuracy
+
 from mohaverekhan import cache
 from django.utils.html import format_html
 
@@ -82,7 +84,7 @@ class WordNormal(models.Model):
     def check_validation(self):
         if self.normalizer.name == 'bitianist-normalizer':
             self.is_valid = True
-            self.validator = cache.bitianist_validator
+            self.validator = cache.validators['bitianist-validator']
             
 
     def save(self, *args, **kwargs):
@@ -128,15 +130,15 @@ class TextNormal(Text):
         ordering = ('-created',)
 
     def check_validation(self):
-        if self.normalizer.name == 'bitianist-normalizer':
+        if self.normalizer.name == 'bitianist-manual-normalizer':
             self.is_valid = True
-            self.validator = cache.bitianist_validator
+            self.validator = cache.validators['bitianist-validator']
 
     def check_normalizers_sequence(self):
         if self.text.normalizers_sequence:
             if self.text.normalizers_sequence[-1] != self.normalizer.name:
                 self.normalizers_sequence = self.text.normalizers_sequence \
-                                                + self.normalizer.name
+                                                + [self.normalizer.name]
         else:
             self.normalizers_sequence = [self.normalizer.name]
             
@@ -169,9 +171,22 @@ class TextTag(models.Model):
         tokens_string = ''
         if self.tokens:
             for token in self.tokens:
-                tokens_string += token['content'] + ' ' 
+                if token['content'] == '\\n':
+                    tokens_string += '\n'
+                else:
+                    tokens_string += token['content'] + ' ' 
         return tokens_string.strip()
 
+    @property
+    def tags_string(self):
+        tags_string = ''
+        if self.tokens:
+            for token in self.tokens:
+                if token['content'] == '\\n':
+                    tags_string += 'O \n '
+                else:
+                    tags_string += token['tag']['name'] + ' ' 
+        return tags_string.strip()
 
     @property
     def tags_html(self):
@@ -179,7 +194,7 @@ class TextTag(models.Model):
         if self.tokens:
             for token in self.tokens:
                 if 'tag' in token:
-                    if token["tag"]["name"] == '\n':
+                    if token['content'] == '\\n':
                         html += format_html(f'<br />')
                     else:
                         # html += format_html(f'<div>hello</div>')
@@ -197,10 +212,10 @@ class TextTag(models.Model):
         return html
 
     def check_validation(self):
-        if self.tagger is not None and self.tagger.name in ('bijankhan-formal-tagger', 
-                                                'bitianist-informal-test-tagger'):
+        if self.tagger is not None and self.tagger.name in ('bijankhan-manual-tagger', 
+                                                'bitianist-manual-tagger'):
             self.is_valid = True
-            self.validator = cache.bitianist_validator
+            self.validator = cache.validators['bitianist-validator']
             # self.accuracy = 100
 
     def set_tag_details(self):
@@ -231,6 +246,17 @@ class TextTag(models.Model):
             for token in self.tokens:
                 rep += f'{token["content"]}_{token["tag"]["name"]} '
         return rep
+
+    def evaluate(self, predicted_text_tag):
+        predicted_tags_sequence = [token['tag']['name'] for token in predicted_text_tag.tokens]
+        true_tags_sequence = [token['tag']['name'] for token in self.tokens]
+        asses = zip(predicted_tags_sequence, true_tags_sequence)
+        newline = '\n'
+        logger.info(f'asses : \n{newline.join([ass.__str__() for ass in asses])}\n')
+        predicted_text_tag.accuracy = accuracy(true_tags_sequence, predicted_tags_sequence) * 100
+        predicted_text_tag.true_text_tag = self
+        predicted_text_tag.save()
+        return predicted_text_tag
 
  # def is_tokens_valid(self):
     #     is_valid = True
@@ -291,7 +317,7 @@ class Tag(models.Model):
     persian = models.CharField(max_length=30)
     color = ColorField()
     tag_set = models.ForeignKey(to='TagSet', on_delete=models.CASCADE, related_name='tags', related_query_name='tag')
-    # examples = ArrayField(models.CharField(max_length=30), blank=True, default=list)
+    examples = ArrayField(models.CharField(max_length=50), blank=True, default=list)
 
     def __str__(self):  
         return self.name
@@ -302,22 +328,35 @@ class Tag(models.Model):
         ordering = ('-created',)
         unique_together = (("name", "tag_set"), ("persian", "tag_set"),)
 
-    @property
-    def examples(self):
+    # @property
+    def update_examples(self, text_tag_tokens_list):
         examples = set()
-        text_tag_tokens = TextTag.objects.filter(tagger__tag_set=self.tag_set, is_valid=True, \
-            tokens__tag__contains={'name': self.name}).values_list('tokens', flat=True)[:300]
-        if not text_tag_tokens:
-            return list(examples)
-        
-        text_tag_tokens = random.sample(text_tag_tokens, min(len(text_tag_tokens), 20))
-        for text_tag_token in text_tag_tokens:
-            if text_tag_token['tag']['name'] == self.name:
-                examples.add(text_tag_token['content'])
-                if len(examples) >= 20:
-                    break
+        # search_token = [{'tag': {'name': self.name, 'persian': self.persian, 'color': self.color }}]
+        # text_tag_tokens_list = TextTag.objects.filter(tagger__tag_set=self.tag_set, is_valid=True, \
+        #     tokens__contains=search_token).values_list('tokens', flat=True)
 
-        return list(examples)
+        # logger.debug(f'> {self.name} text_tag_tokens_list.count() : {text_tag_tokens_list.count()} {type(text_tag_tokens_list)}')
+
+        # if not text_tag_tokens_list or text_tag_tokens_list.count() == 0:
+        #     self.examples = list(examples)
+
+        # text_tag_tokens_list = list(text_tag_tokens_list)
+        
+        # text_tag_tokens_list = random.sample(text_tag_tokens_list, min(len(text_tag_tokens_list), 40))
+        
+        logger.debug(f'> {self.name} len(text_tag_tokens_list) : {len(text_tag_tokens_list)} {type(text_tag_tokens_list)}')
+        for text_tag_tokens in text_tag_tokens_list:
+            # logger.debug(f'> text_tag_tokens[0] != self.tag_set.name => {text_tag_tokens[0]} != {self.tag_set.name} => {text_tag_tokens[0] != self.tag_set.name}')
+            if text_tag_tokens[0] != self.tag_set.name:
+                continue
+            for text_tag_token in text_tag_tokens[1]:
+                if text_tag_token['tag']['name'] == self.name:
+                    examples.add(text_tag_token['content'])
+                    if len(examples) >= 25:
+                        break
+
+        self.examples = list(examples)
+        self.save(update_fields=['examples']) 
 
     # def add_to_examples(self, token_content):
     #     if (token_content not in self.examples 
@@ -463,8 +502,6 @@ class Tagger(models.Model):
     def tag(self, text):
         pass
 
-    def evaluate(self, prediction_text_tag, true_text_tag):
-        pass
 
     def infpost(self):
         try:
@@ -632,7 +669,7 @@ def init():
 #         self.is_valid = False
 #         if self.normalizer:
 #                 self.is_valid = True
-#                 self.validator = cache.bitianist_validator
+#                 self.validator = cache.validators['bitianist-validator']
 #         super(NormalSentence, self).save(*args, **kwargs)
 
 

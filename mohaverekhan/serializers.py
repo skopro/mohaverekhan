@@ -213,7 +213,7 @@ class TextTagSerializer(serializers.ModelSerializer):
     text = TextInTextNormalOrTextTag()
     validator = serializers.SlugRelatedField(slug_field='name', 
             read_only=True)
-    true_text_tag = TrueTextTagSerializer()
+    true_text_tag = TrueTextTagSerializer(required=False, read_only=True)
         
     class Meta:
         model = TextTag
@@ -234,7 +234,19 @@ class TextTagSerializer(serializers.ModelSerializer):
         tagged_text = TextTag.objects.create(text=text, **validated_data)
         return tagged_text
 
+    def update(self, instance, validated_data):
+        text_data = validated_data.get('text', None)
+        if not text_data:
+            return instance
+        text_content = text_data.get('content', None)
+        if not text_content:
+            return instance
+        instance.text.content = text_content
+        instance.text.save(update_fields=['content'])
 
+        instance.tokens = validated_data.get('tokens', instance.tokens)
+        instance.save(update_fields=['tokens'])
+        return instance
 
 class WordNormalInWordSerializer(serializers.ModelSerializer):
     normalizer = serializers.SlugRelatedField(slug_field='name', 

@@ -211,7 +211,7 @@ $(document).ready(function(){
     function do_after_success_tokenizing_text(result, status, xhr) {
         tokens_string = xhr.responseJSON.tokens_string
         console.log(tokens_string)
-        $("#output-text").html(tokens_string);
+        $("#output-text").html(tokens_string.replace(/\n/g, "<br>"));
     }
     function do_after_success_normalizing_text(result, status, xhr) {
         text_id = xhr.responseJSON.id

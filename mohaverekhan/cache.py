@@ -7,7 +7,7 @@ repetition_pattern = re.compile(r"([^A-Za-z])\1{1,}")
 # debug_pattern = re.compile(r'[0-9۰۱۲۳۴۵۶۷۸۹]')
 # debug_pattern = re.compile(r'^گرون$|^میدون$|^خونه$|^نون$|^ارزون$|^اون$|^قلیون$')
 # debug_pattern = re.compile(r'هایمان')
-debug_pattern = re.compile(r'$کننده')
+debug_pattern = re.compile(r'درسته')
 
 logger = None
 # Word, WordNormal, Text, TextNormal = None, None, None, None
@@ -23,6 +23,11 @@ compile_patterns = lambda patterns: [(re.compile(pattern), repl) for pattern, re
 punctuations = r'\.:!،؛؟»\]\)\}«\[\(\{\'\"…'
 numbers = r'۰۱۲۳۴۵۶۷۸۹'
 persians = 'اآب‌پتثجچحخدذرزژسشصضطظعغفقکگلمنوهی'
+link = r'((https?|ftp):\/\/)?(?<!@)([wW]{3}\.)?(([\w-]+)(\.(\w){2,})+([-\w@:%_\+\/~#?&=]+)?)'
+emoji = r'[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F4CC\U0001F4CD]+'
+email = r'[a-zA-Z0-9\._\+-]+@([a-zA-Z0-9-]+\.)+[A-Za-z]{2,}'
+id = r'([^\w\._]*)(@[\w_]+)([\S]+)'
+tag = r'\#([\S]+)'
 # def cache_models():
 #     global Word, WordNormal, Text, TextNormal
 #     global TextTag, TagSet, Tag, Validator
@@ -45,6 +50,7 @@ def cache_tokens():
     text_tokens_list = TextTag.objects.filter(is_valid=True).values_list('tokens', flat=True)
     if text_tokens_list.count() == 0:
         return
+    logger.info(f'> Looking for {debug_pattern}')
     for text_tokens in text_tokens_list:
         for token in text_tokens:
             token_content = token['content']
@@ -54,6 +60,10 @@ def cache_tokens():
                 logger.info(f'> Token [{token_content}] has tag [{tag_name}]')
             if tag_name not in ('O', 'U'):
                 token_set.add(token_content)
+    token_set.remove('دیگهای')
+    token_set.remove('کتابه')
+    token_set.remove('عالیه')
+    token_set.remove('درسته')
     logger.info(f'> len(token_set) : {len(token_set)}')
     logger.info(f'> token_set samples : {set(random.sample(token_set, 20)) }')
     for token in token_set:

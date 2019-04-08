@@ -87,12 +87,14 @@ class TextTagAdmin(admin.ModelAdmin):
     search_fields = ['text__content']
     list_filter = ['is_valid', 'tagger__name', 'tokenizer__name']
     ordering = ('-created',)
-    readonly_fields = ['created', 'id', 'text', 'get_text_content', 'tags_html']
+    readonly_fields = ['created', 'id', 'text', 'get_text_content', 'tags_html', 
+                   'tokens_string', 'tags_string']
 
     fieldsets = (
         (None, {
             'fields': ('id', 'created', 'get_text_content',
-             'tokens', 'tags_html', 'is_valid', 'accuracy',)
+             'tokens', 'tags_html', 'is_valid', 'accuracy', 
+             'tokens_string', 'tags_string')
         }),
         ('Relations', {
             'fields': ('text', 'tokenizer', 'tagger', 'validator'),
@@ -126,10 +128,10 @@ class TextTagAdmin(admin.ModelAdmin):
             <div style="direction: rtl !important;text-align: right;padding: 0.2vh 1.0vw 0.2vh 1.0vw;">
                 {}
             </div>
-            ''', obj.text.content)
+            ''', format_html(obj.text.content.replace('\n', format_html('<br />'))))
         return html
     get_text_content.admin_order_field = 'created' 
-    get_text_content.short_description = 'Sentence Content'
+    get_text_content.short_description = 'Text Content'
 
     def get_tokenizer_name(self, obj):
         if not obj.tokenizer:
@@ -168,7 +170,8 @@ class TextAdmin(admin.ModelAdmin):
     search_fields = ['content', 'id']
     ordering = ('-created',)
     list_filter = ['normalizers_sequence',]
-    readonly_fields = ['created', 'id', 'normalizers', 'normalizers_sequence']
+    readonly_fields = ['created', 'id', 'normalizers', 'normalizers_sequence',
+        'total_text_tag_count', 'total_text_normal_count']
     # exclude = ('normalizers',)
 
     fieldsets = (
@@ -224,10 +227,23 @@ class TextNormalAdmin(admin.ModelAdmin):
     get_normalizer_name.admin_order_field = 'created' 
     get_normalizer_name.short_description = 'Normalizer Name'
 
+    # def get_text_content(self, obj):
+    #     if not obj.text:
+    #         return None
+    #     return obj.text.content
+    # get_text_content.admin_order_field = 'created' 
+    # get_text_content.short_description = 'Text Content'
+
     def get_text_content(self, obj):
         if not obj.text:
             return None
-        return obj.text.content
+        # return obj.text.content
+        html = format_html('''
+            <div style="direction: rtl !important;text-align: right;padding: 0.2vh 1.0vw 0.2vh 1.0vw;">
+                {}
+            </div>
+            ''', format_html(obj.text.content.replace('\n', format_html('<br />'))))
+        return html
     get_text_content.admin_order_field = 'created' 
     get_text_content.short_description = 'Text Content'
 
