@@ -14,7 +14,7 @@ import nltk
 from mohaverekhan import utils
 
 
-logger = utils.get_logger(logger_name='data_setup_7')
+logger = utils.get_logger(logger_name='data_setup')
 CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
 logger.info(f'CURRENT_DIR : {CURRENT_DIR}')
 
@@ -458,3 +458,7 @@ def decode(sequence, lookup, separator=''): # 0 used for padding, is ignored
 
 if __name__ == '__main__':
     process_data()
+
+def init():
+    global logger
+    logger = logging.getLogger(__name__)

@@ -119,7 +119,7 @@ class BitianistFormalNLTKTagger(Tagger):
 
     def train(self):
         bijankhan_tag_set = TagSet.objects.get(name='bijankhan-tag-set')
-        text_tokens_list = TextTag.objects.filter(tagger__tag_set=bijankhan_tag_set).values_list('tokens', flat=True)
+        text_tokens_list = TextTag.objects.filter(tagger__tag_set=bijankhan_tag_set).values_list('tagged_tokens', flat=True)
             # Q(is_valid=True) &
             # (Q(tagger__tag_set=self.tag_set) | 
             # Q(tagger__tag_set=bijankhan_tag_set)
@@ -137,7 +137,7 @@ class BitianistFormalNLTKTagger(Tagger):
         token_content = ''
         for text_tokens in text_tokens_list:
             for token in text_tokens:
-                token_content = self.refine_training_token(token['content'])
+                token_content = self.refine_training_token(token['token'])
                 tagged_sentence.append((token_content, token['tag']['name']))
                 if token_content in ('.', '!', '?', '؟'):
                     tagged_sentences.append(tagged_sentence)
@@ -153,10 +153,14 @@ class BitianistFormalNLTKTagger(Tagger):
 
     
     def tag(self, text):
-        text_tag = cache.tokenizers['bitianist-informal-tokenizer']\
-                            .tokenize(text)
-        text_tag.tagger = self
-        token_contents = [token['content'] for token in text_tag.tokens]
+        text_normal = cache.normalizers['bitianist-informal-refinement-normalizer']\
+                            .normalize(text)
+        text_tag, created = TextTag.objects.get_or_create(
+            tagger=self,
+            text=text_normal,
+        )
+        # token_contents = [token['token'] for token in text_tag.tokens]
+        token_contents = text_normal.content.replace('\n', ' \\n ').split(' ')
         if not self.main_tagger:
             if os.path.isfile(self.main_tagger_path):
                 self.load_trained_main_tagger()
@@ -164,8 +168,16 @@ class BitianistFormalNLTKTagger(Tagger):
                 raise Exception()
         
         tagged_tokens = self.main_tagger.tag(token_contents)
-        for i in range(len(text_tag.tokens)):
-            text_tag.tokens[i]['tag'] = {'name': tagged_tokens[i][1]}
+        tagged_token_json = {}
+        text_tag.tagged_tokens = []
+        for tagged_token in tagged_tokens:
+            tagged_token_json = {}
+            tagged_token_json['token'] = tagged_token[0]
+            tagged_token_json['tag'] = {'name': tagged_token[1]}
+            logger.info(f'tagged_token_json : {tagged_token_json}')
+            text_tag.tagged_tokens.append(tagged_token_json)
+        # for i in range(len(text_tag.tokens)):
+        #     text_tag.tokens[i]['tag'] = {'name': tagged_tokens[i][1]}
         text_tag.save()
         logger.info(f'text tags : {text_tag.__unicode__()}')
         return text_tag

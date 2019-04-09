@@ -261,7 +261,7 @@ class TextTagSerializer(serializers.ModelSerializer):
         instance.text.content = text_content
         instance.text.save(update_fields=['content'])
 
-        instance.tokens = validated_data.get('tagged_tokens', instance.tokens)
+        instance.tagged_tokens = validated_data.get('tagged_tokens', instance.tagged_tokens)
         instance.save(update_fields=['tagged_tokens'])
         return instance
 

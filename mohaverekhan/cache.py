@@ -131,7 +131,7 @@ def cache_token_tags_dic():
     logger.info(f'>>> Random samples')
     for tag_set, token_tags in temp_tag_set_token_tags.items():
         logger.info(f'>> tag_set : {tag_set}')
-        for token in random.sample(list(token_tags), 25):
+        for token in random.sample(list(token_tags), min(len(token_tags), 25)):
             logger.info(f'> {token} : {token_tags[token]}')
 
     

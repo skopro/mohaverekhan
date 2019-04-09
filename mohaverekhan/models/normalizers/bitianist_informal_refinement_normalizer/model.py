@@ -240,12 +240,15 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                 logger.debug(f'> Found nj_joined : {nj_joined}')
                 return nj_joined
         
-        # for i in range(1, len(token_content)): # محاوره‌ خوان
-        #     part1, part2 = token_content[:i], token_content[i:]
-        #     if part1 in cache.all_token_tags and part2 in cache.all_token_tags:
-        #         sp_joined = f'{part1} {part2}'
-        #         logger.debug(f'> Found sp_joined : {sp_joined}')
-        #         return sp_joined
+        for i in range(1, len(token_content)): # محاوره‌ خوان
+            part1, part2 = token_content[:i], token_content[i:]
+            if part1 in cache.all_token_tags and part2 in cache.all_token_tags:
+                if ('T' in cache.all_token_tags[part1] or
+                    'C' in cache.all_token_tags[part2] 
+                    ):
+                    sp_joined = f'{part1} {part2}'
+                    logger.debug(f'> Found sp_joined : {sp_joined}')
+                    return sp_joined
 
         # logger.debug(f"> Can't fix {token_content}")
         return token_content

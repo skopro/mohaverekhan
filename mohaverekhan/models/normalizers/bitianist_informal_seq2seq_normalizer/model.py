@@ -337,7 +337,7 @@ def init():
     logger = logging.getLogger(__name__)
     CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
     logger.info(f'CURRENT_DIR : {CURRENT_DIR}')
-    MODEL_PATH = os.path.join(utils.DATA_PATH, 'persian_informal_to_formal_seq2seq_model.npz')
+    MODEL_PATH = os.path.join(utils.DATA_PATH, 'model.npz')
 
     sess_config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
     if os.path.isfile(MODEL_PATH):

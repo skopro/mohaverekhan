@@ -102,7 +102,7 @@ class TextTagAdmin(admin.ModelAdmin):
     )
     
     def get_tagged_tokens_html(self, obj):
-        return format_html(obj.tagged_tokens_html)
+        return format_html(obj.tagged_tokens_html.replace(r'}', r'}}').replace(r'{', r'{{'))
         # return format_html(
         #     '''
         #     <div style="background-color: #44444e !important;">
@@ -128,7 +128,7 @@ class TextTagAdmin(admin.ModelAdmin):
             <div style="direction: rtl !important;text-align: right;padding: 0.2vh 1.0vw 0.2vh 1.0vw;">
                 {}
             </div>
-            ''', format_html(obj.text.content.replace('\n', format_html('<br />'))))
+            ''', format_html(obj.text.content.replace(r'}', r'}}').replace(r'{', r'{{').replace('\n', format_html('<br />'))))
         return html
     get_text_content.admin_order_field = 'created' 
     get_text_content.short_description = 'Text Content'
@@ -354,10 +354,10 @@ class TokenAdmin(admin.ModelAdmin):
     get_number_of_tags.short_description = 'Number Of Tags'
 
 class TokenTagAdmin(admin.ModelAdmin):
-    list_display = ('get_token_content', 'get_tag_name', 'get_tag_set_name',
+    list_display = ('get_token_content', 'get_tag_name', 'get_tag_persian', 'get_tag_set_name',
                 'number_of_repetitions', 'created')
     search_fields = ['token__content', 'id']
-    ordering = ('-created', 'number_of_repetitions')
+    ordering = ('-number_of_repetitions', '-created')
     list_filter = ['tag__tag_set__name', 'tag__name']
     readonly_fields = ['created', 'id', 'number_of_repetitions']
     # exclude = ('normalizers',)
@@ -390,6 +390,14 @@ class TokenTagAdmin(admin.ModelAdmin):
         return obj.tag.name
     get_tag_name.admin_order_field = 'created' 
     get_tag_name.short_description = 'Tag Name'
+
+    def get_tag_persian(self, obj):
+        if not obj.tag:
+            return None
+        # return obj.token.content
+        return obj.tag.persian
+    get_tag_persian.admin_order_field = 'created' 
+    get_tag_persian.short_description = 'Tag Persian'
 
     def get_tag_set_name(self, obj):
         if not obj.tag:

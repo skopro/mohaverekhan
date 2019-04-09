@@ -142,9 +142,9 @@ $(document).ready(function(){
 
 
     function do_after_success_tagging_text(result, status, xhr) {
-        tags_html = xhr.responseJSON.tags_html
-        console.log(tags_html)
-        $("#output-text").html(tags_html);
+        tagged_tokens_html = xhr.responseJSON.tagged_tokens_html
+        console.log(tagged_tokens_html)
+        $("#output-text").html(tagged_tokens_html);
 
         // html = ''
         // for(var i in xhr.responseJSON.tokens) {
