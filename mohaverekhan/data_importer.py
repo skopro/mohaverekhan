@@ -28,6 +28,9 @@ text_tags_url = fr'{base_api_url}/text-tags'
 tag_sets_url = fr'{base_api_url}/tag-sets'
 tags_url = fr'{base_api_url}/tags'
 
+tokens_url = fr'{base_api_url}/tokens'
+token_tags_url = fr'{base_api_url}/token-tags'
+
 validators_url = fr'{base_api_url}/validators'
 normalizers_url = fr'{base_api_url}/normalizers'
 taggers_url = fr'{base_api_url}/taggers'
@@ -270,10 +273,10 @@ def generate_text_normal_dictionary(content, normalizer,
         d['id'] = id 
     return d
 
-def generate_text_tag_dictionary(tokens, tagger, 
+def generate_text_tag_dictionary(tagged_tokens, tagger, 
         text, id=None):
     d = {}
-    d['tokens'] = tokens
+    d['tagged_tokens'] = tagged_tokens
     d['tagger'] = tagger
     d['text'] = text
     if id:
@@ -303,9 +306,9 @@ def generate_word_normal_dictionary(content, normalizer,
 
 
 
-def generate_token_dictionary(content, tag=None):
+def generate_tagged_token_dictionary(token, tag=None):
     d = {}
-    d['content'] = content
+    d['token'] = token
     if tag:
         d['tag'] = tag    
     return d
@@ -333,6 +336,7 @@ def import_tag_sets():
 def import_validators():
     bitianist_validator = generate_validator_dictionary(
         'bitianist-validator',
+        show_name='اعتبارسنج بیتیانیست',
         owner='bitianist'
     )
 
@@ -348,6 +352,7 @@ def import_normalizers():
     }
     bitianist_bitianist_normalizer = generate_normalizer_dictionary(
         'bitianist-manual-normalizer',
+        show_name='نرمال‌کننده دستی بیتیانیست',
         owner='bitianist',
         is_automatic=False,
         model_details=model_details
@@ -364,6 +369,7 @@ def import_normalizers():
     }
     bitianist_informal_refinement_normalizer = generate_tagger_dictionary(
         'bitianist-informal-refinement-normalizer',
+        show_name='نرمال‌کننده اصلاح',
         owner='bitianist',
         is_automatic=True,
         model_details=model_details
@@ -381,6 +387,7 @@ def import_normalizers():
     }
     bitianist_informal_seq2seq_normalizer = generate_tagger_dictionary(
         'bitianist-informal-seq2seq-normalizer',
+        show_name='نرمال‌کننده توالی‌به‌توالی',
         owner='bitianist',
         is_automatic=True,
         model_details=model_details
@@ -396,6 +403,7 @@ def import_normalizers():
     }
     bitianist_informal_replacement_normalizer = generate_tagger_dictionary(
         'bitianist-informal-replacement-normalizer',
+        show_name='نرمال‌کننده جایگزینی',
         owner='bitianist',
         is_automatic=True,
         model_details=model_details
@@ -411,6 +419,7 @@ def import_normalizers():
     }
     bitianist_informal_transformation_normalizer = generate_tagger_dictionary(
         'bitianist-informal-transformation-normalizer',
+        show_name='نرمال‌کننده دگرگونی',
         owner='bitianist',
         is_automatic=True,
         model_details=model_details
@@ -513,7 +522,7 @@ def import_text_equivalents():
     text_content, text_normal_content = '', ''
     text = None
     logger.info(f'>> Reading text_equivalents : {df.columns}')
-    normalizer = 'bitianist-informal-manual-normalizer'
+    normalizer = 'bitianist-manual-normalizer'
     # manual_normalizer = generate_normalizer_dictionary('manual-normalizer')
     i = 0
     for i in df.index:
@@ -542,7 +551,7 @@ def import_word_equivalents():
     word = None
     logger.info(f'>> Reading word_equivalents : {df.columns}')
     ctr = 1
-    normalizer = 'bitianist-informal-manual-normalizer'
+    normalizer = 'bitianist-manual-normalizer'
     word_content_set = set()
     for i in df.index:
 
@@ -575,8 +584,8 @@ def read_bijankhan_xml_file(xml_file):
     text_tag = None
     logger = utils.get_logger(logger_name='data_importer')
     token_content, tag_name, text_content = '', '', ''
-    tag, token = None, None
-    text_tag_tokens = []
+    tag, tagged_token = None, None
+    text_tag_tagged_tokens = []
     # texts_count = 0
     try:
         with open(xml_file, mode="r", encoding="utf-8") as xf:
@@ -590,13 +599,13 @@ def read_bijankhan_xml_file(xml_file):
                 text_content += token_content + ' '
                 tag_name = tagged_token_xml.find('tag').text[0]
                 tag = generate_tag_dictionary(name=tag_name)
-                token = generate_token_dictionary(token_content, tag)
-                text_tag_tokens.append(token)
+                tagged_token = generate_tagged_token_dictionary(token_content, tag)
+                text_tag_tagged_tokens.append(tagged_token)
 
             text = generate_text_dictionary(text_content)
             text_tag = generate_text_tag_dictionary(
-                        tokens=text_tag_tokens,
-                        tagger='bijankhan-formal-tagger', 
+                        tagged_tokens=text_tag_tagged_tokens,
+                        tagger='bijankhan-manual-tagger', 
                         text=text)
 
             logger.info(f'> File {file_name} reading finished.')
@@ -615,8 +624,8 @@ def send_bijankhan_text_tag(text_tag):
 def import_bijankhan_data():
     logger.info(f'>> Reading bijankhan data')
     files = glob.glob(fr'{bijankhan_data_dir}/*.xml')
-    text_tags = []
-    # files = files[0:1]
+    # text_tags = []
+    # files = files[0:2]
 
     text_tags = Parallel(n_jobs=-1, verbose=20)(delayed(read_bijankhan_xml_file)(xml_file) for xml_file in files)
     logger.info(f'>> Total {len(text_tags)} texts read.')
@@ -630,14 +639,14 @@ def import_bitianist_text_tag(text_tag_id=None):
     # 1
     text_content = 'شلوغی فرهنگ‌سرا آیدی'
 
-    tokens = [
-        generate_token_dictionary('شلوغی', generate_tag_dictionary(name='A')),
-        generate_token_dictionary('فرهنگ‌سرا', generate_tag_dictionary(name='N')),
-        generate_token_dictionary('آیدی', generate_tag_dictionary(name='N')),
+    tagged_tokens = [
+        generate_tagged_token_dictionary('شلوغی', generate_tag_dictionary(name='A')),
+        generate_tagged_token_dictionary('فرهنگ‌سرا', generate_tag_dictionary(name='N')),
+        generate_tagged_token_dictionary('آیدی', generate_tag_dictionary(name='N')),
     ]
     text = generate_text_dictionary(text_content)
     text_tag = generate_text_tag_dictionary(
-                tokens=tokens,
+                tagged_tokens=tagged_tokens,
                 tagger=tagger,
                 text=text)
 
@@ -747,7 +756,7 @@ D D A C N O D D A V O
     logger.info(f'tags_string_tuple {len(tags_string_tuple)} : \n{tags_string_tuple}\n')
 
     tagged_tokens = zip(token_contents_tuple, tags_string_tuple)
-    tokens = [generate_token_dictionary(tagged_token[0], generate_tag_dictionary(name=tagged_token[1])) for tagged_token in tagged_tokens]
+    tokens = [generate_tagged_token_dictionary(tagged_token[0], generate_tag_dictionary(name=tagged_token[1])) for tagged_token in tagged_tokens]
     text = generate_text_dictionary(text_content)
     text_tag = generate_text_tag_dictionary(
                 tokens=tokens,
@@ -772,12 +781,12 @@ def main():
         # import_taggers()
 
         
-        # import_bijankhan_data()
+        import_bijankhan_data()
         # import_text_equivalents()
         # import_word_equivalents()
 
         # import_bitianist_text_tag('b3ebb659-958f-479c-a8f0-318e4346c37c')
-        import_bitianist_evaluate_text_tag()
+        # import_bitianist_evaluate_text_tag()
 
         # import_tags()
         # import_translation_characters()
@@ -811,13 +820,13 @@ if __name__ == "__main__": main()
 #                 sentence_content += token_content + ' '
 #                 tag_name = tagged_token_xml.find('tag').text[0]
 #                 tag = generate_tag_dictionary(name=tag_name)
-#                 token = generate_token_dictionary(token_content, tag)
+#                 token = generate_tagged_token_dictionary(token_content, tag)
 #                 sentence_tokens.append(token)
 #                 if len(token_content) == 1 and sentence_breaker_pattern.search(token_content):
 #                     sentence = generate_sentence_dictionary(sentence_content)
 #                     tagged_sentence = generate_tagged_sentence_dictionary(
 #                                 tokens=sentence_tokens,
-#                                 tagger='bijankhan-formal-tagger', 
+#                                 tagger='bijankhan-manual-tagger', 
 #                                 sentence=sentence)
 #                     tagged_sentences.append(tagged_sentence)
 #                     # sentences_count += 1
@@ -993,7 +1002,7 @@ if __name__ == "__main__": main()
 #                 sentence_content += token_content + ' '
 #                 tag_name = tagged_token_xml.find('tag').text[0]
 #                 tag = generate_tag_dictionary(tag_name)
-#                 token = generate_token_dictionary(token_content, tag)
+#                 token = generate_tagged_token_dictionary(token_content, tag)
 #                 sentence_tokens.append(token)
 #                 if len(token_content) == 1 and sentence_breaker_pattern.search(token_content):
 #                     sentence = generate_sentence_dictionary(sentence_content, sentence_tokens)
@@ -1077,109 +1086,109 @@ if __name__ == "__main__": main()
 # tags_tuple = ('V', 'E', 'N', 'K', 'O', 'N', 'C', 'D')
 #     tokens = [
 # #برید_V     به_E     رستوران_N     https://chilivery.com/tehran/restaurant۱/_K     ._O     غذا_N     ش_C     خیلی_D     عالی_A     ه_C     😍😍😍_X             
-#         generate_token_dictionary('برید', generate_tag_dictionary(name='A')),
-#         generate_token_dictionary('به', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('رستوران', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('https://chilivery.com/tehran/restaurant۱/', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('.', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('غذا', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('ش', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('خیلی', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('عالی', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('ه', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('😍😍😍', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('\\n', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('برید', generate_tag_dictionary(name='A')),
+#         generate_tagged_token_dictionary('به', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('رستوران', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('https://chilivery.com/tehran/restaurant۱/', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('.', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('غذا', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('ش', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('خیلی', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('عالی', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('ه', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('😍😍😍', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('\\n', generate_tag_dictionary(name='N')),
 # # از‌نظر_E     قیمت_N     میارزه_N     ک_C     بری_V     ولی_J     واقعا_D     خف_N     ست_C                 
-#         generate_token_dictionary('از‌نظر', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('قیمت', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('میارزه', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('ک', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('بری', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('ولی', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('واقعا', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('خف', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('ست', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('\\n', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('از‌نظر', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('قیمت', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('میارزه', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('ک', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('بری', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('ولی', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('واقعا', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('خف', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('ست', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('\\n', generate_tag_dictionary(name='N')),
 # # مث_N     این_T     جای_N     دیگه‌ای_N     ندیدم_V     مشتریاش_N     انقدر_D     زیاد_A     باشه_V     ._O                 
-#         generate_token_dictionary('مث', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('این', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('جای', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('دیگه‌ای', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('ندیدم', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('مشتریاش', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('انقدر', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('زیاد', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('باشه', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('.', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('\\n', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('مث', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('این', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('جای', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('دیگه‌ای', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('ندیدم', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('مشتریاش', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('انقدر', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('زیاد', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('باشه', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('.', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('\\n', generate_tag_dictionary(name='N')),
 # # کیفیت_N  پیتزاها_N  ش_C  اصلن_N  خوب_A  نیست_V  …_O  از_E  شلوغی_N  میدون_N  تجریش_N  داره_V  پول_N  در_E  میاره_V  ._O     
-#         generate_token_dictionary('کیفیت', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('پیتزاها', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('ش', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('اصلن', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('خوب', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('نیست', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('…', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('از', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('شلوغی', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('میدون', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('تجریش', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('داره', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('پول', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('درمیاره', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('.', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('\\n', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('کیفیت', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('پیتزاها', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('ش', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('اصلن', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('خوب', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('نیست', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('…', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('از', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('شلوغی', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('میدون', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('تجریش', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('داره', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('پول', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('درمیاره', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('.', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('\\n', generate_tag_dictionary(name='N')),
 # # باز_A  م_C  از_E  ش_C  خرید_N  می‌کنم_V  ،_O  بهترین_A  منطق_N  ست_C  ._O  
-#         generate_token_dictionary('باز', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('م', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('از', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('ش', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('خرید', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('می‌کنم', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('.', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('بهترین', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('منطق', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('ست', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('.', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('\\n', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('باز', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('م', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('از', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('ش', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('خرید', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('می‌کنم', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('.', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('بهترین', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('منطق', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('ست', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('.', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('\\n', generate_tag_dictionary(name='N')),
 # #اگه_J  یه_U  بار_N  بری_V  اونجا_D  مشتری_N  ش_C  میشی_A  ._O  
-#         generate_token_dictionary('اگه', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('یه', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('بار', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('بری', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('اونجا', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('مشتری', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('ش', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('میشی', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('.', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('\\n', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('اگه', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('یه', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('بار', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('بری', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('اونجا', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('مشتری', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('ش', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('میشی', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('.', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('\\n', generate_tag_dictionary(name='N')),
 # #برای_E  ارسال_N  رزومه_N  به_E  آدرس_N  job@gmail.com_M  میل_N  بزنید_V  ._O           
-#         generate_token_dictionary('برای', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('ارسال', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('رزومه', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('به', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('آدرس', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('job@gmail.com', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('میل', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('بزنید', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('.', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('\\n', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('برای', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('ارسال', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('رزومه', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('به', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('آدرس', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('job@gmail.com', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('میل', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('بزنید', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('.', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('\\n', generate_tag_dictionary(name='N')),
 # #کتاب_N  ه_C  رو_P  تو_N  فرهنگ‌سرا_A  پیدا_A  ش_C  کردم_V  ._O           
-#         generate_token_dictionary('کتاب', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('ه', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('رو', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('\\n', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('کتاب', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('ه', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('رو', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('\\n', generate_tag_dictionary(name='N')),
 # #در‌صورت_E  مشکل_N  به_E  آیدی_N  @bitianist_S  پیام_N  بدهید_V  ._O  
-#         generate_token_dictionary('', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('\\n', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('\\n', generate_tag_dictionary(name='N')),
 # #حاضر_A  م_C  شرط_N  بند_N  م_C  همون_Z  و_J  ورداشتن_V  تزیین_N  کردن_V  و_J  برای_E  ما_Z  اووردن_V  !_O              
-#         generate_token_dictionary('', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('', generate_tag_dictionary(name='N')),
-#         generate_token_dictionary('\\n', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('', generate_tag_dictionary(name='N')),
+#         generate_tagged_token_dictionary('\\n', generate_tag_dictionary(name='N')),
 # #آخه_D  واقعا_D  درست_A  ه_C  اینکار_N  ؟_O  چرا_D  خوب_D  درست_A  نمی‌کنن_V  ؟_O            
 #     ]

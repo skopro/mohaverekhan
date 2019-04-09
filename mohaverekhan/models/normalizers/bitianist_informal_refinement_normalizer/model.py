@@ -133,27 +133,27 @@ class BitianistInformalRefinementNormalizer(Normalizer):
         fixed_token_content = token_content
         if self.repetition_pattern.search(fixed_token_content):
             fixed_token_content = self.repetition_pattern.sub(r'\1\1', token_content) #شش
-            if fixed_token_content in cache.token_set:
+            if fixed_token_content in cache.all_token_tags:
                 logger.info(f'> found repetition token {token_content} -> {fixed_token_content}')
                 return fixed_token_content
 
             fixed_token_content = self.repetition_pattern.sub(r'\1', token_content)
             if fixed_token_content == 'کنده':
                 return 'کننده'
-            if fixed_token_content in cache.token_set:
+            if fixed_token_content in cache.all_token_tags:
                 logger.info(f'> found repetition token {token_content} -> {fixed_token_content}')
                 return fixed_token_content
             
             # عاااالیه
             logger.info(f'> fix_repetition_token token_content[0:-1] : {token_content[0:-1]}')
             fixed_token_content = self.repetition_pattern.sub(r'\1\1', token_content[0:-1])
-            if fixed_token_content in cache.token_set:
+            if fixed_token_content in cache.all_token_tags:
                 fixed_token_content += token_content[-1]
                 logger.info(f'> found repetition token {token_content} -> {fixed_token_content}')
                 return fixed_token_content
 
             fixed_token_content = self.repetition_pattern.sub(r'\1', token_content[0:-1])
-            if fixed_token_content in cache.token_set:
+            if fixed_token_content in cache.all_token_tags:
                 fixed_token_content += token_content[-1]
                 logger.info(f'> found repetition token {token_content} -> {fixed_token_content}')
                 return fixed_token_content
@@ -169,7 +169,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
         fixed_token_content = ''
         for token_content in token_contents:
             fixed_token_content = token_content.strip(' ')
-            if fixed_token_content not in cache.token_set:
+            if fixed_token_content not in cache.all_token_tags:
                 fixed_token_content = self.fix_repetition_token(fixed_token_content)
             
             fixed_text_content += fixed_token_content.strip(' ') + " "
@@ -202,7 +202,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
             for move_count in reversed(range(0, move_count+1)):
                 # end when move_count = 0 return the word without any join
                 fixed_token_content = '‌'.join(token_contents[i:i+move_count+1])
-                if fixed_token_content in cache.token_set or move_count == 0:
+                if fixed_token_content in cache.all_token_tags or move_count == 0:
                     logger.debug(f'> nj [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
                     # logger.debug(f'> Found => move_count : {move_count} | fixed_token_content : {fixed_token_content}')
                     i = i + move_count + 1
@@ -212,7 +212,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                 #دو بار بری رو داشت جمع میکردی دو باربری
                 #باید جدول توکن ها درست کنم که براساس تگ تصمیم بگیرم بچسبونم یا نه
                 # fixed_token_content = ''.join(token_contents[i:i+move_count+1])
-                # if fixed_token_content in cache.token_set or move_count == 0:
+                # if fixed_token_content in cache.all_token_tags or move_count == 0:
                 #     logger.debug(f'> empty [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
                 #     # logger.debug(f'> Found => move_count : {move_count} | fixed_token_content : {fixed_token_content}')
                 #     i = i + move_count + 1
@@ -228,7 +228,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
         if nj_pattern.search(token_content):
             logger.debug(f'> nj found in token : {token_content}')
             fixed_token_content = token_content.replace('‌', '')
-            if fixed_token_content in cache.token_set:
+            if fixed_token_content in cache.all_token_tags:
                 logger.debug(f'> nj replaced with empty : {fixed_token_content}')
                 return fixed_token_content
 
@@ -236,13 +236,13 @@ class BitianistInformalRefinementNormalizer(Normalizer):
         for i in range(1, len(token_content)):
             part1, part2 = token_content[:i], token_content[i:]
             nj_joined = f'{part1}‌{part2}'
-            if nj_joined in cache.token_set:
+            if nj_joined in cache.all_token_tags:
                 logger.debug(f'> Found nj_joined : {nj_joined}')
                 return nj_joined
         
         # for i in range(1, len(token_content)): # محاوره‌ خوان
         #     part1, part2 = token_content[:i], token_content[i:]
-        #     if part1 in cache.token_set and part2 in cache.token_set:
+        #     if part1 in cache.all_token_tags and part2 in cache.all_token_tags:
         #         sp_joined = f'{part1} {part2}'
         #         logger.debug(f'> Found sp_joined : {sp_joined}')
         #         return sp_joined
@@ -261,7 +261,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
 
         for token_content in token_contents:
             fixed_token_content = token_content.strip(' ')
-            if fixed_token_content not in cache.token_set:
+            if fixed_token_content not in cache.all_token_tags:
                 logger.debug(f'> {fixed_token_content} not in token set!')
                 fixed_token_content = self.fix_wrong_joined_undefined_token(fixed_token_content)
             
@@ -285,7 +285,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
         self.join_multipart_tokens(text_normal) # فرههههههههنگ سرا
         self.fix_wrong_joined_undefined_tokens(text_normal) # آرامکننده کتابمن 
         self.join_multipart_tokens(text_normal) # آرام کنندهخوبی
-        text_normal.content = text_normal.content.replace(' newline ','\n').strip(' ')
+        text_normal.content = text_normal.content.replace(' newline ', '\n').strip(' ')
         end_ts = time.time()
         logger.info(f"> (Time)({end_ts - beg_ts:.6f})")
         text_normal.save()

@@ -23,7 +23,7 @@ class MohaverekhanConfig(AppConfig):
         models.taggers.bitianist_formal_nltk_tagger.model.init()
         models.taggers.bitianist_informal_nltk_tagger.model.init()
 
-        # cache.init()
+        cache.init()
 
 
         from mohaverekhan import serializers, views

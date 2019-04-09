@@ -66,9 +66,9 @@ class TagInTagSetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ('id', 'name', 'persian', 
-            'color', 'examples')
-        read_only_fields = ('examples',
-                    )
+            'color')
+        # read_only_fields = (,
+        #             )
 
 class TagSetSerializer(serializers.ModelSerializer):
     tags = TagInTagSetSerializer(many=True, required=False)
@@ -107,9 +107,9 @@ class TagInTokenSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ('id', 'name', 'persian', 
             'color', 'created', 
-            'examples', 'tag_set')
-        read_only_fields = ('examples',
-                    )
+            'tag_set')
+        # read_only_fields = (,
+        #             )
 
 class TokenSerializer(serializers.ModelSerializer):
     tags = TagInTokenSerializer(many=True, read_only=True)
@@ -141,9 +141,9 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ('id', 'name', 'persian', 
             'color', 'created', 'number_of_tokens',
-            'examples', 'tag_set', )
-        read_only_fields = ('examples',
-                    )
+            'tag_set', )
+        # read_only_fields = (,
+        #             )
 
 
 class TextNormalInTextSerializer(serializers.ModelSerializer):

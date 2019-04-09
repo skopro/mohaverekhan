@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
+from django.db.models import Count 
 
 from .models import (
             Word, WordNormal,
@@ -80,7 +81,7 @@ class WordNormalAdmin(admin.ModelAdmin):
 
 class TextTagAdmin(admin.ModelAdmin):
     list_per_page = 10
-    list_display = ('tagged_tokens_html', 'get_text_content', 'is_valid', 
+    list_display = ('get_tagged_tokens_html', 'get_text_content', 'is_valid', 
                     'accuracy', 'get_tagger_name', 
                     'get_validator_name', 'true_text_tag', 'created')
     search_fields = ['text__content']
@@ -254,8 +255,8 @@ class TagAdmin(admin.ModelAdmin):
     get_color_html.short_description = 'Color'
 
     list_display = ('name', 'persian', 
-                'get_color_html', 'tag_set', 'number_of_tokens', 
-                'examples', 'created')
+                'get_color_html', 'tag_set', 'get_number_of_tokens', 
+                'created')
     ordering = ('-tag_set', '-created')
     readonly_fields = ['created', 'id']
     list_filter = ['tag_set', 'name', 'persian']
@@ -264,19 +265,31 @@ class TagAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
             'fields': ('id', 'created', 'name', 
-                'persian', 'color', 'examples', 'number_of_tokens')
+                'persian', 'color', 'number_of_tokens')
         }),
         ('Relation', {
             'fields': ('tag_set',),
         }),
     )
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.annotate(
+            _number_of_tokens=Count("token", distinct=True),
+        ).order_by('-_number_of_tokens')
+        return queryset
+
+    def get_number_of_tokens(self, obj):
+        return obj.number_of_tokens
+    get_number_of_tokens.admin_order_field = '-_number_of_tokens' 
+    get_number_of_tokens.short_description = 'Number Of Tokens'
+
 class TokenTagInTokenInline(admin.TabularInline):
     model = Token.tags.through
     fk_name = 'token'
-    fields = ('get_token_content', 'get_tag_name', 'get_tag_set_name', 
-            'number_of_repetitions', 'created', 'id')
-    readonly_fields = ['number_of_repetitions', 'created', 'id']
+    fields = ('token', 'tag', 
+            'created', 'id')
+    readonly_fields = ['created', 'id', 'tag']
     extra = 0
     max_num = 25
 
@@ -310,7 +323,7 @@ class TokenTagInTokenInline(admin.TabularInline):
     get_tag_set_name.short_description = 'Tag Set Name'
 
 class TokenAdmin(admin.ModelAdmin):
-    list_display = ('content', 'number_of_tags', 'created')
+    list_display = ('content', 'get_number_of_tags', 'created')
     search_fields = ['content', 'id']
     ordering = ('-created',)
     list_filter = []
@@ -328,11 +341,23 @@ class TokenAdmin(admin.ModelAdmin):
         TokenTagInTokenInline,
     ]
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.annotate(
+            _number_of_tags=Count("tags", distinct=True),
+        ).order_by('-_number_of_tags')
+        return queryset
+
+    def get_number_of_tags(self, obj):
+        return obj.number_of_tags
+    get_number_of_tags.admin_order_field = '-_number_of_tags' 
+    get_number_of_tags.short_description = 'Number Of Tags'
+
 class TokenTagAdmin(admin.ModelAdmin):
     list_display = ('get_token_content', 'get_tag_name', 'get_tag_set_name',
                 'number_of_repetitions', 'created')
     search_fields = ['token__content', 'id']
-    ordering = ('-created',)
+    ordering = ('-created', 'number_of_repetitions')
     list_filter = ['tag__tag_set__name', 'tag__name']
     readonly_fields = ['created', 'id', 'number_of_repetitions']
     # exclude = ('normalizers',)
@@ -374,11 +399,16 @@ class TokenTagAdmin(admin.ModelAdmin):
     get_tag_set_name.admin_order_field = 'created' 
     get_tag_set_name.short_description = 'Tag Set Name'
 
+    def get_number_of_repetitions(self, obj):
+        return obj.number_of_repetitions
+    get_number_of_repetitions.admin_order_field = '-created' 
+    get_number_of_repetitions.short_description = 'Number Of Repetitions'
+
 class TagInLine(admin.TabularInline):
     model = Tag
     fields = ('name', 'persian', 'color', 'number_of_tokens',
-     'examples', 'id', 'created')
-    readonly_fields = ['examples', 'created', 'id']
+    'id', 'created')
+    readonly_fields = ['created', 'id']
     extra = 0
     max_num = 25
 

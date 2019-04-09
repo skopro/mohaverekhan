@@ -2,6 +2,7 @@ import logging
 import random
 import re
 from django.apps import apps
+import time
 
 repetition_pattern = re.compile(r"([^A-Za-z])\1{1,}")
 # debug_pattern = re.compile(r'[0-9۰۱۲۳۴۵۶۷۸۹]')
@@ -41,45 +42,57 @@ tag = r'\#([\S]+)'
 #     Validator = apps.get_model(app_label='mohaverekhan', model_name='Validator')
 #     Normalizer = apps.get_model(app_label='mohaverekhan', model_name='Normalizer')
 #     Tagger = apps.get_model(app_label='mohaverekhan', model_name='Tagger')
-token_tags_dic = dict()
+tag_set_token_tags = dict()
+all_token_tags = dict()
 
-def cache_tokens():
+def cache_token_tags_dic():
+    global tag_set_token_tags, all_token_tags, repetition_word_set
+    temp_tag_set_token_tags = {}
+    temp_all_token_tags = {}
+    temp_repetition_word_set = set()
     token_content, tag_name = '', ''
+    TokenTag = apps.get_model(app_label='mohaverekhan', model_name='TokenTag')
     TextTag = apps.get_model(app_label='mohaverekhan', model_name='TextTag')
-    text_tagged_tokens_list = TextTag.objects.filter(is_valid=True).values_list('tagged_tokens', flat=True)
-    if text_tagged_tokens_list.count() == 0:
+    text_tag_list = TextTag.objects.filter(is_valid=True).values_list('tagger__tag_set__name', 'tagged_tokens')
+    if text_tag_list.count() == 0:
         return
     before, after = '', ''
     logger.info(f'> Looking for {debug_pattern}')
-    for text_tagged_tokens in text_tagged_tokens_list:
-        for index, tagged_token in enumerate(text_tagged_tokens):
-            token_content = token['token']
-            tag_name = token['tag']['name']
+    tag_set_name = ''
+    tagged_tokens = None
+    for text_tag in text_tag_list:
+        tag_set_name = text_tag[0]
+        tagged_tokens = text_tag[1]
+        for index, tagged_token in enumerate(tagged_tokens):
+            token_content = tagged_token['token']
+            tag_name = tagged_token['tag']['name']
 
             if debug_pattern.search(token_content):
                 # if tag_name != 'U':
                 if index - 1 >= 0:
-                    before = text_tokens[index-1]['content']
+                    before = tagged_tokens[index-1]['token']
                 else:
                     before = '^'
 
-                if index + 1 < len(text_tokens):
-                    after = text_tokens[index+1]['content']
+                if index + 1 < len(tagged_tokens):
+                    after = tagged_tokens[index+1]['token']
                 else:
                     after = '$'
 
                 logger.info(f'> Token A {after} A    B {token_content} B    C {before} C has tag [{tag_name}]')
-            if tag_name not in ('O', 'U'):
-                token_set.add(token_content)
-                tag_count_dic = token_tags_dic.get(token_content, {})
-                tag_count = tag_count_dic.get(tag_name, 0)
-                tag_count_dic[tag_name] = tag_count + 1
-                token_tags_dic[token_content] = tag_count_dic
+            # if tag_name not in ('O', 'U'):
+            # token_set.add(token_content)
+            token_tags = temp_tag_set_token_tags.get(tag_set_name, {})
+            tag_counts = token_tags.get(token_content, {})
+            tag_count = tag_counts.get(tag_name, 0)
+            tag_counts[tag_name] = tag_count + 1
+            token_tags[token_content] = tag_counts
+            temp_tag_set_token_tags[tag_set_name] = token_tags
                 # token_tags.append(tag_name)
                 # token_tags_dic[token_content] = token_tags
 
-    token_set.remove('دیگهای')
-    del token_tags_dic['دیگهای']
+    # token_set.remove('دیگهای')
+    del temp_tag_set_token_tags['bijankhan-tag-set']['دیگهای']
 
     #Remove ه in عالیه درسته کتابه زیاده
     # old_token_set = set(token_set)
@@ -114,12 +127,20 @@ def cache_tokens():
     # if 'زیاده' in token_set:
     #     logger.error(f"> Can't remove زیاده کتابه درسته عالیه ...")
     
-    logger.info(f'> len(token_set) : {len(token_set)}')
-    logger.info(f'> token_set samples : {set(random.sample(token_set, 20)) }')
-    for token in token_set:
+    logger.info(f'> len(temp_tag_set_token_tags) : {len(temp_tag_set_token_tags)}')
+    logger.info(f'>>> Random samples')
+    for tag_set, token_tags in temp_tag_set_token_tags.items():
+        logger.info(f'>> tag_set : {tag_set}')
+        for token in random.sample(list(token_tags), 25):
+            logger.info(f'> {token} : {token_tags[token]}')
+
+    
+    [temp_all_token_tags.update(token_tags) for token_tags in temp_tag_set_token_tags.values()]
+    # logger.info(f'> token_tags_dic samples : {set(random.sample(list(token_tags_dic), 20)) }')
+    for token in temp_all_token_tags:
         if repetition_pattern.search(token):
-            repetition_word_set.add(token)
-    # for repetition_word in repetition_word_set:
+            temp_repetition_word_set.add(token)
+    # for repetition_word in temp_repetition_word_set:
     #     # logger.info(f'> repetition_word : {repetition_word}')
     #     fuck = repetition_pattern.sub(r'\1', repetition_word)
         
@@ -137,11 +158,13 @@ def cache_tokens():
     #         logger.info(f'> Fuckkkking3 : {repetition_word} - {fuck} - {fuck3}')
     #     if fuck4 != repetition_word and fuck4 in token_set:
     #         logger.info(f'> Fuckkkking4 : {repetition_word} - {fuck} - {fuck4}')
-    if len(repetition_word_set) != 0:
-        logger.info(f'> len(repetition_word_set) : {len(repetition_word_set)}')
-        logger.info(f'> repetition_word_set samples: {set(random.sample(repetition_word_set, min(len(repetition_word_set), 100)))}')
+    if len(temp_repetition_word_set) != 0:
+        logger.info(f'> len(temp_repetition_word_set) : {len(temp_repetition_word_set)}')
+        logger.info(f'> temp_repetition_word_set samples: {set(random.sample(temp_repetition_word_set, min(len(temp_repetition_word_set), 100)))}')
 
-
+    tag_set_token_tags = temp_tag_set_token_tags
+    all_token_tags = temp_all_token_tags
+    repetition_word_set = temp_repetition_word_set
     # logger.info(f'> debug_pattern : {debug_pattern}')
     # for token in token_set:
     #     if debug_pattern.search(token):
@@ -212,4 +235,4 @@ def init():
     cache_normalizers()
     cache_taggers()
 
-    # cache_tokens()
+    cache_token_tags_dic()

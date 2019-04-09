@@ -12,6 +12,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.urls import reverse
 from joblib import Parallel, delayed
 import random
+import time
 
 from .serializers import (
             WordSerializer, WordNormalSerializer,
@@ -94,30 +95,40 @@ class TagSetViewSet(viewsets.ModelViewSet):
     lookup_field = 'name'
 
 class TokenViewSet(viewsets.ModelViewSet):
-    queryset = TagSet.objects.all()
+    queryset = Token.objects.all()
     serializer_class = TokenSerializer
     lookup_field = 'content'
 
 class TokenTagViewSet(viewsets.ModelViewSet):
-    queryset = TagSet.objects.all()
+    queryset = TokenTag.objects.all()
     serializer_class = TokenTagSerializer
 
-class TagViewSet(viewsets.ModelViewSet):
-    queryset = Tag.objects.all()
-    serializer_class = TagSerializer
+    i = 0
+    def update_token_tag_rank(self, token_tag_update):
+        TokenTag.objects.filter(
+                        tag__tag_set__name=token_tag_update[0],
+                        token__content=token_tag_update[1],
+                        tag__name=token_tag_update[2]
+                        ).update(number_of_repetitions=token_tag_update[3])
+        if self.i % 1000 == 0:
+            logger.info(f'>> Updating token[{self.i}] : {token_tag_update[1]}')
+        self.i += 1
 
-    def update_examples_in_another_thread(self):
-        text_tag_tokens_list = TextTag.objects.filter(is_valid=True)\
-            .values_list('tagger__tag_set__name', 'tokens')
+    def update_rank_in_another_thread(self):
+        beg_ts = time.time()
+        cache.cache_token_tags_dic()
 
-        logger.debug(f'> {self.name} text_tag_tokens_list.count() : {text_tag_tokens_list.count()} {type(text_tag_tokens_list)}')
-
-        if not text_tag_tokens_list:
-            return
-        
-        text_tag_tokens_list = list(text_tag_tokens_list)
-        text_tag_tokens_list = random.sample(text_tag_tokens_list, int(len(text_tag_tokens_list)/2))
-        [tag.update_examples(text_tag_tokens_list) for tag in Tag.objects.all()]
+        self.i = 0
+        token_tag_update_list = []
+        for tag_set_name, token_tags in cache.tag_set_token_tags.items():
+            logger.info(f'>>> Updating tag set {tag_set_name}')
+            for token_content, tags in token_tags.items():
+                for tag_name, tag_count in tags.items():
+                    token_tag_update_list.append((tag_set_name, token_content, tag_name, tag_count))
+        logger.info(f'> len token_tag_update_list : {len(token_tag_update_list)}')
+        Parallel(n_jobs=48, verbose=20, backend='threading')(delayed(self.update_token_tag_rank)(token_tag_update) for token_tag_update in token_tag_update_list)
+        end_ts = time.time()
+        logger.info(f"> (Time)(Update repetitions)({end_ts - beg_ts:.6f})")
         
 
         # for text_tag_tokens in text_tag_tokens_list:
@@ -131,21 +142,60 @@ class TagViewSet(viewsets.ModelViewSet):
         # [tag.update_examples() for tag in tags]
         # Parallel(n_jobs=2, verbose=20, backend='threading')(delayed(tag.update_examples)() for tag in tags)
 
-    @action(detail=False, methods=['get',], url_name='update_examples')
+    @action(detail=False, methods=['get',], url_name='update_rank')
     @csrf_exempt
-    def update_examples(self, request):
+    def update_rank(self, request):
         # logger.debug(f'> Start update_examples of tags in parallel ...')
         # Parallel(n_jobs=-1, verbose=20)(delayed(tag.update_examples)() for tag in tags)
-        thread = threading.Thread(target=self.update_examples_in_another_thread)
-        logger.debug(f'> Start update_examples of tags in parallel ...')
+        thread = threading.Thread(target=self.update_rank_in_another_thread)
+        logger.debug(f'> Start update_rank of token tags in parallel ...')
         thread.start()
-        
-        
-        # for tag in tags:
-            # thread = threading.Thread(target=tag.update_examples)
-        #     logger.debug(f'> Start update_examples of tag {tag.name} in parallel ...')
-        #     thread.start()
         return Response(status=200)
+
+class TagViewSet(viewsets.ModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+
+    # def update_examples_in_another_thread(self):
+    #     text_tag_tokens_list = TextTag.objects.filter(is_valid=True)\
+    #         .values_list('tagger__tag_set__name', 'tagged_tokens')
+
+    #     logger.debug(f'> {self.name} text_tag_tokens_list.count() : {text_tag_tokens_list.count()} {type(text_tag_tokens_list)}')
+
+    #     if not text_tag_tokens_list:
+    #         return
+        
+    #     text_tag_tokens_list = list(text_tag_tokens_list)
+    #     text_tag_tokens_list = random.sample(text_tag_tokens_list, int(len(text_tag_tokens_list)/2))
+    #     [tag.update_examples(text_tag_tokens_list) for tag in Tag.objects.all()]
+        
+
+        # for text_tag_tokens in text_tag_tokens_list:
+        #     for text_tag_token in text_tag_tokens:
+        #         if text_tag_token['tag']['name'] == self.name:
+        #             examples.add(text_tag_token['content'])
+        #             if len(examples) >= 40:
+        #                 break
+
+        # tags = Tag.objects.all()
+        # [tag.update_examples() for tag in tags]
+        # Parallel(n_jobs=2, verbose=20, backend='threading')(delayed(tag.update_examples)() for tag in tags)
+
+    # @action(detail=False, methods=['get',], url_name='update_examples')
+    # @csrf_exempt
+    # def update_examples(self, request):
+    #     # logger.debug(f'> Start update_examples of tags in parallel ...')
+    #     # Parallel(n_jobs=-1, verbose=20)(delayed(tag.update_examples)() for tag in tags)
+    #     thread = threading.Thread(target=self.update_examples_in_another_thread)
+    #     logger.debug(f'> Start update_examples of tags in parallel ...')
+    #     thread.start()
+        
+        
+    #     # for tag in tags:
+    #         # thread = threading.Thread(target=tag.update_examples)
+    #     #     logger.debug(f'> Start update_examples of tag {tag.name} in parallel ...')
+    #     #     thread.start()
+    #     return Response(status=200)
 
 class ValidatorViewSet(viewsets.ModelViewSet):
     queryset = Validator.objects.all()
