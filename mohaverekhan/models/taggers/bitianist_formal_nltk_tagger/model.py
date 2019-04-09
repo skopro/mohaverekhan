@@ -83,6 +83,7 @@ class BitianistFormalNLTKTagger(Tagger):
     def create_main_tagger(self):
         logger.info('>> Create main tagger')
         default_tagger = nltk.DefaultTagger('N')
+        # default_tagger = nltk.DefaultTagger('R')
         suffix_tagger = nltk.AffixTagger(self.train_data, backoff=default_tagger, affix_length=-3, min_stem_length=2, verbose=True)
         logger.info(f'> suffix_tagger : \n{suffix_tagger.unicode_repr()}\n')
         affix_tagger = nltk.AffixTagger(self.train_data, backoff=suffix_tagger, affix_length=5, min_stem_length=1, verbose=True)

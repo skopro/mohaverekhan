@@ -52,7 +52,6 @@ tags_url = `${base_api_url}/tags`
 
 validators_url = `${base_api_url}/validators`
 normalizers_url = `${base_api_url}/normalizers`
-tokenizers_url = `${base_api_url}/tokenizers`
 taggers_url = `${base_api_url}/taggers`
 
 // sentences_url = `${base_api_url}/sentences`
@@ -61,7 +60,6 @@ taggers_url = `${base_api_url}/taggers`
 // refinement_patterns_url = `${base_api_url}/rules/refinement_patterns`
 
 selected_normalizer = "no-normalizer"
-selected_tokenizer = "no-tokenizer"
 selected_tagger = "no-tagger"
 text_id = "no-id"
 input_text = "no-text"
@@ -78,22 +76,6 @@ function do_after_success_getting_normalizers(result, status, xhr) {
         $( "#normalizers" ).append($("<option></option>")
                 .attr("value", normalizer.name)
                 .text(normalizer.show_name)); 
-    }
-    $('.selectpicker').selectpicker('refresh');
-}
-
-function do_after_success_getting_tokenizers(result, status, xhr) {
-    for ( var i in xhr.responseJSON) {
-        tokenizer = xhr.responseJSON[i]
-        console.log(tokenizer.name)
-        console.log(tokenizer.show_name)
-        // if (tokenizer.model_type == "manual")
-            // continue
-        // $( "#tokenizers" ).append( `"<option>${tokenizer.name}</option>"` );
-        $( "#tokenizers" ).append($("<option></option>")
-                .attr("value", tokenizer.name)
-                .text(tokenizer.show_name)); 
-        
     }
     $('.selectpicker').selectpicker('refresh');
 }
@@ -118,7 +100,6 @@ function do_after_success_getting_taggers(result, status, xhr) {
 
 
 get(`${normalizers_url}?is_automatic=true`, do_after_success_getting_normalizers)
-get(`${tokenizers_url}?is_automatic=true`, do_after_success_getting_tokenizers)
 get(`${taggers_url}?is_automatic=true`, do_after_success_getting_taggers)
 
 $(document).ready(function(){
@@ -137,41 +118,27 @@ $(document).ready(function(){
         }
     });
 
-    $('#normalizers').on('change', function() {
-        $(".selected-button").removeClass("selected-button");
-        selected_normalizer = $("#normalizers").children("option:selected").val();
-        if(selected_normalizer != 'no-normalizer')
-            $("#normalizers").addClass("selected-button");
+    // $('#normalizers').on('change', function() {
+    //     $(".selected-button").removeClass("selected-button");
+    //     selected_normalizer = $("#normalizers").children("option:selected").val();
+    //     if(selected_normalizer != 'no-normalizer')
+    //         $("#normalizers").addClass("selected-button");
 
-        $('#tokenizers').val('no-tokenizer')
-        $('#taggers').val('no-tagger')
+    //     $('#taggers').val('no-tagger')
 
-        $('.selectpicker').selectpicker('refresh');
-    });
+    //     $('.selectpicker').selectpicker('refresh');
+    // });
 
-    $('#tokenizers').on('change', function() {
-        $(".selected-button").removeClass("selected-button");
-        selected_tokenizer = $("#tokenizers").children("option:selected").val();
-        if(selected_tokenizer != 'no-tokenizer')
-            $("#tokenizers").addClass("selected-button");
+    // $('#taggers').on('change', function() {
+    //     $(".selected-button").removeClass("selected-button");
+    //     selected_tagger = $("#taggers").children("option:selected").val();
+    //     if(selected_tagger != 'no-tagger')
+    //         $("#taggers").addClass("selected-button");
 
-        $('#normalizers').val('no-normalizer')
-        $('#taggers').val('no-tagger')
+    //     $('#normalizers').val('no-normalizer')
 
-        $('.selectpicker').selectpicker('refresh');
-    });
-
-    $('#taggers').on('change', function() {
-        $(".selected-button").removeClass("selected-button");
-        selected_tagger = $("#taggers").children("option:selected").val();
-        if(selected_tagger != 'no-tagger')
-            $("#taggers").addClass("selected-button");
-
-        $('#normalizers').val('no-normalizer')
-        $('#tokenizers').val('no-tokenizer')
-
-        $('.selectpicker').selectpicker('refresh');
-    });
+    //     $('.selectpicker').selectpicker('refresh');
+    // });
 
 
     function do_after_success_tagging_text(result, status, xhr) {
@@ -208,11 +175,6 @@ $(document).ready(function(){
         // console.log(html)
         // $("#output-text").html(html);
     }
-    function do_after_success_tokenizing_text(result, status, xhr) {
-        tokens_string = xhr.responseJSON.tokens_string
-        console.log(tokens_string)
-        $("#output-text").html(tokens_string.replace(/\n/g, "<br>"));
-    }
     function do_after_success_normalizing_text(result, status, xhr) {
         text_id = xhr.responseJSON.id
         console.log(`text_id (normal) : ${text_id}`)
@@ -224,39 +186,32 @@ $(document).ready(function(){
         $("#output-text").html(xhr.responseJSON.content.replace(/\n/g, "<br>"))
         // }
     }
-    function do_after_success_getting_item(result, status, xhr) {
+    function normal_after_success_getting_item(result, status, xhr) {
         var text = xhr.responseJSON
         text_id = text.id
         console.log(`text_id : ${text_id}`)
         console.log(`text content : ${text}`)
-        if (selected_normalizer != "no-normalizer") {
-            get(`${normalizers_url}/${selected_normalizer}/normalize?text-id=${text_id}`, do_after_success_normalizing_text)
-        }
-        else if (selected_tokenizer != "no-tokenizer") {
-            get(`${tokenizers_url}/${selected_tokenizer}/tokenize?text-id=${text_id}`, do_after_success_tokenizing_text)
-        }
-        else if (selected_tagger != "no-tagger") {
-            get(`${taggers_url}/${selected_tagger}/tag?text-id=${text_id}`, do_after_success_tagging_text)
-        }
+        get(`${normalizers_url}/${selected_normalizer}/normalize?text-id=${text_id}`, do_after_success_normalizing_text)
     }
 
-    $("#do-it-button").click(function() {
+
+    function tag_after_success_getting_item(result, status, xhr) {
+        var text = xhr.responseJSON
+        text_id = text.id
+        console.log(`text_id : ${text_id}`)
+        console.log(`text content : ${text}`)
+        get(`${taggers_url}/${selected_tagger}/tag?text-id=${text_id}`, do_after_success_tagging_text)
+    }
+
+    $("#normal-button").click(function() {
         input_text = $("#input-text").val()
         console.log(`input_text : ${input_text}`)
 
         selected_normalizer = $("#normalizers").children("option:selected").val();
         console.log(`selected_normalizer : ${selected_normalizer}`)
 
-        selected_tokenizer = $("#tokenizers").children("option:selected").val();
-        console.log(`selected_tokenizer : ${selected_tokenizer}`)
-
-        selected_tagger = $("#taggers").children("option:selected").val();
-        console.log(`selected_tagger : ${selected_tagger}`)
-
-        if ( selected_normalizer == "no-normalizer" && 
-                selected_tokenizer == "no-tokenizer" &&
-                selected_tagger == "no-tagger") {
-            $("#output-text").text('لطفا یک نرمال‌کننده یا یک قطعه‌کننده و یا یک برچسب‌زننده انتخاب کنید.');
+        if ( selected_normalizer == "no-normalizer") {
+            $("#output-text").text('لطفا یک نرمال‌کننده انتخاب کنید.');
             return
         }
 
@@ -266,18 +221,28 @@ $(document).ready(function(){
         var data = `{"content": "${input_text}"}`
         console.log(`data : ${data}`)
 
-        post(texts_url, data, do_after_success_getting_item)
+        post(texts_url, data, normal_after_success_getting_item)
+    })
 
-        // input_text = $('#input-text').clone().children().remove().end().text() + '\n';
-        // current_line = ''
-        // $("#input-text").children('div').each(function () {
-        //     current_line = $(this).text()
-        //     if (current_line != '')
-        //         input_text += current_line + '\n';
-        // });
-        // console.log(`input_text : ${input_text}`)
+    $("#tag-button").click(function() {
+        input_text = $("#input-text").val()
+        console.log(`input_text : ${input_text}`)
 
-        
+        selected_tagger = $("#taggers").children("option:selected").val();
+        console.log(`selected_tagger : ${selected_tagger}`)
+
+        if (selected_tagger == "no-tagger") {
+            $("#output-text").text('لطفا یک برچسب‌زننده انتخاب کنید.');
+            return
+        }
+
+        input_text = input_text.replace(/\n/g, "\\n")
+        console.log(`input_text : \n${input_text}\n`)
+
+        var data = `{"content": "${input_text}"}`
+        console.log(`data : ${data}`)
+
+        post(texts_url, data, tag_after_success_getting_item)
     })
     
 

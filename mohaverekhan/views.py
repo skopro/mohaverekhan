@@ -16,16 +16,17 @@ import random
 from .serializers import (
             WordSerializer, WordNormalSerializer,
             TextSerializer, TextNormalSerializer, TextTagSerializer,
-            TagSetSerializer, TagSerializer,
-            NormalizerSerializer, TokenizerSerializer,
+            TagSetSerializer, TagSerializer, TokenSerializer,
+            TokenTagSerializer,
+            NormalizerSerializer,
             TaggerSerializer, ValidatorSerializer,
             )
 
 from .models import (
             Word, WordNormal,
             Text, TextNormal, TextTag,
-            TagSet, Tag,
-            Normalizer, Tokenizer,
+            TagSet, Tag, Token, TokenTag,
+            Normalizer,
             Tagger, Validator
             )
 
@@ -92,6 +93,15 @@ class TagSetViewSet(viewsets.ModelViewSet):
     serializer_class = TagSetSerializer
     lookup_field = 'name'
 
+class TokenViewSet(viewsets.ModelViewSet):
+    queryset = TagSet.objects.all()
+    serializer_class = TokenSerializer
+    lookup_field = 'content'
+
+class TokenTagViewSet(viewsets.ModelViewSet):
+    queryset = TagSet.objects.all()
+    serializer_class = TokenTagSerializer
+
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
@@ -106,7 +116,7 @@ class TagViewSet(viewsets.ModelViewSet):
             return
         
         text_tag_tokens_list = list(text_tag_tokens_list)
-        text_tag_tokens_list = random.sample(text_tag_tokens_list, min(len(text_tag_tokens_list), 200))
+        text_tag_tokens_list = random.sample(text_tag_tokens_list, int(len(text_tag_tokens_list)/2))
         [tag.update_examples(text_tag_tokens_list) for tag in Tag.objects.all()]
         
 
@@ -182,45 +192,6 @@ class NormalizerViewSet(viewsets.ModelViewSet):
             raise NotFound(detail="Error 404, text not found", code=404)
         text_normal = normalizer.normalize(text)
         serializer = TextNormalSerializer(text_normal)
-        return Response(serializer.data)
-
-class TokenizerViewSet(viewsets.ModelViewSet):
-    queryset = Tokenizer.objects.all()
-    serializer_class = TokenizerSerializer
-    lookup_field = 'name'
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('is_automatic',)
-
-    @action(detail=True, methods=['get',], url_name='train')
-    @csrf_exempt
-    def train(self, request, name=None):
-        tokenizer = cache.tokenizers.get(name, None)
-        if not tokenizer:
-            raise NotFound(detail="Error 404, tokenizer not found", code=404)
-        tokenizer.model_details['state'] = 'training'
-        tokenizer.save(update_fields=['model_details'])
-        thread = threading.Thread(target=tokenizer.train)
-        logger.debug(f'> Start training tokenizer {name} in parallel ...')
-        thread.start()
-        serializer = TokenizerSerializer(tokenizer)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['get',], url_name='tokenize')
-    @csrf_exempt
-    def tokenize(self, request, name=None):
-        tokenizer = cache.tokenizers.get(name, None)
-        if not tokenizer:
-            raise NotFound(detail="Error 404, tokenizer not found", code=404)
-
-        text_id = request.GET.get('text-id', None)
-        if not text_id:
-            raise ParseError(detail="Error 400, text-id not found", code=400)
-
-        text = Text.objects.filter(id=text_id).first()
-        if not text:
-            raise NotFound(detail="Error 404, text not found", code=404)
-        text_tag = tokenizer.tokenize(text)
-        serializer = TextTagSerializer(text_tag)
         return Response(serializer.data)
 
 class TaggerViewSet(viewsets.ModelViewSet):

@@ -3,8 +3,8 @@ from rest_framework_recursive.fields import RecursiveField
 from .models import (
             Word, WordNormal,
             Text, TextNormal, TextTag,
-            TagSet, Tag,
-            Normalizer, Tokenizer,
+            TagSet, Tag, Token, TokenTag,
+            Normalizer,
             Tagger, Validator
             )
 import logging
@@ -30,17 +30,6 @@ class NormalizerSerializer(serializers.ModelSerializer):
             'total_valid_word_normal_count',
             )
 
-
-class TokenizerSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Tokenizer
-        fields = ('id', 'name', 'show_name', 'owner', 'is_automatic', 
-                'created', 'last_update', 'model_details',
-                'total_text_tag_count', 
-                'total_valid_text_tag_count', )
-        read_only_fields = ('total_text_tag_count',
-                 'total_valid_text_tag_count')
 
 class TaggerSerializer(serializers.ModelSerializer):
     tag_set = serializers.SlugRelatedField(slug_field='name', 
@@ -110,9 +99,7 @@ class TagSetSerializer(serializers.ModelSerializer):
 
         return tag_set
 
-
-
-class TagSerializer(serializers.ModelSerializer):
+class TagInTokenSerializer(serializers.ModelSerializer):
     tag_set = serializers.SlugRelatedField(slug_field='name', 
             queryset=TagSet.objects.all())
 
@@ -121,6 +108,40 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'persian', 
             'color', 'created', 
             'examples', 'tag_set')
+        read_only_fields = ('examples',
+                    )
+
+class TokenSerializer(serializers.ModelSerializer):
+    tags = TagInTokenSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Token
+        fields = ('id', 'content', 'number_of_tags', 
+            'tags', 'created',)
+        read_only_fields = ('tags', 'number_of_tags',
+                    )
+
+class TokenTagSerializer(serializers.ModelSerializer):
+    tag = TagInTokenSerializer()
+    token = serializers.SlugRelatedField(slug_field='content', 
+            queryset=Token.objects.all())
+
+    class Meta:
+        model = TokenTag
+        fields = ('id', 'token', 'tag', 
+            'number_of_repetitions', 'created')
+        read_only_fields = ('number_of_repetitions',
+                    )
+
+class TagSerializer(serializers.ModelSerializer):
+    tag_set = serializers.SlugRelatedField(slug_field='name', 
+            queryset=TagSet.objects.all())
+
+    class Meta:
+        model = Tag
+        fields = ('id', 'name', 'persian', 
+            'color', 'created', 'number_of_tokens',
+            'examples', 'tag_set', )
         read_only_fields = ('examples',
                     )
 
@@ -138,8 +159,6 @@ class TextNormalInTextSerializer(serializers.ModelSerializer):
         read_only_fields = ('is_valid',)       
 
 class TextTagInTextSerializer(serializers.ModelSerializer):
-    tokenizer = serializers.SlugRelatedField(slug_field='name', 
-            queryset=Tokenizer.objects.all())
     tagger = serializers.SlugRelatedField(slug_field='name', 
             queryset=Tagger.objects.all())
     validator = serializers.SlugRelatedField(slug_field='name', 
@@ -147,8 +166,8 @@ class TextTagInTextSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TextTag
-        fields = ('id', 'created', 'tokenizer', 'tagger', 'accuracy', 'true_text_tag',
-            'is_valid', 'validator', 'tokens', 'tags_html', 'tokens_string')
+        fields = ('id', 'created', 'tagger', 'accuracy', 'true_text_tag',
+            'is_valid', 'validator', 'tagged_tokens', 'tagged_tokens_html')
         read_only_fields = ('is_valid',)    
 
 
@@ -203,11 +222,9 @@ class TrueTextTagSerializer(serializers.ModelSerializer):
         model = TextTag
         fields = ('id', 'created', 
             'tagger', 'accuracy', 
-            'tokens', 'tags_html')
+            'tagged_tokens', 'tagged_tokens_html')
 
 class TextTagSerializer(serializers.ModelSerializer):
-    tokenizer = serializers.SlugRelatedField(slug_field='name', 
-            queryset=Tokenizer.objects.all())
     tagger = serializers.SlugRelatedField(slug_field='name', 
             queryset=Tagger.objects.all(), required=False)
     text = TextInTextNormalOrTextTag()
@@ -218,9 +235,9 @@ class TextTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = TextTag
         fields = ('id', 'created', 
-            'tokenizer', 'tagger', 'text', 'accuracy', 'true_text_tag', 
-            'is_valid', 'validator', 'tokens', 
-            'tags_html', 'tokens_string')
+            'tagger', 'text', 'accuracy', 'true_text_tag', 
+            'is_valid', 'validator', 'tagged_tokens', 
+            'tagged_tokens_html', 'tags_string')
         read_only_fields = ('is_valid', 'accuracy', 'true_text_tag')
     
     def create(self, validated_data):
@@ -244,8 +261,8 @@ class TextTagSerializer(serializers.ModelSerializer):
         instance.text.content = text_content
         instance.text.save(update_fields=['content'])
 
-        instance.tokens = validated_data.get('tokens', instance.tokens)
-        instance.save(update_fields=['tokens'])
+        instance.tokens = validated_data.get('tagged_tokens', instance.tokens)
+        instance.save(update_fields=['tagged_tokens'])
         return instance
 
 class WordNormalInWordSerializer(serializers.ModelSerializer):
@@ -341,7 +358,7 @@ class WordNormalSerializer(serializers.ModelSerializer):
 #         model = TaggedSentence
 #         fields = ('id', 'created', 
 #             'tagger', 'sentence', 
-#             'tokens', 'validator', 'is_valid')
+#             'tagged_tokens', 'validator', 'is_valid')
 #         read_only_fields = ('validator', 'is_valid',)
     
 #     def create(self, validated_data):

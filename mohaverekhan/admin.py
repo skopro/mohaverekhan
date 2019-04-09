@@ -5,8 +5,8 @@ from django.utils.html import format_html
 from .models import (
             Word, WordNormal,
             Text, TextNormal, TextTag,
-            TagSet, Tag,
-            Normalizer, Tokenizer,
+            TagSet, Tag, Token, TokenTag,
+            Normalizer,
             Tagger, Validator
             )
 
@@ -80,37 +80,36 @@ class WordNormalAdmin(admin.ModelAdmin):
 
 class TextTagAdmin(admin.ModelAdmin):
     list_per_page = 10
-    list_display = ('tags_html', 'get_text_content', 'is_valid', 
-                    'accuracy', 
-                    'get_tokenizer_name', 'get_tagger_name', 
+    list_display = ('tagged_tokens_html', 'get_text_content', 'is_valid', 
+                    'accuracy', 'get_tagger_name', 
                     'get_validator_name', 'true_text_tag', 'created')
     search_fields = ['text__content']
-    list_filter = ['is_valid', 'tagger__name', 'tokenizer__name']
+    list_filter = ['is_valid', 'tagger__name']
     ordering = ('-created',)
-    readonly_fields = ['created', 'id', 'text', 'get_text_content', 'tags_html', 
-                   'tokens_string', 'tags_string']
+    readonly_fields = ['created', 'id', 'text', 'get_text_content', 
+                'tagged_tokens_html', 'tags_string']
 
     fieldsets = (
         (None, {
             'fields': ('id', 'created', 'get_text_content',
-             'tokens', 'tags_html', 'is_valid', 'accuracy', 
-             'tokens_string', 'tags_string')
+             'tagged_tokens', 'tagged_tokens_html', 'is_valid', 'accuracy', 
+             'tags_string')
         }),
         ('Relations', {
-            'fields': ('text', 'tokenizer', 'tagger', 'validator'),
+            'fields': ('text', 'tagger', 'validator'),
         }),
     )
     
-    def get_tags_html(self, obj):
-        return format_html(obj.tags_html)
+    def get_tagged_tokens_html(self, obj):
+        return format_html(obj.tagged_tokens_html)
         # return format_html(
         #     '''
         #     <div style="background-color: #44444e !important;">
         #         {}
         #     </div>
-        #     ''', obj.tags_html)
-    get_tags_html.admin_order_field = 'created' 
-    get_tags_html.short_description = 'Tags HTML'
+        #     ''', obj.tagged_tokens_html)
+    get_tagged_tokens_html.admin_order_field = 'created' 
+    get_tagged_tokens_html.short_description = 'Tagged Tokens HTML'
 
     def get_validator_name(self, obj):
         if not obj.validator:
@@ -133,13 +132,6 @@ class TextTagAdmin(admin.ModelAdmin):
     get_text_content.admin_order_field = 'created' 
     get_text_content.short_description = 'Text Content'
 
-    def get_tokenizer_name(self, obj):
-        if not obj.tokenizer:
-            return None
-        return obj.tokenizer.name
-    get_tokenizer_name.admin_order_field = 'created' 
-    get_tokenizer_name.short_description = 'Tagger Name'
-
     def get_tagger_name(self, obj):
         if not obj.tagger:
             return None
@@ -149,9 +141,9 @@ class TextTagAdmin(admin.ModelAdmin):
 
 class TextTagInTextInline(admin.TabularInline):
     model = TextTag
-    fields = ('id', 'tokens', 'is_valid', 'accuracy', 'true_text_tag',
-        'tokenizer', 'tagger', 'validator', 'created')
-    readonly_fields = ['created', 'id', 'tokenizer', 'tagger', 'validator']
+    fields = ('id', 'tagged_tokens', 'is_valid', 'accuracy', 'true_text_tag',
+        'tagger', 'validator', 'created')
+    readonly_fields = ['created', 'id', 'tagger', 'validator']
     extra = 0
     max_num = 25
 
@@ -262,7 +254,8 @@ class TagAdmin(admin.ModelAdmin):
     get_color_html.short_description = 'Color'
 
     list_display = ('name', 'persian', 
-                'get_color_html', 'examples', 'tag_set', 'created')
+                'get_color_html', 'tag_set', 'number_of_tokens', 
+                'examples', 'created')
     ordering = ('-tag_set', '-created')
     readonly_fields = ['created', 'id']
     list_filter = ['tag_set', 'name', 'persian']
@@ -271,19 +264,125 @@ class TagAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
             'fields': ('id', 'created', 'name', 
-                'persian', 'color', 'examples')
+                'persian', 'color', 'examples', 'number_of_tokens')
         }),
         ('Relation', {
             'fields': ('tag_set',),
         }),
     )
 
+class TokenTagInTokenInline(admin.TabularInline):
+    model = Token.tags.through
+    fk_name = 'token'
+    fields = ('get_token_content', 'get_tag_name', 'get_tag_set_name', 
+            'number_of_repetitions', 'created', 'id')
+    readonly_fields = ['number_of_repetitions', 'created', 'id']
+    extra = 0
+    max_num = 25
+
+    def get_token_content(self, obj):
+        if not obj.token:
+            return None
+        # return obj.token.content
+        html = format_html('''
+            <div style="direction: rtl !important;text-align: right;padding: 0.2vh 1.0vw 0.2vh 1.0vw;">
+                {}
+            </div>
+            ''', format_html(obj.token.content))
+        return html
+    get_token_content.admin_order_field = 'created' 
+    get_token_content.short_description = 'Token Content'
+
+    def get_tag_name(self, obj):
+        if not obj.tag:
+            return None
+        # return obj.token.content
+        return obj.tag.name
+    get_tag_name.admin_order_field = 'created' 
+    get_tag_name.short_description = 'Tag Name'
+
+    def get_tag_set_name(self, obj):
+        if not obj.tag:
+            return None
+        # return obj.token.content
+        return obj.tag.tag_set.name
+    get_tag_set_name.admin_order_field = 'created' 
+    get_tag_set_name.short_description = 'Tag Set Name'
+
+class TokenAdmin(admin.ModelAdmin):
+    list_display = ('content', 'number_of_tags', 'created')
+    search_fields = ['content', 'id']
+    ordering = ('-created',)
+    list_filter = []
+    readonly_fields = ['created', 'id', 'number_of_tags']
+    # exclude = ('normalizers',)
+
+    fieldsets = (
+        (None, {
+            'fields': ('id', 'created', 'content', 'number_of_tags',
+                )
+        }),
+    )
+
+    inlines = [
+        TokenTagInTokenInline,
+    ]
+
+class TokenTagAdmin(admin.ModelAdmin):
+    list_display = ('get_token_content', 'get_tag_name', 'get_tag_set_name',
+                'number_of_repetitions', 'created')
+    search_fields = ['token__content', 'id']
+    ordering = ('-created',)
+    list_filter = ['tag__tag_set__name', 'tag__name']
+    readonly_fields = ['created', 'id', 'number_of_repetitions']
+    # exclude = ('normalizers',)
+
+    fieldsets = (
+        (None, {
+            'fields': ('id', 'created', 
+                'token', 'tag', 'number_of_repetitions',
+                )
+        }),
+    )
+
+    def get_token_content(self, obj):
+        if not obj.token:
+            return None
+        # return obj.token.content
+        html = format_html('''
+            <div style="direction: rtl !important;text-align: right;padding: 0.2vh 1.0vw 0.2vh 1.0vw;">
+                {}
+            </div>
+            ''', format_html(obj.token.content))
+        return html
+    get_token_content.admin_order_field = 'created' 
+    get_token_content.short_description = 'Token Content'
+
+    def get_tag_name(self, obj):
+        if not obj.tag:
+            return None
+        # return obj.token.content
+        return obj.tag.name
+    get_tag_name.admin_order_field = 'created' 
+    get_tag_name.short_description = 'Tag Name'
+
+    def get_tag_set_name(self, obj):
+        if not obj.tag:
+            return None
+        # return obj.token.content
+        return obj.tag.tag_set.name
+    get_tag_set_name.admin_order_field = 'created' 
+    get_tag_set_name.short_description = 'Tag Set Name'
+
 class TagInLine(admin.TabularInline):
     model = Tag
-    fields = ('name', 'persian', 'color', 'examples', 'id', 'created')
+    fields = ('name', 'persian', 'color', 'number_of_tokens',
+     'examples', 'id', 'created')
     readonly_fields = ['examples', 'created', 'id']
     extra = 0
     max_num = 25
+
+
 
 class TagSetAdmin(admin.ModelAdmin):
     list_display = ('name',
@@ -351,38 +450,6 @@ class NormalizerAdmin(admin.ModelAdmin):
     get_model_details.admin_order_field = 'created' 
     get_model_details.short_description = 'Model Details'
 
-class TokenizerAdmin(admin.ModelAdmin):
-    list_display = ('name', 'show_name', 'owner', 'is_automatic', 
-                'total_text_tag_count', 
-                'total_valid_text_tag_count',
-                'get_model_details', 'last_update', 'created')
-    ordering = ('-is_automatic', '-created')
-    readonly_fields = ['created', 'id', 'last_update',
-                'total_text_tag_count', 
-                'total_valid_text_tag_count',
-                ]
-    list_filter = ['owner', 'is_automatic']
-
-    fieldsets = (
-        (None, {
-            'fields': ('id', 'created', 'last_update', 'name', 'show_name', 
-                'owner', 'is_automatic', 'model_details' )
-        }),
-        ('Rank', {
-            'fields': (
-                'total_text_tag_count', 
-                'total_valid_text_tag_count',
-                ),
-        }),
-    )
-
-    def get_model_details(self, obj):
-        model_details = ''
-        for key, value in obj.model_details.items():
-            model_details += f'> {key} = {value}<br>'
-        return format_html(model_details)
-    get_model_details.admin_order_field = 'created' 
-    get_model_details.short_description = 'Model Details'
 
 class TaggerAdmin(admin.ModelAdmin):
     list_display = ('name', 'show_name', 'owner', 'is_automatic', 'tag_set', 
@@ -459,9 +526,10 @@ admin.site.register(TextTag, TextTagAdmin)
 
 admin.site.register(Tag, TagAdmin)
 admin.site.register(TagSet, TagSetAdmin)
+admin.site.register(Token, TokenAdmin)
+admin.site.register(TokenTag, TokenTagAdmin)
 
 admin.site.register(Normalizer, NormalizerAdmin)
-admin.site.register(Tokenizer, TokenizerAdmin)
 admin.site.register(Tagger, TaggerAdmin)
 admin.site.register(Validator, ValidatorAdmin)
 

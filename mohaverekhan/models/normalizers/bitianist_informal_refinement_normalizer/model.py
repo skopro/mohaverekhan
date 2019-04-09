@@ -122,12 +122,13 @@ class BitianistInformalRefinementNormalizer(Normalizer):
         text.content = text.content.strip(' ')
 
 
-    repetition_pattern = re.compile(r"(.)\1{1,}")
+    repetition_pattern = re.compile(r"([^ب])\1{1,}") # ببندم=بند
     # repetition_pattern = re.compile(r"([^A-Za-z])\1{1,}")
 
     def fix_repetition_token(self, token_content):
         if len(token_content) <= 2: #شش
             return token_content
+
 
         fixed_token_content = token_content
         if self.repetition_pattern.search(fixed_token_content):
@@ -137,6 +138,8 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                 return fixed_token_content
 
             fixed_token_content = self.repetition_pattern.sub(r'\1', token_content)
+            if fixed_token_content == 'کنده':
+                return 'کننده'
             if fixed_token_content in cache.token_set:
                 logger.info(f'> found repetition token {token_content} -> {fixed_token_content}')
                 return fixed_token_content

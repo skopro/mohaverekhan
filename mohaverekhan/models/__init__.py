@@ -1,8 +1,8 @@
 from .base_models import (
     Word, WordNormal,
     Text, TextNormal, TextTag,
-    TagSet, Tag,
-    Normalizer, Tokenizer,
+    TagSet, Tag, Token, TokenTag,
+    Normalizer,
     Tagger, Validator,
     UTF8JSONField, UTF8JSONFormField,
 )
@@ -17,6 +17,3 @@ from .taggers.bitianist_formal_nltk_tagger.model \
     import BitianistFormalNLTKTagger
 from .taggers.bitianist_informal_nltk_tagger.model \
     import BitianistInformalNLTKTagger
-
-from .tokenizers.bitianist_informal_tokenizer.model \
-    import BitianistInformalTokenizer

@@ -4,9 +4,9 @@ from django.conf.urls import url, re_path
 from .views import (HomePageView, 
             WordViewSet, WordNormalViewSet,
             TextViewSet, TextNormalViewSet, TextTagViewSet, 
-            TagSetViewSet, TagViewSet, 
+            TagSetViewSet, TagViewSet, TokenViewSet, TokenTagViewSet,
             ValidatorViewSet, NormalizerViewSet, 
-            TokenizerViewSet, TaggerViewSet,
+            TaggerViewSet,
             )
 from rest_framework.routers import DefaultRouter, SimpleRouter
 
@@ -26,10 +26,11 @@ router.register(r'text-tags', TextTagViewSet)
 
 router.register(r'tag-sets', TagSetViewSet)
 router.register(r'tags', TagViewSet)
+router.register(r'tokens', TokenViewSet)
+router.register(r'token-tags', TokenTagViewSet)
 
 router.register(r'validators', ValidatorViewSet)
 router.register(r'normalizers', NormalizerViewSet)
-router.register(r'tokenizers', TokenizerViewSet)
 router.register(r'taggers', TaggerViewSet)
 
 

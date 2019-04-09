@@ -30,7 +30,6 @@ tags_url = fr'{base_api_url}/tags'
 
 validators_url = fr'{base_api_url}/validators'
 normalizers_url = fr'{base_api_url}/normalizers'
-tokenizers_url = fr'{base_api_url}/tokenizers'
 taggers_url = fr'{base_api_url}/taggers'
 # sentences_url = fr'{base_api_url}/sentences'
 # normal_sentences_url = fr'{base_api_url}/normal-sentences'
@@ -107,8 +106,8 @@ bijankhan_tag_set_dictionary = [
   },
   {
     "name": "C",
-    "persian": "ضمیر شخصی متصل",
-    "color": "#0E6655"
+    "persian": "متصل‌شونده",
+    "color": "#20EBC4"
   },
   {
     "name": "R",
@@ -179,21 +178,6 @@ def put(url, data_dictionary, log_it=False):
 
 
 def generate_normalizer_dictionary(name, show_name, is_automatic=False, 
-                                owner=None, model_details=None, id=None):
-    d = {}
-    d['name'] = name
-    d['show_name'] = show_name
-    d['is_automatic'] = is_automatic
-    if owner:
-        d['owner'] = owner
-    if model_details:
-        d['model_details'] = model_details 
-    if id:
-        d['id'] = id 
-    return d
-
-
-def generate_tokenizer_dictionary(name, show_name, is_automatic=False, 
                                 owner=None, model_details=None, id=None):
     d = {}
     d['name'] = name
@@ -286,11 +270,10 @@ def generate_text_normal_dictionary(content, normalizer,
         d['id'] = id 
     return d
 
-def generate_text_tag_dictionary(tokens, tokenizer, tagger, 
+def generate_text_tag_dictionary(tokens, tagger, 
         text, id=None):
     d = {}
     d['tokens'] = tokens
-    d['tokenizer'] = tokenizer
     d['tagger'] = tagger
     d['text'] = text
     if id:
@@ -435,58 +418,6 @@ def import_normalizers():
     response, error = post(normalizers_url, bitianist_informal_transformation_normalizer)
     if error:
         return
-
-@utils.time_usage(logger)
-def import_tokenizers():
-    # # 1
-    # model_details = {
-    #     'type': 'rule-based',
-    #     'state': 'ready'
-    # }
-    # bitianist_informal_tokenizer = generate_tokenizer_dictionary(
-    #     'bitianist-informal-tokenizer',
-    #     show_name='قطعه‌کننده محاوره',
-    #     owner='bitianist',
-    #     is_automatic=True,
-    #     model_details=model_details
-    # )
-
-    # response, error = post(tokenizers_url, bitianist_informal_tokenizer)
-    # if error:
-    #     return 0
-    
-    # 2
-    # model_details = {
-    #     'type': 'manual',
-    # }
-    # bijankhan_manual_tokenizer = generate_tokenizer_dictionary(
-    #     'bijankhan-manual-tokenizer',
-    #     show_name='قطعه‌کننده دستی بی‌جن‌خان',
-    #     owner='bijankhan',
-    #     is_automatic=False,
-    #     model_details=model_details
-    # )
-
-    # response, error = post(tokenizers_url, bijankhan_manual_tokenizer)
-    # if error:
-    #     return 0
-
-    # 3
-    model_details = {
-        'type': 'manual',
-    }
-    bitianist_manual_tokenizer = generate_tokenizer_dictionary(
-        'bitianist-manual-tokenizer',
-        show_name='قطعه‌کننده دستی بیتیانیست',
-        owner='bitianist',
-        is_automatic=False,
-        model_details=model_details
-    )
-
-    response, error = post(tokenizers_url, bitianist_manual_tokenizer)
-    if error:
-        return 0
-
 
 
 @utils.time_usage(logger)
@@ -665,7 +596,6 @@ def read_bijankhan_xml_file(xml_file):
             text = generate_text_dictionary(text_content)
             text_tag = generate_text_tag_dictionary(
                         tokens=text_tag_tokens,
-                        tokenizer='bijankhan-formal-tokenizer',
                         tagger='bijankhan-formal-tagger', 
                         text=text)
 
@@ -695,20 +625,19 @@ def import_bijankhan_data():
     logger.info(f'>> Total {len(text_tags)} texts imported.')
 
 def import_bitianist_text_tag(text_tag_id=None):
-    tokenizer = 'bitianist-manual-tokenizer'
     tagger = 'bitianist-manual-tagger'
 
     # 1
-    text_content = 'شلوغی فرهنگ‌سرا'
+    text_content = 'شلوغی فرهنگ‌سرا آیدی'
 
     tokens = [
         generate_token_dictionary('شلوغی', generate_tag_dictionary(name='A')),
         generate_token_dictionary('فرهنگ‌سرا', generate_tag_dictionary(name='N')),
+        generate_token_dictionary('آیدی', generate_tag_dictionary(name='N')),
     ]
     text = generate_text_dictionary(text_content)
     text_tag = generate_text_tag_dictionary(
                 tokens=tokens,
-                tokenizer=tokenizer,
                 tagger=tagger,
                 text=text)
 
@@ -722,14 +651,10 @@ def import_bitianist_text_tag(text_tag_id=None):
         return
 
 def import_bitianist_evaluate_text_tag(text_tag_id=None):
-    tokenizer = 'bitianist-manual-tokenizer'
     tagger = 'bitianist-manual-tagger'
 
     # 1
     text_content = '''
-برید به رستوران https://chilivery.com/tehran/restaurant۱/ . غذاش خیلی عالیه 😍😍😍 از‌نظر قیمت میارزه ک بری ولی واقعا خفست مث این جای دیگه‌ای ندیدم انقدر خوبو ارزون باشه ! مشتریاشم خیلی زیاده . کیفیت پیتزاهاش اصلن خوب نیست 😠😠 … از شلوغیه میدون تجریش داره پول درمیاره . بازم ازش خرید می‌کنم ، بهترین منطقست . اگه یه بار بری اونجا مشتریش میشی . برای ارسال رزومه به آدرس job@gmail.com میل بزنید . کتابه رو تو فرهنگ‌سرا پیداش کردم . در‌صورت مشکل به آیدی @bitianist پیام بدهید . حاضرم شرط بندم همونو ورداشتن تزیین کردن و برای ما اووردن ! 😐😐 آخه واقعا درسته اینکار ؟ چرا خوب درست نمی‌کنن ؟    
-'''.strip()
-    tokenized_text_content = '''
 برید به رستوران https://chilivery.com/tehran/restaurant۱/ . غذاش خیلی عالیه 😍😍😍
 از‌نظر قیمت میارزه ک بری ولی واقعا خفست
 مث این جای دیگه‌ای ندیدم انقدر خوبو ارزون باشه ! مشتریاشم خیلی زیاده .
@@ -739,28 +664,41 @@ def import_bitianist_evaluate_text_tag(text_tag_id=None):
 برای ارسال رزومه به آدرس job@gmail.com میل بزنید .
 کتابه رو تو فرهنگ‌سرا پیداش کردم .
 در‌صورت مشکل به آیدی @bitianist پیام بدهید .
-حاضرم شرط بندم همونو ورداشتن تزیین کردن و برای ما اووردن ! 😐😐
+حاضرم شرط ببندم همونو ورداشتن تزیین کردن و برای ما اووردن ! 😐😐
 آخه واقعا درسته اینکار ؟ چرا خوب درست نمی‌کنن ؟
+'''.strip()
+    tokenized_text_content = '''
+برید به رستوران https://chilivery.com/tehran/restaurant۱/ . غذا ش خیلی عالی ه 😍😍😍 
+از‌نظر قیمت میارزه ک بری ولی واقعا خف ست 
+مث این جای دیگه ای ندیدم انقدر خوب و ارزون باشه ! مشتریا ش م خیلی زیاده . 
+کیفیت پیتزاها ش اصلن خوب نیست 😠😠 … از شلوغی میدون تجریش داره پول درمیاره . 
+باز م از ش خرید می‌کنم ، بهترین منطق ست . 
+اگه یه بار بری اونجا مشتری ش میشی . 
+برای ارسال رزومه به آدرس job@gmail.com میل بزنید . 
+کتاب ه رو تو فرهنگ‌سرا پیدا ش کردم . 
+در‌صورت مشکل به آیدی @bitianist پیام بدهید . 
+حاضر م شرط ببندم همون و ورداشتن تزیین کردن و برای ما اووردن ! 😐😐 
+آخه واقعا درست ه اینکار ؟ چرا خوب درست نمی‌کنن ؟
 '''.strip()
 
     tags_string = '''
 V E N K O N C D A C X O 
 E N N C V J D N C O 
-N T N N V D A J A V O N C D A O O 
+N T N Z I V D A J A V O N C C D A O O 
 N N C N A V X O E N N N V N N O O 
 D C E C N V O A N C O O 
 J U N V D N C A O O 
 E N N E N M N V O O 
 N R N Z A A C V O O 
 E N E N S N V O O 
-A C N N C Z J V N V J E Z V O X O 
+A C N V Z J V N V J E Z V O X O 
 D D A C N O D D A V O
     '''.strip()
 
     '''
-برید_V  به_E  رستوران_N  https://chilivery.com/tehran/restaurant۱/_K  ._O  غذا_N  ش_C  خیلی_D  عالی_A  ه_C  😍😍😍_X  
-از‌نظر_E  قیمت_N  میارزه_N  ک_C  بری_V  ولی_J  واقعا_D  خف_N  ست_C  
-مث_N  این_T  جای_N  دیگه‌ای_N  ندیدم_V  انقدر_D  خوب_A  و_J  ارزون_A  باشه_V  !_O  مشتریاش_N  م_C  خیلی_D  زیاده_A  ._O  
+برید_V  به_E  رستوران_N  https://chilivery.com/tehran/restaurant۱/_K  ._O  غذا_N  ش_C  خیلی_D  عالی_A  ه_C_V  😍😍😍_X  
+از‌نظر_E  قیمت_N  میارزه_N_V  ک_C_J  بری_V  ولی_J  واقعا_D  خف_N_A  ست_C_V
+مث_N_D  این_T_Z  جای_N  دیگه‌ای_N  ندیدم_V  انقدر_D  خوب_A  و_J  ارزون_A  باشه_V  !_O  مشتریاش_N  م_C  خیلی_D  زیاده_A  ._O  
 کیفیت_N  پیتزاها_N  ش_C  اصلن_N  خوب_A  نیست_V  😠😠_X  …_O  از_E  شلوغی_N  میدون_N  تجریش_N  داره_V  پول_N  درمیاره_N  ._O  
 باز_D  م_C  از_E  ش_C  خرید_N  می‌کنم_V  ،_O  بهترین_A  منطق_N  ست_C  ._O  
 اگه_J  یه_U  بار_N  بری_V  اونجا_D  مشتری_N  ش_C  میشی_A  ._O  
@@ -769,6 +707,31 @@ D D A C N O D D A V O
 در‌صورت_E  مشکل_N  به_E  آیدی_N  @bitianist_S  پیام_N  بدهید_V  ._O  
 حاضر_A  م_C  شرط_N  بند_N  م_C  همون_Z  و_J  ورداشتن_V  تزیین_N  کردن_V  و_J  برای_E  ما_Z  اووردن_V  !_O  😐😐_X  
 آخه_D  واقعا_D  درست_A  ه_C  اینکار_N  ؟_O  چرا_D  خوب_D  درست_A  نمی‌کنن_V  ؟_O
+
+برید_V  به_E  رستوران_N  https://chilivery.com/tehran/restaurant۱/_K  ._O  غذا_N  ش_C  خیلی_D  عالی_A  ه_C_V  😍😍😍_X  
+از‌نظر_E  قیمت_N  میارزه_N_V  ک_C_J  بری_V  ولی_J  واقعا_D  خف_N_A  ست_C_V  
+مث_N_D  این_T_Z  جای_N  دیگه_Z  ای_I_C  ندیدم_V  انقدر_D  خوب_A  و_J  ارزون_A  باشه_V  !_O  مشتریاشم_N  خیلی_D  زیاده_A  ._O  
+کیفیت_N  پیتزاها_N  ش_C  اصلن_N  خوب_A  نیست_V  😠😠_X  …_O  از_E  شلوغی_N  میدون_N  تجریش_N  داره_V  پول_N  درمیاره_N  ._O  
+باز_D  م_C  از_E  ش_C  خرید_N  می‌کنم_V  ،_O  بهترین_A  منطق_N  ست_C  ._O  
+اگه_J  یه_U  بار_N  بری_V  اونجا_D  مشتری_N  ش_C  میشی_A  ._O  
+برای_E  ارسال_N  رزومه_N  به_E  آدرس_N  job@gmail.com_M  میل_N  بزنید_V  ._O  
+کتاب_N  ه_R  رو_N  تو_Z  فرهنگ‌سرا_A  پیدا_A  ش_C  کردم_V  ._O  
+در‌صورت_E  مشکل_N  به_E  آیدی_N  @bitianist_S  پیام_N  بدهید_V  ._O  
+حاضر_A  م_C  شرط_N  بند_N  م_C  همون_Z  و_J  ورداشتن_V  تزیین_N  کردن_V  و_J  برای_E  ما_Z  اووردن_V  !_O  😐😐_X  
+آخه_D  واقعا_D  درست_A  ه_C  اینکار_N  ؟_O  چرا_D  خوب_D  درست_A  نمی‌کنن_V  ؟_O
+
+برید_V  به_E  رستوران_N  https://chilivery.com/tehran/restaurant۱/_K  ._O  غذا_N  ش_C  خیلی_D  عالی_A  ه_C_V  😍😍😍_X  
+از‌نظر_E  قیمت_N  میارزه_N_V  ک_C_J  بری_V  ولی_J  واقعا_D  خف_N_A  ست_C_V  
+مث_N_D  این_T_Z  جای_N  دیگه_Z  ای_I_C  ندیدم_V  انقدر_D  خوب_A  و_J  ارزون_A  باشه_V  !_O  مشتریا_N  ش_C  م_C_J  خیلی_D  زیاده_A  ._O  
+کیفیت_N  پیتزاها_N  ش_C  اصلن_N  خوب_A  نیست_V  😠😠_X  …_O  از_E  شلوغی_N  میدون_N  تجریش_N  داره_V  پول_N  درمیاره_N  ._O  
+باز_D  م_C  از_E  ش_C  خرید_N  می‌کنم_V  ،_O  بهترین_A  منطق_N  ست_C  ._O  
+اگه_J  یه_U  بار_N  بری_V  اونجا_D  مشتری_N  ش_C  میشی_A  ._O  
+برای_E  ارسال_N  رزومه_N  به_E  آدرس_N  job@gmail.com_M  میل_N  بزنید_V  ._O  
+کتاب_N  ه_R  رو_N  تو_Z  فرهنگ‌سرا_A  پیدا_A  ش_C  کردم_V  ._O  
+در‌صورت_E  مشکل_N  به_E  آیدی_N  @bitianist_S  پیام_N  بدهید_V  ._O  
+حاضر_A  م_C  شرط_N  ببندم_V  همون_Z  و_J  ورداشتن_V  تزیین_N  کردن_V  و_J  برای_E  ما_Z  اووردن_V  !_O  😐😐_X  
+آخه_D  واقعا_D  درست_A  ه_C  اینکار_N  ؟_O  چرا_D  خوب_D  درست_A  نمی‌کنن_V  ؟_O
+
     '''
 
     tokenized_text_content = tokenized_text_content.replace('\n', ' \\n ')
@@ -788,7 +751,6 @@ D D A C N O D D A V O
     text = generate_text_dictionary(text_content)
     text_tag = generate_text_tag_dictionary(
                 tokens=tokens,
-                tokenizer=tokenizer,
                 tagger=tagger,
                 text=text)
 
@@ -807,7 +769,6 @@ def main():
         # import_tag_sets()
         # import_validators()
         # import_normalizers()
-        # import_tokenizers()
         # import_taggers()
 
         
@@ -816,7 +777,7 @@ def main():
         # import_word_equivalents()
 
         # import_bitianist_text_tag('b3ebb659-958f-479c-a8f0-318e4346c37c')
-        import_bitianist_evaluate_text_tag('3c1a22a3-2066-4e26-a952-2d47f7432571')
+        import_bitianist_evaluate_text_tag()
 
         # import_tags()
         # import_translation_characters()

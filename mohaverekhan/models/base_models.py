@@ -150,66 +150,55 @@ class TextNormal(Text):
 class TextTag(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created = models.DateTimeField(auto_now_add=True)
-    tokenizer = models.ForeignKey('Tokenizer', on_delete=models.CASCADE, related_name='text_tags', related_query_name='text_tag')
-    tagger = models.ForeignKey('Tagger', on_delete=models.CASCADE, related_name='text_tags', related_query_name='text_tag', blank=True, null=True)
+    tagger = models.ForeignKey('Tagger', on_delete=models.CASCADE, related_name='text_tags', related_query_name='text_tag', null=True)
     text = models.ForeignKey('Text', on_delete=models.CASCADE, related_name='text_tags', related_query_name='text_tag')
-    tokens = UTF8JSONField(default=list) # contains list of token with it's tag
+    tagged_tokens = UTF8JSONField(default=list) # contains list of token with it's tag
     accuracy = models.FloatField(default=0, blank=True)
     true_text_tag = models.ForeignKey('self', on_delete=models.CASCADE, related_name='+', blank=True, null=True)
     is_valid = models.BooleanField(default=None, blank=True, null=True)
     validator = models.ForeignKey('Validator', on_delete=models.CASCADE, related_name='text_tags', related_query_name='text_tag', 
                                         blank=True, null=True)
-
+    tags_string = models.TextField(blank=True, default='')
+    tagged_tokens_html = models.TextField(blank=True, default=format_html(''))
+    
     class Meta:
         verbose_name = 'Text Tag'
         verbose_name_plural = 'Text Tags'
         ordering = ('-created',)
 
     
-    @property
-    def tokens_string(self):
-        tokens_string = ''
-        if self.tokens:
-            for token in self.tokens:
-                if token['content'] == '\\n':
-                    tokens_string += '\n'
+    # @property
+    def create_tags_string(self):
+        self.tags_string = ''
+        if self.tagged_tokens:
+            for tagged_token in self.tagged_tokens:
+                if tagged_token['token'] == '\\n':
+                    self.tags_string += 'O \n '
                 else:
-                    tokens_string += token['content'] + ' ' 
-        return tokens_string.strip()
+                    self.tags_string += tagged_token['tag']['name'] + ' ' 
+        self.tags_string = self.tags_string.strip()
 
-    @property
-    def tags_string(self):
-        tags_string = ''
-        if self.tokens:
-            for token in self.tokens:
-                if token['content'] == '\\n':
-                    tags_string += 'O \n '
-                else:
-                    tags_string += token['tag']['name'] + ' ' 
-        return tags_string.strip()
-
-    @property
-    def tags_html(self):
-        html = format_html('')
-        if self.tokens:
-            for token in self.tokens:
-                if 'tag' in token:
-                    if token['content'] == '\\n':
-                        html += format_html(f'<br />')
+    # @property
+    def create_tagged_tokens_html(self):
+        self.tagged_tokens_html = format_html('')
+        if self.tagged_tokens:
+            for tagged_token in self.tagged_tokens:
+                if 'tag' in tagged_token:
+                    if tagged_token['token'] == '\\n':
+                        self.tagged_tokens_html += format_html(f'<br />')
                     else:
                         # html += format_html(f'<div>hello</div>')
-                        html += format_html('''
+                        self.tagged_tokens_html += format_html('''
 <div style="color:{0};display: inline-block;">
     {1}_{2}&nbsp;&nbsp;&nbsp;
 </div>
-                        ''', token["tag"]["color"], token["content"], token["tag"]["name"])
+                        ''', tagged_token["tag"]["color"], tagged_token['token'], tagged_token["tag"]["name"])
 
-        html = format_html('''
+        self.tagged_tokens_html = format_html('''
             <div style="background-color: #44444e !important;direction: rtl !important;text-align: right;padding: 0.5vh 1.0vw 0.5vh 1.0vw;">
                 {}
             </div>
-            ''', html)               
-        return html
+            ''', self.tagged_tokens_html)               
 
     def check_validation(self):
         if self.tagger is not None and self.tagger.name in ('bijankhan-manual-tagger', 
@@ -219,54 +208,64 @@ class TextTag(models.Model):
             # self.accuracy = 100
 
     def set_tag_details(self):
-        if not self.tagger:
-            return
         tag_details_dictionary = {tag.name:tag for tag in self.tagger.tag_set.tags.all()}
-        referenced_tag = None
-        for token in self.tokens:
-            if 'tag' in token and 'name' in token['tag']:
-                if token['tag']['name'] not in tag_details_dictionary:
-                    token['tag'] = error_tag
-                    # self.tagger.tag_set.add_to_unknown_tag_examples(token['content'])
+        referenced_tag, referenced_token, referenced_token_tag = None, None, None
+        for tagged_token in self.tagged_tokens:
+            if 'tag' in tagged_token and 'name' in tagged_token['tag']:
+                if tagged_token['tag']['name'] not in tag_details_dictionary:
+                    tagged_token['tag'] = error_tag
+                    # self.tagger.tag_set.add_to_unknown_tag_examples(token['token'])
                     continue
 
-                referenced_tag = tag_details_dictionary[token['tag']['name']]
-                # referenced_tag.add_to_examples(token['content'])
-                token['tag']['persian'] = referenced_tag.persian
-                token['tag']['color'] = referenced_tag.color
+                referenced_tag = tag_details_dictionary[tagged_token['tag']['name']]
+                # referenced_tag.add_to_examples(tagged_token['token'])
+                tagged_token['tag']['persian'] = referenced_tag.persian
+                tagged_token['tag']['color'] = referenced_tag.color
+
+                if self.is_valid:
+                    referenced_token = Token.objects.get_or_create(content=tagged_token['token'])
+                    referenced_token_tag, created = TokenTag.objects.get_or_create(
+                        token=referenced_token,
+                        tag=referenced_tag
+                    )
+
 
     def save(self, *args, **kwargs):
         self.check_validation()
         self.set_tag_details()
+        self.create_tags_string()
+        self.create_tagged_tokens_html()
         super(TextTag, self).save(*args, **kwargs)
 
     def __unicode__(self):
         rep = ""
-        if self.tokens:
-            for token in self.tokens:
-                rep += f'{token["content"]}_{token["tag"]["name"]} '
+        if self.tagged_tokens:
+            for tagged_token in self.tagged_tokens:
+                rep += f'{tagged_token["token"]}_{tagged_token["tag"]["name"]} '
         return rep
 
     def evaluate(self, predicted_text_tag):
-        predicted_tags_sequence = [token['tag']['name'] for token in predicted_text_tag.tokens]
-        true_tags_sequence = [token['tag']['name'] for token in self.tokens]
-        asses = zip(predicted_tags_sequence, true_tags_sequence)
+        # predicted_tags_sequence = [tagged_token['tag']['name'] for tagged_token in predicted_text_tag.tagged_tokens]
+        # true_tags_sequence = [tagged_token['tag']['name'] for tagged_token in self.tagged_tokens]
+        predicted_tags_string = predicted_text_tag.tags_string.replace('\n', ' ').strip().split()
+        true_tags_string = self.tags_string.replace('\n', ' ').strip().split()
+        asses = zip(predicted_tags_string, true_tags_string)
         newline = '\n'
         logger.info(f'asses : \n{newline.join([ass.__str__() for ass in asses])}\n')
-        predicted_text_tag.accuracy = accuracy(true_tags_sequence, predicted_tags_sequence) * 100
+        predicted_text_tag.accuracy = accuracy(true_tags_string, predicted_tags_string) * 100
         predicted_text_tag.true_text_tag = self
         predicted_text_tag.save()
         return predicted_text_tag
 
  # def is_tokens_valid(self):
     #     is_valid = True
-    #     if not self.tokens:
+    #     if not self.tagged_tokens:
     #         is_valid = False
     #         return is_valid
-    #     for token in self.tokens:
+    #     for token in self.tagged_tokens:
     #         if 'is_valid' not in token:
-    #             token['is_valid'] = False
-    #         is_valid = is_valid and token['is_valid']
+    #             tagged_token['is_valid'] = False
+    #         is_valid = is_valid and tagged_token['is_valid']
     #         if not is_valid:
     #             break
     #     return is_valid
@@ -311,6 +310,16 @@ class TagSet(models.Model):
         verbose_name_plural = 'Tag Sets'
         ordering = ('-created',)
 
+class Token(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
+    content = models.CharField(max_length=200, unique=True)
+    tags = models.ManyToManyField('Tag', through='TokenTag', related_name='tokens', 
+                            related_query_name='token', blank=True,)
+
+    @property
+    def number_of_tags(self):
+        return self.tags.count()
+
 class Tag(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=15)
@@ -329,11 +338,11 @@ class Tag(models.Model):
         unique_together = (("name", "tag_set"), ("persian", "tag_set"),)
 
     # @property
-    def update_examples(self, text_tag_tokens_list):
+    def update_examples(self, text_tag_tagged_tokens_list):
         examples = set()
         # search_token = [{'tag': {'name': self.name, 'persian': self.persian, 'color': self.color }}]
         # text_tag_tokens_list = TextTag.objects.filter(tagger__tag_set=self.tag_set, is_valid=True, \
-        #     tokens__contains=search_token).values_list('tokens', flat=True)
+        #     tokens__contains=search_token).values_list('tagged_tokens', flat=True)
 
         # logger.debug(f'> {self.name} text_tag_tokens_list.count() : {text_tag_tokens_list.count()} {type(text_tag_tokens_list)}')
 
@@ -345,24 +354,47 @@ class Tag(models.Model):
         # text_tag_tokens_list = random.sample(text_tag_tokens_list, min(len(text_tag_tokens_list), 40))
         
         logger.debug(f'> {self.name} len(text_tag_tokens_list) : {len(text_tag_tokens_list)} {type(text_tag_tokens_list)}')
-        for text_tag_tokens in text_tag_tokens_list:
-            # logger.debug(f'> text_tag_tokens[0] != self.tag_set.name => {text_tag_tokens[0]} != {self.tag_set.name} => {text_tag_tokens[0] != self.tag_set.name}')
-            if text_tag_tokens[0] != self.tag_set.name:
+        for text_tag_tagged_tokens in text_tag_tagged_tokens_list:
+            # logger.debug(f'> text_tag_tagged_tokens[0] != self.tag_set.name => {text_tag_tagged_tokens[0]} != {self.tag_set.name} => {text_tag_tagged_tokens[0] != self.tag_set.name}')
+            if text_tag_tagged_tokens[0] != self.tag_set.name:
                 continue
-            for text_tag_token in text_tag_tokens[1]:
-                if text_tag_token['tag']['name'] == self.name:
-                    examples.add(text_tag_token['content'])
-                    if len(examples) >= 25:
+            for text_tag_tagged_token in text_tag_tagged_tokens[1]:
+                if text_tag_tagged_token['tag']['name'] == self.name:
+                    examples.add(text_tag_tagged_token['token'])
+                    if len(examples) >= 50:
                         break
 
         self.examples = list(examples)
         self.save(update_fields=['examples']) 
+
+    @property
+    def number_of_tokens(self):
+        return self.tokens.count()
 
     # def add_to_examples(self, token_content):
     #     if (token_content not in self.examples 
     #             and len(self.examples) < 15 ):
     #         self.examples.append(token_content)
     #         self.save(update_fields=['examples']) 
+
+class TokenTag(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
+    token = models.ForeignKey('Token', on_delete=models.CASCADE, related_name='token_tags', related_query_name='token_tag')
+    tag = models.ForeignKey('Tag', on_delete=models.CASCADE, related_name='token_tags', related_query_name='token_tag')
+
+    @property
+    def number_of_repetitions(self):
+        count = 0
+        text_tag_tagged_tokens_list = TextTag.objects.filter(
+            is_valid=True, 
+            tagger__tag_set=self.tag.tag_set
+        ).values_list('tagged_tokens', flat=True)
+        for text_tag_tagged_tokens in text_tag_tagged_tokens_list:
+            for tagged_token in text_tag_tagged_tokens:
+                if (tagged_token['token'] == self.token.content and
+                    tagged_token['tag']['name'] == self.tag.name):
+                    count += 1
+        return count
 
 class Validator(models.Model):
     name = models.SlugField(default='unknown-validator', unique=True)
@@ -440,31 +472,6 @@ class Normalizer(models.Model):
         )
         logger.debug(f"> created : {created}")
         return text_normal
-
-class Tokenizer(models.Model):
-    name = models.SlugField(default='unknown-normalizer', unique=True)
-    show_name = models.CharField(max_length=200, default='قطعه‌کننده نامشخص')
-    created = models.DateTimeField(auto_now_add=True)
-    owner = models.CharField(max_length=100, default='undefined')
-    is_automatic = models.BooleanField(default=False)
-    model_details = UTF8JSONField(default=dict, blank=True) # contains model training details
-    last_update = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = 'Tokenizer'
-        verbose_name_plural = 'Tokenizers'
-        ordering = ('-created',)
-
-    def __str__(self):  
-        return self.name
-
-    @property
-    def total_text_tag_count(self):
-        return self.text_tags.count()
-
-    @property
-    def total_valid_text_tag_count(self):
-        return self.text_tags.filter(is_valid=True).count()
 
 class Tagger(models.Model):
     name = models.SlugField(default='unknown-tagger', unique=True)
