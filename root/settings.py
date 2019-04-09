@@ -185,9 +185,15 @@ ADMIN_REORDER = (
     },
     {
         'app': MOHAVEREKHAN, 
-        'label': 'Token & Tag',
+        'label': 'Tag',
         'models': (
                 f'{MOHAVEREKHAN}.Tag', f'{MOHAVEREKHAN}.TagSet',
+            )
+    },
+    {
+        'app': MOHAVEREKHAN, 
+        'label': 'Token',
+        'models': (
                 f'{MOHAVEREKHAN}.Token', f'{MOHAVEREKHAN}.TokenTag',
             )
     },

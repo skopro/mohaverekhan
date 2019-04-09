@@ -15,6 +15,7 @@ class MohaverekhanConfig(AppConfig):
         from mohaverekhan import models
         models.base_models.init()
         
+        
         models.normalizers.bitianist_informal_refinement_normalizer.model.init()
         models.normalizers.bitianist_informal_replacement_normalizer.model.init()
         models.normalizers.bitianist_informal_seq2seq_normalizer.model.init()
@@ -23,7 +24,6 @@ class MohaverekhanConfig(AppConfig):
         models.taggers.bitianist_informal_nltk_tagger.model.init()
 
         # cache.init()
-        
 
 
         from mohaverekhan import serializers, views

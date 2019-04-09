@@ -150,7 +150,7 @@ class TextNormal(Text):
 class TextTag(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created = models.DateTimeField(auto_now_add=True)
-    tagger = models.ForeignKey('Tagger', on_delete=models.CASCADE, related_name='text_tags', related_query_name='text_tag', null=True)
+    tagger = models.ForeignKey('Tagger', on_delete=models.CASCADE, related_name='text_tags', related_query_name='text_tag')
     text = models.ForeignKey('Text', on_delete=models.CASCADE, related_name='text_tags', related_query_name='text_tag')
     tagged_tokens = UTF8JSONField(default=list) # contains list of token with it's tag
     accuracy = models.FloatField(default=0, blank=True)
@@ -610,6 +610,12 @@ class Tagger(models.Model):
 def init():
     global logger
     logger = logging.getLogger(__name__)
+
+    # text_tags = TextTag.objects.all()
+    # for text_tag in text_tags:
+    #     logger.info(f'> Saving text_tag {text_tag.id}')
+    #     text_tag.save()
+
 
     # logger.info(f'> count of normal text list : {TextNormal.objects.count()}')
     # logger.info(f'> count of text list : {Text.objects.count()}')

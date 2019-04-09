@@ -207,7 +207,9 @@ def init():
     logger = logging.getLogger(__name__)
     # cache_bitianist_validator()
     # cache_models()
+
     cache_validators()
     cache_normalizers()
     cache_taggers()
-    cache_tokens()
+
+    # cache_tokens()
