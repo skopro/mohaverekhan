@@ -13,7 +13,5 @@ from .normalizers.bitianist_informal_replacement_normalizer.model \
 from .normalizers.bitianist_informal_seq2seq_normalizer.model \
     import BitianistInformalSeq2SeqNormalizer
 
-from .taggers.bitianist_formal_nltk_tagger.model \
-    import BitianistFormalNLTKTagger
 from .taggers.bitianist_informal_nltk_tagger.model \
     import BitianistInformalNLTKTagger

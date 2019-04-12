@@ -83,7 +83,7 @@ class TextTagAdmin(admin.ModelAdmin):
     list_per_page = 10
     list_display = ('get_tagged_tokens_html', 'get_text_content', 'is_valid', 
                     'accuracy', 'get_tagger_name', 
-                    'get_validator_name', 'true_text_tag', 'created')
+                    'get_validator_name', 'get_true_text_tag', 'created')
     search_fields = ['text__content']
     list_filter = ['is_valid', 'tagger__name']
     ordering = ('-created',)
@@ -101,6 +101,10 @@ class TextTagAdmin(admin.ModelAdmin):
         }),
     )
     
+    def get_true_text_tag(self, obj):
+        return format_html(obj.true_text_tag.__str__().replace(r'}', r'}}').replace(r'{', r'{{'))
+
+
     def get_tagged_tokens_html(self, obj):
         return format_html(obj.tagged_tokens_html.replace(r'}', r'}}').replace(r'{', r'{{'))
         # return format_html(
@@ -235,7 +239,7 @@ class TextNormalAdmin(admin.ModelAdmin):
             <div style="direction: rtl !important;text-align: right;padding: 0.2vh 1.0vw 0.2vh 1.0vw;">
                 {}
             </div>
-            ''', format_html(obj.text.content.replace('\n', format_html('<br />'))))
+            ''', format_html(obj.text.content.replace(r'}', r'}}').replace(r'{', r'{{').replace('\n', format_html('<br />'))))
         return html
     get_text_content.admin_order_field = 'created' 
     get_text_content.short_description = 'Text Content'
@@ -258,7 +262,7 @@ class TagAdmin(admin.ModelAdmin):
                 'get_color_html', 'tag_set', 'get_number_of_tokens', 
                 'created')
     ordering = ('-tag_set', '-created')
-    readonly_fields = ['created', 'id']
+    readonly_fields = ['created', 'id', 'number_of_tokens']
     list_filter = ['tag_set', 'name', 'persian']
     search_fields = ['persian']
 
@@ -301,7 +305,7 @@ class TokenTagInTokenInline(admin.TabularInline):
             <div style="direction: rtl !important;text-align: right;padding: 0.2vh 1.0vw 0.2vh 1.0vw;">
                 {}
             </div>
-            ''', format_html(obj.token.content))
+            ''', format_html(obj.token.content.replace(r'}', r'}}').replace(r'{', r'{{')))
         return html
     get_token_content.admin_order_field = 'created' 
     get_token_content.short_description = 'Token Content'
@@ -356,7 +360,10 @@ class TokenAdmin(admin.ModelAdmin):
 class TokenTagAdmin(admin.ModelAdmin):
     list_display = ('get_token_content', 'get_tag_name', 'get_tag_persian', 'get_tag_set_name',
                 'number_of_repetitions', 'created')
-    search_fields = ['token__content', 'id']
+    # search_fields = ['=token__content', 'token__content__startswith', 'id']
+    search_fields = ['=token__content', 'token__content__endswith', 'id']
+    # search_fields = ['=token__content', 'token__content__endswith', 'token__content__startswith', 'id']
+    # search_fields = ['=token__content', 'id']
     ordering = ('-number_of_repetitions', '-created')
     list_filter = ['tag__tag_set__name', 'tag__name']
     readonly_fields = ['created', 'id', 'number_of_repetitions']
@@ -378,7 +385,7 @@ class TokenTagAdmin(admin.ModelAdmin):
             <div style="direction: rtl !important;text-align: right;padding: 0.2vh 1.0vw 0.2vh 1.0vw;">
                 {}
             </div>
-            ''', format_html(obj.token.content))
+            ''', format_html(obj.token.content.replace(r'}', r'}}').replace(r'{', r'{{')))
         return html
     get_token_content.admin_order_field = 'created' 
     get_token_content.short_description = 'Token Content'

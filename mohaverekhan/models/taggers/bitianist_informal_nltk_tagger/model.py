@@ -25,25 +25,16 @@ class BitianistInformalNLTKTagger(Tagger):
     Tag => G
     """
     word_patterns = [
-        (rf'^-?[0-9{cache.numbers}]+([.,][0-9{cache.numbers}]+)?$', 'U'),
-        (r'^[\.:!،؛؟»\]\)\}«\[\(\{\'\"…#+*,$@]+$', 'O'),
+        (r'^\\n$', 'O'), #bitianist
+        (rf'^({cache.num})|(cache.numf)$', 'U'),
+        (rf'^[{cache.punctuations}{cache.typographies}]+$', 'O'),
         (rf'^بی‌[{cache.persians}]+$|^بی [{cache.persians}]+$', 'A'),
-        (r'^[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F4CC\U0001F4CD]+$', 'X'), #hazm emoticons - symbols & pictographs - pushpin & round pushpin
-        (r'^([^\w\._]*)(@[\w_]+).*$', 'S'), #hazm
-        (r'^((https?|ftp):\/\/)?(?<!@)([wW]{3}\.)?(([\w-]+)(\.(\w){2,})+([-\w@:%_\+\/~#?&=]+)?)$', 'K'), #hazm forgot "="? lol
-        (r'^[a-zA-Z0-9\._\+-]+@([a-zA-Z0-9-]+\.)+[A-Za-z]{2,}$', 'M'), #hazm
-        (r'^\#([\S]+)$', 'G'), #hazm
-        # (r'.*ed$', 'VBD'),
-        # (r'.*ness$', 'NN'),
-        # (r'.*ment$', 'NN'),
-        # (r'.*ful$', 'JJ'),
-        # (r'.*ious$', 'JJ'),
-        # (r'.*ble$', 'JJ'),
-        # (r'.*ic$', 'JJ'),
-        # (r'.*ive$', 'JJ'),
-        # (r'.*ic$', 'JJ'),
-        # (r'.*est$', 'JJ'),
-        # (r'^a$', 'PREP'),
+        (rf'^[{cache.emojies}]+$', 'X'), #hazm emoticons - symbols & pictographs - pushpin & round pushpin
+        (rf'^({cache.id})$', 'S'), #hazm
+        (rf'^({cache.link})$', 'K'), #hazm forgot "="? lol
+        (rf'^({cache.email})$', 'M'), #hazm
+        (rf'^({cache.tag})$', 'G'), #hazm
+        (r'^[a-zA-Z]+$', 'R'), #bitianist
     ]
 
     current_path = os.path.abspath(os.path.dirname(__file__))
@@ -51,7 +42,8 @@ class BitianistInformalNLTKTagger(Tagger):
     main_tagger_path = os.path.join(current_path, 'metadata.pkl')
     main_tagger = None
     accuracy = 0
-    train_data, test_data  = [], []
+    train_data, test_data = [], []
+    bitianist_text_tag_index = -1
 
     def __init__(self, *args, **kwargs):
         super(BitianistInformalNLTKTagger, self).__init__(*args, **kwargs)
@@ -82,6 +74,7 @@ class BitianistInformalNLTKTagger(Tagger):
     def create_main_tagger(self):
         logger.info('>> Create main tagger')
         default_tagger = nltk.DefaultTagger('N')
+        # default_tagger = nltk.DefaultTagger('R')
         suffix_tagger = nltk.AffixTagger(self.train_data, backoff=default_tagger, affix_length=-3, min_stem_length=2, verbose=True)
         logger.info(f'> suffix_tagger : \n{suffix_tagger.unicode_repr()}\n')
         affix_tagger = nltk.AffixTagger(self.train_data, backoff=suffix_tagger, affix_length=5, min_stem_length=1, verbose=True)
@@ -94,7 +87,7 @@ class BitianistInformalNLTKTagger(Tagger):
         templates = brill.fntbl37()
         brill_trainer_result = brill_trainer.BrillTaggerTrainer( 
                 trigram_tagger, templates, deterministic=True) 
-        brill_tagger = brill_trainer_result.train(self.train_data, max_rules=300, min_score=10)
+        brill_tagger = brill_trainer_result.train(self.train_data, max_rules=300, min_score=30)
         logger.info(f'>brill_tagger.print_template_statistics() => in console :(')
         brill_tagger.print_template_statistics()
         rules = '\n'.join([rule.__str__() for rule in brill_tagger.rules()])
@@ -117,10 +110,12 @@ class BitianistInformalNLTKTagger(Tagger):
 
     def train(self):
         bijankhan_tag_set = TagSet.objects.get(name='bijankhan-tag-set')
+        # text_tokens_list = TextTag.objects.filter(tagger__tag_set=bijankhan_tag_set).values_list('tagged_tokens', flat=True)
+        logger.info(f'> self.tag_set : {self.tag_set}')
         text_tokens_list = TextTag.objects.filter(
             Q(is_valid=True) &
             (Q(tagger__tag_set=self.tag_set) | Q(tagger__tag_set=bijankhan_tag_set))
-        ).values_list('tokens', flat=True)
+        ).order_by('-tagger').values_list('tagged_tokens', flat=True)
         logger.info(f'> text_tokens_list.count() : {text_tokens_list.count()}')
         if text_tokens_list.count() == 0:
             logger.error(f'> text_tokens_list count == 0 !!!')
@@ -131,15 +126,29 @@ class BitianistInformalNLTKTagger(Tagger):
         tagged_sentences = []
         tagged_sentence = []
         token_content = ''
-        for text_tokens in text_tokens_list:
+        specials = r'شلوغی فرهنگ‌سرا آیدی انقدر اوورد اووردن منو میدون خونه جوون زمونه نون مسلمون کتابخونه دندون نشون پاستا پنه تاچ تنظیمات می‌تونید سی‌پی‌یو‌ سی‌پی‌یو‌‌ها گرافیک اومدن می‌خان واس ٪ kb m kg g cm mm'.split()
+        self.bitianist_text_tag_index = -1
+        for index, text_tokens in enumerate(text_tokens_list):
             for token in text_tokens:
-                token_content = self.refine_training_token(token['content'])
+                token_content = self.refine_training_token(token['token'])
+                if token_content == '٪':
+                    if token['tag']['name'] == 'O':
+                        self.bitianist_text_tag_index = index
+                    token['tag']['name'] = 'O'
+
                 tagged_sentence.append((token_content, token['tag']['name']))
+                # if self.bitianist_text_tag_index == -1 and token_content in specials:
+                #     logger.info(f"> He see that {token_content} {token['tag']['name']}")
+                #     self.bitianist_text_tag_index = 
+                
+
                 if token_content in ('.', '!', '?', '؟'):
                     tagged_sentences.append(tagged_sentence)
                     tagged_sentence = []
 
-        logger.info(f'> tagged_sentences[:20] : \n\n{tagged_sentences[:20]}\n\n')
+        logger.info(f'> self.bitianist_text_tag_index : {self.bitianist_text_tag_index}')
+        logger.info(f'> tagged_sentences[0] : \n\n{tagged_sentences[0]}\n\n')
+        logger.info(f'> tagged_sentences[-1] : \n\n{tagged_sentences[-1]}\n\n')
         self.separate_train_and_test_data(tagged_sentences)
         self.create_main_tagger()
         self.save_trained_main_tagger()
@@ -149,10 +158,14 @@ class BitianistInformalNLTKTagger(Tagger):
 
     
     def tag(self, text):
-        text_tag = cache.tokenizers['bitianist-informal-tokenizer']\
-                            .tokenize(text)
-        text_tag.tagger = self
-        token_contents = [token['content'] for token in text_tag.tokens]
+        text_normal = cache.normalizers['bitianist-informal-refinement-normalizer']\
+                            .normalize(text)
+        text_tag, created = TextTag.objects.get_or_create(
+            tagger=self,
+            text=text_normal,
+        )
+        # token_contents = [token['token'] for token in text_tag.tokens]
+        token_contents = text_normal.content.replace('\n', ' \\n ').split(' ')
         if not self.main_tagger:
             if os.path.isfile(self.main_tagger_path):
                 self.load_trained_main_tagger()
@@ -160,8 +173,16 @@ class BitianistInformalNLTKTagger(Tagger):
                 raise Exception()
         
         tagged_tokens = self.main_tagger.tag(token_contents)
-        for i in range(len(text_tag.tokens)):
-            text_tag.tokens[i]['tag'] = {'name': tagged_tokens[i][1]}
+        tagged_token_json = {}
+        text_tag.tagged_tokens = []
+        for tagged_token in tagged_tokens:
+            tagged_token_json = {}
+            tagged_token_json['token'] = tagged_token[0]
+            tagged_token_json['tag'] = {'name': tagged_token[1]}
+            logger.info(f'tagged_token_json : {tagged_token_json}')
+            text_tag.tagged_tokens.append(tagged_token_json)
+        # for i in range(len(text_tag.tokens)):
+        #     text_tag.tokens[i]['tag'] = {'name': tagged_tokens[i][1]}
         text_tag.save()
         logger.info(f'text tags : {text_tag.__unicode__()}')
         return text_tag

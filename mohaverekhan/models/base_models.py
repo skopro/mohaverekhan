@@ -82,7 +82,7 @@ class WordNormal(models.Model):
         ordering = ('-created',)
 
     def check_validation(self):
-        if self.normalizer.name == 'bitianist-normalizer':
+        if self.normalizer.name == 'bitianist-manual-normalizer':
             self.is_valid = True
             self.validator = cache.validators['bitianist-validator']
             
@@ -246,6 +246,15 @@ class TextTag(models.Model):
             for tagged_token in self.tagged_tokens:
                 rep += f'{tagged_token["token"]}_{tagged_token["tag"]["name"]} '
         return rep
+
+    def __str__(self):  
+        return format_html(
+            '<a href="http://127.0.0.1:8000/admin/mohaverekhan/texttag/{}/change/">{}</a>', 
+            self.id, 
+            format_html(
+                self.tags_string[0:50].replace(r'}', r'}}').replace(r'{', r'{{').replace('\n', format_html('<br />')) + format_html(" ..." if len(self.tags_string) > 50 else "")
+                    )
+            )
 
     def evaluate(self, predicted_text_tag):
         # predicted_tags_sequence = [tagged_token['tag']['name'] for tagged_token in predicted_text_tag.tagged_tokens]

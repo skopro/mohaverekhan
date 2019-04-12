@@ -8,7 +8,7 @@ repetition_pattern = re.compile(r"([^A-Za-z])\1{1,}")
 # debug_pattern = re.compile(r'[0-9۰۱۲۳۴۵۶۷۸۹]')
 # debug_pattern = re.compile(r'^گرون$|^میدون$|^خونه$|^نون$|^ارزون$|^اون$|^قلیون$')
 # debug_pattern = re.compile(r'هایمان')
-debug_pattern = re.compile(r'^کنده$')
+debug_pattern = re.compile(r'^(.)\1{5}$')
 
 logger = None
 # Word, WordNormal, Text, TextNormal = None, None, None, None
@@ -20,13 +20,22 @@ taggers = {}
 token_set = set()
 repetition_word_set = set()
 compile_patterns = lambda patterns: [(re.compile(pattern), repl) for pattern, repl in patterns]
-punctuations = r'\.:!،؛؟»\]\)\}«\[\(\{\'\"…'
+typographies = r'&*@‱\\/•^†‡⹋°〃=※×#÷%‰¶§‴~_\|‖¦٪'
+punctuations = r'\.:!،؛?؟»\]\)\}«\[\(\{\'\"…¡¿'
+num_punctuations = r':!،؛?؟»\]\)\}«\[\(\{\'\"…¡¿'
 numbers = r'۰۱۲۳۴۵۶۷۸۹'
 persians = 'اآب‌پتثجچحخدذرزژسشصضطظعغفقکگلمنوهی'
-link = r'((https?|ftp):\/\/)?(?<!@)([wW]{3}\.)?(([\w-]+)(\.(\w){2,})+([-\w@:%_\+\/~#?&=]+)?)'
-emoji = r'[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F4CC\U0001F4CD]+'
+has_persian_character_pattern = re.compile(rf"([{persians}{numbers}])")
+link = r'((https?|ftp):\/\/)?(?<!@)([wW]{3}\.)?(([a-zA-Z0-9۰۱۲۳۴۵۶۷۸۹-]+)(\.([a-zA-Z0-9۰۱۲۳۴۵۶۷۸۹]){2,})+([-\w@:%_\+\/~#?&=]+)?)'
+    #    r'((https?|ftp):\/\/)?(?<!@)([wW]{3}\.)?(([\w-]+)(\.(\w){2,})+([-\w@:%_\+\/~#?&]+)?)'
+emojies = r'\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F4CC\U0001F4CD'
 email = r'[a-zA-Z0-9\._\+-]+@([a-zA-Z0-9-]+\.)+[A-Za-z]{2,}'
-id = r'([^\w\._]*)(@[\w_]+)([\S]+)'
+# id = r'([^\w\._]+)(@[\w_]+)([\S]+)'
+id = r'@[a-zA-Z_]+'
+# num = r'([^\.,\w]+)([\d۰-۹]+)([^\.,\w]+)'
+# numf = r'([^,\w]+)([\d۰-۹,]+[\.٫]{1}[\d۰-۹]+)([^,\w]+)'
+num = r'[+-]?[\d۰-۹]+'
+numf = r'[+-]?[\d۰-۹,]+[\.٫,]{1}[\d۰-۹]+'
 tag = r'\#([\S]+)'
 # def cache_models():
 #     global Word, WordNormal, Text, TextNormal
@@ -44,6 +53,45 @@ tag = r'\#([\S]+)'
 #     Tagger = apps.get_model(app_label='mohaverekhan', model_name='Tagger')
 tag_set_token_tags = dict()
 all_token_tags = dict()
+
+is_number_pattern = re.compile(rf"^({num})|(numf)$")
+
+def is_token_valid(token_content):
+
+    if is_number_pattern.fullmatch(token_content):
+        logger.info(f'> Number found and added : {token_content}')
+        tag_set_token_tags['bitianist-tag-set'][token_content] = {'U': 1}
+        all_token_tags[token_content] = {'U': 1}
+        return True, token_content
+
+    if token_content in all_token_tags:
+        return True, token_content
+
+
+
+    nj_pattern = re.compile(r'‌')
+    if nj_pattern.search(token_content):
+        # logger.debug(f'> nj found in token : {token_content}')
+        token_content_parts = token_content.split('‌')
+        is_valid = True
+        for part in token_content_parts:
+            if len(part) < 3:
+                is_valid = False
+
+        fixed_token_content = token_content.replace('‌', '')
+        if is_valid and fixed_token_content in all_token_tags:
+            logger.debug(f'> nj replaced with empty : {fixed_token_content}')
+            return True, fixed_token_content
+
+    part1, part2, nj_joined, sp_joined = '', '', '', ''
+    for i in range(1, len(token_content)):
+        part1, part2 = token_content[:i], token_content[i:]
+        nj_joined = f'{part1}‌{part2}'
+        if nj_joined in all_token_tags:
+            logger.debug(f'> Found nj_joined : {nj_joined}')
+            return True, nj_joined
+    
+    return False, token_content
 
 def cache_token_tags_dic():
     global tag_set_token_tags, all_token_tags, repetition_word_set
@@ -88,11 +136,84 @@ def cache_token_tags_dic():
             tag_counts[tag_name] = tag_count + 1
             token_tags[token_content] = tag_counts
             temp_tag_set_token_tags[tag_set_name] = token_tags
+
+            
+
                 # token_tags.append(tag_name)
                 # token_tags_dic[token_content] = token_tags
+    plural_token_content = ''
+    mi_verb_heh = ''
+    a_o_token = ''
+    ie_token = ''
+    middle_a_pattern = re.compile(r"^.*[^و]ان.*$") # ببندم=بند
+    for tag_set_name, tag_set_token_tags in dict(temp_tag_set_token_tags).items():
+        for token_content, tags in dict(tag_set_token_tags).items():
+            # Try add plural names
+            if(
+                len(token_content) > 2 and 
+                'N' in tags and 
+                token_content[-2:] != 'ها' and
+                token_content[-3:] != 'های' and
+                token_content[-4:] != 'هایی' and
+                not (token_content[-3:] == 'هان' and token_content[:-2] in tag_set_token_tags)
+            ):
+                if token_content[-1] in ('ه', 'ی'):
+                    plural_token_content = token_content + '‌' + 'ها'
+                else:
+                    plural_token_content = token_content + 'ها'
+                # logger.info(f'> plural {plural_token_content}')
+                if plural_token_content not in tag_set_token_tags:
+                    # logger.info(f'> Added plural {plural_token_content} {plural_token_content}ی')
+                    temp_tag_set_token_tags[tag_set_name][plural_token_content] = {'N': 1}
+                    temp_tag_set_token_tags[tag_set_name][plural_token_content+'ی'] = {'N': 1}
+
+                if token_content[-1] != 'ا':
+                    informal_plural_token_content = token_content + 'ا'
+                    if informal_plural_token_content not in tag_set_token_tags:
+                        # logger.info(f'> Added informal plural {informal_plural_token_content} {informal_plural_token_content}ی')
+                        temp_tag_set_token_tags[tag_set_name][informal_plural_token_content] = {'N': 1}
+                        temp_tag_set_token_tags[tag_set_name][informal_plural_token_content+'ی'] = {'N': 1}
+
+            if (
+                len(token_content) > 2 and 
+                token_content.endswith('ه‌ای')
+            ):
+                ie_token = token_content + 'ه'
+                logger.info(f'> ie_token {token_content} {ie_token}')
+                if ie_token not in tag_set_token_tags:
+                    temp_tag_set_token_tags[tag_set_name][ie_token] = {'A': 1}
+
+            # if(
+            #     len(token_content) > 2 and 
+            #     'N' in tags and
+            #     (
+            #         token_content.endswith('ان') or
+            #         token_content.endswith('انه')
+            #     ) and
+            #     token_content.find('وان') == -1
+            # ):
+            #     a_o_token = token_content.replace('ان', 'ون')
+            #     logger.info(f'> a_o_token {token_content} {a_o_token}')
+            #     if a_o_token not in tag_set_token_tags:
+            #         temp_tag_set_token_tags[tag_set_name][a_o_token] = {'N': 1}
+
+            # Try add می‌فعل‌ه
+            # if(
+            #     'V' in tags and 
+            #     token_content[:2] == 'می' and
+            #     token_content[-1] == 'د'
+            # ):
+            #     if token_content[-2] == 'و' or token_content[-2] == 'ه':
+            #         mi_verb_heh = token_content[:-2] + 'ه'
+            #     else:
+            #         mi_verb_heh = token_content[:-1] + 'ه'
+            #     if mi_verb_heh not in tag_set_token_tags or 'V' not in tag_set_token_tags[mi_verb_heh]:
+            #         temp_tag_set_token_tags[tag_set_name][mi_verb_heh] = {'V': 1}
+            #         logger.info(f'> Added mi_verb_heh {mi_verb_heh}')
 
     # token_set.remove('دیگهای')
     del temp_tag_set_token_tags['bijankhan-tag-set']['دیگهای']
+    del temp_tag_set_token_tags['bijankhan-tag-set']['هارو']
 
     #Remove ه in عالیه درسته کتابه زیاده
     # old_token_set = set(token_set)
@@ -165,6 +286,19 @@ def cache_token_tags_dic():
     tag_set_token_tags = temp_tag_set_token_tags
     all_token_tags = temp_all_token_tags
     repetition_word_set = temp_repetition_word_set
+
+
+    two_length_token_set = set()
+    for token_content in all_token_tags:
+        if (
+            len(token_content) == 2 and 
+            # ('C' in all_token_tags[token_content] or 'R' in all_token_tags[token_content])
+            'R' not in all_token_tags[token_content] and 
+            'C' not in all_token_tags[token_content]
+        ):
+            two_length_token_set.add(token_content)
+    logger.info('> Two length tokens')
+    logger.info('\n'.join([f'{token_content} {list(all_token_tags[token_content].keys())}' for token_content in two_length_token_set]))
     # logger.info(f'> debug_pattern : {debug_pattern}')
     # for token in token_set:
     #     if debug_pattern.search(token):
@@ -210,13 +344,8 @@ def cache_normalizers():
     logger.info(f'>> Cached normalizers : {list(normalizers.keys())}')
 
 def cache_taggers():
-    BitianistFormalNLTKTagger = apps.get_model(
-        app_label='mohaverekhan', model_name='BitianistFormalNLTKTagger')
     BitianistInformalNLTKTagger = apps.get_model(
         app_label='mohaverekhan', model_name='BitianistInformalNLTKTagger')
-
-    taggers['bitianist-formal-nltk-tagger'] = BitianistFormalNLTKTagger.objects.filter(
-        name='bitianist-formal-nltk-tagger').first()
 
     taggers['bitianist-informal-nltk-tagger'] = BitianistInformalNLTKTagger.objects.filter(
         name='bitianist-informal-nltk-tagger').first()

@@ -22,7 +22,7 @@ from . import data
 from mohaverekhan import utils
 
 from mohaverekhan.models import Normalizer, Text, TextNormal
-from mohaverekhan import cache
+# from mohaverekhan import cache
 
 logger = None
 # logger = utils.get_logger(logger_name='seq2seq')

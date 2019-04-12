@@ -105,13 +105,31 @@ class TokenTagViewSet(viewsets.ModelViewSet):
 
     i = 0
     def update_token_tag_rank(self, token_tag_update):
-        TokenTag.objects.filter(
-                        tag__tag_set__name=token_tag_update[0],
-                        token__content=token_tag_update[1],
-                        tag__name=token_tag_update[2]
-                        ).update(number_of_repetitions=token_tag_update[3])
+        
+
+
+        token_tag = TokenTag.objects.filter(
+                        token__content=token_tag_update[0],
+                        tag__name=token_tag_update[1],
+                        tag__tag_set__name=token_tag_update[2]
+                        ).first()
+        if token_tag:
+            token_tag.number_of_repetitions=token_tag_update[3]
+            token_tag.save(update_fields=['number_of_repetitions']) 
+        else:
+            token, created = Token.objects.get_or_create(content=token_tag_update[0])
+            tag = Tag.objects.get(name=token_tag_update[1], tag_set__name=token_tag_update[2])
+            
+            TokenTag.objects.create(
+                token=token,
+                tag=tag,
+                number_of_repetitions=token_tag_update[3]
+            )
+        
+
+
         if self.i % 1000 == 0:
-            logger.info(f'>> Updating token[{self.i}] : {token_tag_update[1]}')
+            logger.info(f'>> Updating token[{self.i}] : {token_tag_update[0]}')
         self.i += 1
 
     def update_rank_in_another_thread(self):
@@ -124,9 +142,9 @@ class TokenTagViewSet(viewsets.ModelViewSet):
             logger.info(f'>>> Updating tag set {tag_set_name}')
             for token_content, tags in token_tags.items():
                 for tag_name, tag_count in tags.items():
-                    token_tag_update_list.append((tag_set_name, token_content, tag_name, tag_count))
+                    token_tag_update_list.append((token_content, tag_name, tag_set_name, tag_count))
         logger.info(f'> len token_tag_update_list : {len(token_tag_update_list)}')
-        Parallel(n_jobs=48, verbose=20, backend='threading')(delayed(self.update_token_tag_rank)(token_tag_update) for token_tag_update in token_tag_update_list)
+        Parallel(n_jobs=96, verbose=20, backend='threading')(delayed(self.update_token_tag_rank)(token_tag_update) for token_tag_update in token_tag_update_list)
         end_ts = time.time()
         logger.info(f"> (Time)(Update repetitions)({end_ts - beg_ts:.6f})")
         
@@ -142,13 +160,13 @@ class TokenTagViewSet(viewsets.ModelViewSet):
         # [tag.update_examples() for tag in tags]
         # Parallel(n_jobs=2, verbose=20, backend='threading')(delayed(tag.update_examples)() for tag in tags)
 
-    @action(detail=False, methods=['get',], url_name='update_rank')
+    @action(detail=False, methods=['get',], url_name='update_ranks')
     @csrf_exempt
-    def update_rank(self, request):
+    def update_ranks(self, request):
         # logger.debug(f'> Start update_examples of tags in parallel ...')
         # Parallel(n_jobs=-1, verbose=20)(delayed(tag.update_examples)() for tag in tags)
         thread = threading.Thread(target=self.update_rank_in_another_thread)
-        logger.debug(f'> Start update_rank of token tags in parallel ...')
+        logger.debug(f'> Start update_ranks of token tags in parallel ...')
         thread.start()
         return Response(status=200)
 

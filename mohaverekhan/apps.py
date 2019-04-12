@@ -20,7 +20,6 @@ class MohaverekhanConfig(AppConfig):
         models.normalizers.bitianist_informal_replacement_normalizer.model.init()
         models.normalizers.bitianist_informal_seq2seq_normalizer.model.init()
 
-        models.taggers.bitianist_formal_nltk_tagger.model.init()
         models.taggers.bitianist_informal_nltk_tagger.model.init()
 
         cache.init()

@@ -95,7 +95,7 @@ bijankhan_tag_set_dictionary = [
   {
     "name": "L",
     "persian": "واحد",
-    "color": "#34495E"
+    "color": "#FF1F96"
   },
   {
     "name": "P",
@@ -451,25 +451,25 @@ def import_taggers():
 
 
 
-    # 1
-    model_details = {
-        'module': 'nltk',
-        'type': 'hybrid',
-        'state': 'not-ready',
-    }
+    # # 1
+    # model_details = {
+    #     'module': 'nltk',
+    #     'type': 'hybrid',
+    #     'state': 'not-ready',
+    # }
 
-    bitianist_formal_nltk_tagger = generate_tagger_dictionary(
-        'bitianist-formal-nltk-tagger',
-        show_name='برچسب‌زن رسمی',
-        owner='bitianist',
-        tag_set='bitianist-tag-set',
-        is_automatic=True,
-        model_details=model_details
-    )
+    # bitianist_formal_nltk_tagger = generate_tagger_dictionary(
+    #     'bitianist-formal-nltk-tagger',
+    #     show_name='برچسب‌زن رسمی',
+    #     owner='bitianist',
+    #     tag_set='bitianist-tag-set',
+    #     is_automatic=True,
+    #     model_details=model_details
+    # )
 
-    response, error = post(taggers_url, bitianist_formal_nltk_tagger)
-    if error:
-        return 0
+    # response, error = post(taggers_url, bitianist_formal_nltk_tagger)
+    # if error:
+    #     return 0
 
 
 
@@ -637,14 +637,53 @@ def import_bitianist_text_tag(text_tag_id=None):
     tagger = 'bitianist-manual-tagger'
 
     # 1
-    text_content = 'شلوغی فرهنگ‌سرا آیدی انقدر'
+    text_content = 'شلوغی فرهنگ‌سرا آیدی انقدر اوورد اووردن منو میدون خونه جوون زمونه نون مسلمون کتابخونه دندون'
+    text_content += ' نشون پاستا پنه تاچ تنظیمات می‌تونید سی‌پی‌یو‌ سی‌پی‌یو‌‌ها گرافیک اومدن می‌خان واس ٪'
 
     tagged_tokens = [
         generate_tagged_token_dictionary('شلوغی', generate_tag_dictionary(name='A')),
         generate_tagged_token_dictionary('فرهنگ‌سرا', generate_tag_dictionary(name='N')),
         generate_tagged_token_dictionary('آیدی', generate_tag_dictionary(name='N')),
         generate_tagged_token_dictionary('انقدر', generate_tag_dictionary(name='D')),
+        generate_tagged_token_dictionary('اوورد', generate_tag_dictionary(name='V')),
+        generate_tagged_token_dictionary('اووردن', generate_tag_dictionary(name='V')),
+        generate_tagged_token_dictionary('منو', generate_tag_dictionary(name='N')),
+        generate_tagged_token_dictionary('میدون', generate_tag_dictionary(name='N')),
+        generate_tagged_token_dictionary('خونه', generate_tag_dictionary(name='N')),
+        generate_tagged_token_dictionary('جوون', generate_tag_dictionary(name='N')),
+        generate_tagged_token_dictionary('زمونه', generate_tag_dictionary(name='N')),
+        generate_tagged_token_dictionary('نون', generate_tag_dictionary(name='N')),
+        generate_tagged_token_dictionary('مسلمون', generate_tag_dictionary(name='N')),
+        generate_tagged_token_dictionary('کتابخونه', generate_tag_dictionary(name='N')),
+        generate_tagged_token_dictionary('دندون', generate_tag_dictionary(name='N')),
+        generate_tagged_token_dictionary('نشون', generate_tag_dictionary(name='N')),
+        generate_tagged_token_dictionary('پاستا', generate_tag_dictionary(name='N')),
+        generate_tagged_token_dictionary('پنه', generate_tag_dictionary(name='N')),
+        generate_tagged_token_dictionary('تاچ', generate_tag_dictionary(name='N')),
+        generate_tagged_token_dictionary('تنظیمات', generate_tag_dictionary(name='N')),
+        generate_tagged_token_dictionary('می‌تونید', generate_tag_dictionary(name='V')),
+        generate_tagged_token_dictionary('سی‌پی‌یو‌', generate_tag_dictionary(name='N')),
+        generate_tagged_token_dictionary('سی‌پی‌یو‌‌ها', generate_tag_dictionary(name='N')),
+        generate_tagged_token_dictionary('گرافیک', generate_tag_dictionary(name='N')),
+        generate_tagged_token_dictionary('اومدن', generate_tag_dictionary(name='V')),
+        generate_tagged_token_dictionary('می‌خان', generate_tag_dictionary(name='V')),
+        generate_tagged_token_dictionary('واس', generate_tag_dictionary(name='E')),
+        generate_tagged_token_dictionary('٪', generate_tag_dictionary(name='O')),
+
     ]
+
+    text_content += ' kb m kg g cm mm'
+    tagged_tokens += [
+        generate_tagged_token_dictionary('kb', generate_tag_dictionary(name='L')),
+        generate_tagged_token_dictionary('m', generate_tag_dictionary(name='L')),
+        generate_tagged_token_dictionary('kg', generate_tag_dictionary(name='L')),
+        generate_tagged_token_dictionary('g', generate_tag_dictionary(name='L')),
+        generate_tagged_token_dictionary('cm', generate_tag_dictionary(name='L')),
+        generate_tagged_token_dictionary('mm', generate_tag_dictionary(name='L')),
+
+    ]
+    logger.info(f'> text_content : \n{text_content}\n')
+    logger.info(f'> tagged_tokens : \n{tagged_tokens}\n')
     text = generate_text_dictionary(text_content)
     text_tag = generate_text_tag_dictionary(
                 tagged_tokens=tagged_tokens,
@@ -760,10 +799,10 @@ def main():
 
         
         # import_bijankhan_data()
-        import_text_equivalents()
-        import_word_equivalents()
+        # import_text_equivalents()
+        # import_word_equivalents()
 
-        # import_bitianist_text_tag('8f40d06e-aa29-46ed-8aed-82c942598be6')
+        import_bitianist_text_tag('8f40d06e-aa29-46ed-8aed-82c942598be6')
         # import_bitianist_evaluate_text_tag()
 
         # import_tags()

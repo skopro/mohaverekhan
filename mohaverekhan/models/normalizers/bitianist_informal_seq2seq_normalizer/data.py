@@ -1,6 +1,7 @@
 import random
 import sys
 import os
+import logging
 
 import pickle
 import itertools
@@ -13,6 +14,7 @@ import nltk
 # from ..tools import utils
 from mohaverekhan import utils
 
+# logger = None
 
 logger = utils.get_logger(logger_name='data_setup')
 CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -273,6 +275,8 @@ def log_sample(index, src, dest):
     logger.info(f'src[{index if index >= 0 else len(src) + index - 1}] : {src[index]}')
     logger.info(f'dest[{index if index >= 0 else len(dest) + index - 1}] : {dest[index]}')
 
+def get_data():
+    pass
 
 def process_data():
     try:
