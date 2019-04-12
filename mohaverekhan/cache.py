@@ -26,31 +26,13 @@ num_punctuations = r':!،؛?؟»\]\)\}«\[\(\{\'\"…¡¿'
 numbers = r'۰۱۲۳۴۵۶۷۸۹'
 persians = 'اآب‌پتثجچحخدذرزژسشصضطظعغفقکگلمنوهی'
 has_persian_character_pattern = re.compile(rf"([{persians}{numbers}])")
-link = r'((https?|ftp):\/\/)?(?<!@)([wW]{3}\.)?(([a-zA-Z0-9۰۱۲۳۴۵۶۷۸۹-]+)(\.([a-zA-Z0-9۰۱۲۳۴۵۶۷۸۹]){2,})+([-\w@:%_\+\/~#?&=]+)?)'
-    #    r'((https?|ftp):\/\/)?(?<!@)([wW]{3}\.)?(([\w-]+)(\.(\w){2,})+([-\w@:%_\+\/~#?&]+)?)'
+link = r'((https?|ftp):\/\/)?(?<!@)([wW]{3}\.)?(([a-zA-Z۰-۹0-9-]+)(\.([a-zA-Z۰-۹0-9]){2,})+([-\w@:%_\+\/~#?&=]+)?)'
 emojies = r'\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F4CC\U0001F4CD'
-email = r'[a-zA-Z0-9\._\+-]+@([a-zA-Z0-9-]+\.)+[A-Za-z]{2,}'
-# id = r'([^\w\._]+)(@[\w_]+)([\S]+)'
+email = r'[a-zA-Z۰-۹0-9\._\+-]+@([a-zA-Z۰-۹0-9-]+\.)+[A-Za-z]{2,}'
 id = r'@[a-zA-Z_]+'
-# num = r'([^\.,\w]+)([\d۰-۹]+)([^\.,\w]+)'
-# numf = r'([^,\w]+)([\d۰-۹,]+[\.٫]{1}[\d۰-۹]+)([^,\w]+)'
 num = r'[+-]?[\d۰-۹]+'
 numf = r'[+-]?[\d۰-۹,]+[\.٫,]{1}[\d۰-۹]+'
 tag = r'\#([\S]+)'
-# def cache_models():
-#     global Word, WordNormal, Text, TextNormal
-#     global TextTag, TagSet, Tag, Validator
-#     global Normalizer, Tagger
-#     Word = apps.get_model(app_label='mohaverekhan', model_name='Word')
-#     WordNormal = apps.get_model(app_label='mohaverekhan', model_name='WordNormal')
-#     Text = apps.get_model(app_label='mohaverekhan', model_name='Text')
-#     TextNormal = apps.get_model(app_label='mohaverekhan', model_name='TextNormal')
-#     TextTag = apps.get_model(app_label='mohaverekhan', model_name='TextTag')
-#     TagSet = apps.get_model(app_label='mohaverekhan', model_name='TagSet')
-#     Tag = apps.get_model(app_label='mohaverekhan', model_name='Tag')
-#     Validator = apps.get_model(app_label='mohaverekhan', model_name='Validator')
-#     Normalizer = apps.get_model(app_label='mohaverekhan', model_name='Normalizer')
-#     Tagger = apps.get_model(app_label='mohaverekhan', model_name='Tagger')
 tag_set_token_tags = dict()
 all_token_tags = dict()
 
@@ -325,30 +307,40 @@ def cache_validators():
     logger.info(f'>> Cached validators : {list(validators.keys())}')
 
 def cache_normalizers():
-    BitianistInformalRefinementNormalizer = apps.get_model(
-        app_label='mohaverekhan', model_name='BitianistInformalRefinementNormalizer')
-    BitianistInformalReplacementNormalizer = apps.get_model(
-        app_label='mohaverekhan', model_name='BitianistInformalReplacementNormalizer')
-    BitianistInformalSeq2SeqNormalizer = apps.get_model(
-        app_label='mohaverekhan', model_name='BitianistInformalSeq2SeqNormalizer')
+    BitianistBasicNormalizer = apps.get_model(
+        app_label='mohaverekhan', model_name='BitianistBasicNormalizer')
+    BitianistRefinementNormalizer = apps.get_model(
+        app_label='mohaverekhan', model_name='BitianistRefinementNormalizer')
+    BitianistReplacementNormalizer = apps.get_model(
+        app_label='mohaverekhan', model_name='BitianistReplacementNormalizer')
+    BitianistSeq2SeqNormalizer = apps.get_model(
+        app_label='mohaverekhan', model_name='BitianistSeq2SeqNormalizer')
 
-    normalizers['bitianist-informal-refinement-normalizer'] = BitianistInformalRefinementNormalizer.objects.filter(
-        name='bitianist-informal-refinement-normalizer').first()
+    normalizers['bitianist-basic-normalizer'] = BitianistBasicNormalizer.objects.filter(
+        name='bitianist-basic-normalizer').first()
 
-    normalizers['bitianist-informal-replacement-normalizer'] = BitianistInformalReplacementNormalizer.objects.filter(
-        name='bitianist-informal-replacement-normalizer').first()
+    normalizers['bitianist-refinement-normalizer'] = BitianistRefinementNormalizer.objects.filter(
+        name='bitianist-refinement-normalizer').first()
 
-    normalizers['bitianist-informal-seq2seq-normalizer'] = BitianistInformalSeq2SeqNormalizer.objects.filter(
-        name='bitianist-informal-seq2seq-normalizer').first()
+    normalizers['bitianist-replacement-normalizer'] = BitianistReplacementNormalizer.objects.filter(
+        name='bitianist-replacement-normalizer').first()
+
+    normalizers['bitianist-seq2seq-normalizer'] = BitianistSeq2SeqNormalizer.objects.filter(
+        name='bitianist-seq2seq-normalizer').first()
     
     logger.info(f'>> Cached normalizers : {list(normalizers.keys())}')
 
 def cache_taggers():
-    BitianistInformalNLTKTagger = apps.get_model(
-        app_label='mohaverekhan', model_name='BitianistInformalNLTKTagger')
+    BitianistRefinementTagger = apps.get_model(
+        app_label='mohaverekhan', model_name='BitianistRefinementTagger')
+    BitianistSeq2SeqTagger = apps.get_model(
+        app_label='mohaverekhan', model_name='BitianistSeq2SeqTagger')
 
-    taggers['bitianist-informal-nltk-tagger'] = BitianistInformalNLTKTagger.objects.filter(
-        name='bitianist-informal-nltk-tagger').first()
+    taggers['bitianist-refinement-tagger'] = BitianistRefinementTagger.objects.filter(
+        name='bitianist-refinement-tagger').first()
+
+    taggers['bitianist-seq2seq-tagger'] = BitianistSeq2SeqTagger.objects.filter(
+        name='bitianist-seq2seq-tagger').first()
     
     logger.info(f'>> Cached taggers : {list(taggers.keys())}')
 

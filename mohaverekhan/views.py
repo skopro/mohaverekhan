@@ -258,7 +258,12 @@ class NormalizerViewSet(viewsets.ModelViewSet):
         text = Text.objects.filter(id=text_id).first()
         if not text:
             raise NotFound(detail="Error 404, text not found", code=404)
-        text_normal = normalizer.normalize(text)
+        text_normal_content = normalizer.normalize(text.content)
+        text_normal, created = TextNormal.objects.update_or_create(
+            text=text, 
+            normalizer=normalizer,
+            defaults={'content': text_normal_content}
+        )
         serializer = TextNormalSerializer(text_normal)
         return Response(serializer.data)
 
@@ -300,7 +305,23 @@ class TaggerViewSet(viewsets.ModelViewSet):
         if not text:
             raise NotFound(detail="Error 404, text not found", code=404)
 
-        text_tag = tagger.tag(text)
+        text_tagged_tokens = tagger.tag(text.content)
+
+        tagged_token_json = {}
+        text_tagged_token_list = []
+        for tagged_token in text_tagged_tokens:
+            tagged_token_json = {}
+            tagged_token_json['token'] = tagged_token[0]
+            tagged_token_json['tag'] = {'name': tagged_token[1]}
+            logger.info(f'tagged_token_json : {tagged_token_json}')
+            text_tagged_token_list.append(tagged_token_json)
+
+        text_tag, created = TextTag.objects.update_or_create(
+            tagger=tagger,
+            text=text,
+            defaults={'tagged_tokens': text_tagged_token_list}
+        )
+        logger.info(f'text tags : {text_tag.__unicode__()}')
         serializer = TextTagSerializer(text_tag)
         return Response(serializer.data)
 

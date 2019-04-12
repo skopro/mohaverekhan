@@ -346,171 +346,168 @@ def import_validators():
 
 @utils.time_usage(logger)
 def import_normalizers():
-    # 1
-    model_details = {
-       'type': 'manual'
-    }
-    bitianist_bitianist_normalizer = generate_normalizer_dictionary(
-        'bitianist-manual-normalizer',
-        show_name='نرمال‌کننده دستی بیتیانیست',
-        owner='bitianist',
-        is_automatic=False,
-        model_details=model_details
-    )
-    response, error = post(normalizers_url, bitianist_bitianist_normalizer)
-    if error:
-        return
+    # # 1
+    # model_details = {
+    #    'type': 'manual'
+    # }
+    # bitianist_bitianist_normalizer = generate_normalizer_dictionary(
+    #     'bitianist-manual-normalizer',
+    #     show_name='نرمال‌کننده دستی بیتیانیست',
+    #     owner='bitianist',
+    #     is_automatic=False,
+    #     model_details=model_details
+    # )
+    # response, error = post(normalizers_url, bitianist_bitianist_normalizer)
+    # if error:
+    #     return
 
 
-    # 2
-    model_details = {
-        'type': 'rule-based',
-        'state': 'ready'
-    }
-    bitianist_informal_refinement_normalizer = generate_tagger_dictionary(
-        'bitianist-informal-refinement-normalizer',
-        show_name='نرمال‌کننده اصلاح',
-        owner='bitianist',
-        is_automatic=True,
-        model_details=model_details
-    )
-    response, error = post(normalizers_url, bitianist_informal_refinement_normalizer)
-    if error:
-        return
+    # # 2
+    # model_details = {
+    #     'type': 'rule-based',
+    #     'state': 'ready'
+    # }
+    # bitianist_refinement_normalizer = generate_tagger_dictionary(
+    #     'bitianist-refinement-normalizer',
+    #     show_name='نرمال‌کننده پالایش',
+    #     owner='bitianist',
+    #     is_automatic=True,
+    #     model_details=model_details
+    # )
+    # response, error = post(normalizers_url, bitianist_refinement_normalizer)
+    # if error:
+    #     return
 
 
-    # 3
-    model_details = {
-        'type': 'stochastic',
-        'module': 'seq2seq',
-        'state': 'not-ready'
-    }
-    bitianist_informal_seq2seq_normalizer = generate_tagger_dictionary(
-        'bitianist-informal-seq2seq-normalizer',
-        show_name='نرمال‌کننده توالی‌به‌توالی',
-        owner='bitianist',
-        is_automatic=True,
-        model_details=model_details
-    )
-    response, error = post(normalizers_url, bitianist_informal_seq2seq_normalizer)
-    if error:
-        return
+    # # 3
+    # model_details = {
+    #     'type': 'stochastic',
+    #     'module': 'seq2seq',
+    #     'state': 'not-ready'
+    # }
+    # bitianist_seq2seq_normalizer = generate_tagger_dictionary(
+    #     'bitianist-seq2seq-normalizer',
+    #     show_name='نرمال‌کننده توالی‌به‌توالی',
+    #     owner='bitianist',
+    #     is_automatic=True,
+    #     model_details=model_details
+    # )
+    # response, error = post(normalizers_url, bitianist_seq2seq_normalizer)
+    # if error:
+    #     return
 
-    # 4
-    model_details = {
-        'type': 'rule-based',
-        'state': 'ready'
-    }
-    bitianist_informal_replacement_normalizer = generate_tagger_dictionary(
-        'bitianist-informal-replacement-normalizer',
-        show_name='نرمال‌کننده جایگزینی',
-        owner='bitianist',
-        is_automatic=True,
-        model_details=model_details
-    )
-    response, error = post(normalizers_url, bitianist_informal_replacement_normalizer)
-    if error:
-        return
-    
+    # # 4
+    # model_details = {
+    #     'type': 'rule-based',
+    #     'state': 'ready'
+    # }
+    # bitianist_replacement_normalizer = generate_tagger_dictionary(
+    #     'bitianist-replacement-normalizer',
+    #     show_name='نرمال‌کننده جایگزینی',
+    #     owner='bitianist',
+    #     is_automatic=True,
+    #     model_details=model_details
+    # )
+    # response, error = post(normalizers_url, bitianist_replacement_normalizer)
+    # if error:
+    #     return
+
     # 5
     model_details = {
         'type': 'rule-based',
         'state': 'ready'
     }
-    bitianist_informal_transformation_normalizer = generate_tagger_dictionary(
-        'bitianist-informal-transformation-normalizer',
-        show_name='نرمال‌کننده دگرگونی',
+    bitianist_basic_normalizer = generate_tagger_dictionary(
+        'bitianist-basic-normalizer',
+        show_name='نرمال‌کننده بنیادی',
         owner='bitianist',
         is_automatic=True,
         model_details=model_details
     )
-    response, error = post(normalizers_url, bitianist_informal_transformation_normalizer)
+    response, error = post(normalizers_url, bitianist_basic_normalizer)
     if error:
         return
-
+    
 
 @utils.time_usage(logger)
 def import_taggers():
-    # 0
-    model_details = {
-       'type': 'manual'
-    }
+    # # 0
+    # model_details = {
+    #    'type': 'manual'
+    # }
 
-    bijankhan_manual_tagger = generate_tagger_dictionary(
-        'bijankhan-manual-tagger',
-        show_name='برچسب‌زن دستی بی‌جن‌خان',
-        owner='bijankhan',
-        tag_set='bijankhan-tag-set',
-        is_automatic=False,
-        model_details=model_details
-    )
+    # bijankhan_manual_tagger = generate_tagger_dictionary(
+    #     'bijankhan-manual-tagger',
+    #     show_name='برچسب‌زن دستی بی‌جن‌خان',
+    #     owner='bijankhan',
+    #     tag_set='bijankhan-tag-set',
+    #     is_automatic=False,
+    #     model_details=model_details
+    # )
 
-    response, error = post(taggers_url, bijankhan_manual_tagger)
-    if error:
-        return 0
+    # response, error = post(taggers_url, bijankhan_manual_tagger)
+    # if error:
+    #     return 0
 
 
 
-    # # 1
+    # # 2
+    # model_details = {
+    #    'type': 'manual',
+    #    'description': "For new words"
+    # }
+
+    # bitianist_manual_tagger = generate_tagger_dictionary(
+    #     'bitianist-manual-tagger',
+    #     show_name='برچسب‌زن دستی بیتیانیست',
+    #     owner='bitianist',
+    #     tag_set='bitianist-tag-set',
+    #     is_automatic=False,
+    #     model_details=model_details
+    # )
+
+    # response, error = post(taggers_url, bitianist_manual_tagger)
+    # if error:
+    #     return 0
+
+    # # 3
     # model_details = {
     #     'module': 'nltk',
     #     'type': 'hybrid',
     #     'state': 'not-ready',
     # }
 
-    # bitianist_formal_nltk_tagger = generate_tagger_dictionary(
-    #     'bitianist-formal-nltk-tagger',
-    #     show_name='برچسب‌زن رسمی',
+    # bitianist_refinement_tagger = generate_tagger_dictionary(
+    #     'bitianist-refinement-tagger',
+    #     show_name='برچسب‌زن پالایش',
     #     owner='bitianist',
     #     tag_set='bitianist-tag-set',
     #     is_automatic=True,
     #     model_details=model_details
     # )
 
-    # response, error = post(taggers_url, bitianist_formal_nltk_tagger)
+    # response, error = post(taggers_url, bitianist_refinement_tagger)
     # if error:
     #     return 0
 
-
-
-    # 2
+    
+    # 4
     model_details = {
         'module': 'nltk',
         'type': 'hybrid',
         'state': 'not-ready',
     }
 
-    bitianist_informal_nltk_tagger = generate_tagger_dictionary(
-        'bitianist-informal-nltk-tagger',
-        show_name='برچسب‌زن محاوره',
+    bitianist_seq2seq_tagger = generate_tagger_dictionary(
+        'bitianist-seq2seq-tagger',
+        show_name='برچسب‌زن توالی‌به‌توالی',
         owner='bitianist',
         tag_set='bitianist-tag-set',
         is_automatic=True,
         model_details=model_details
     )
 
-    response, error = post(taggers_url, bitianist_informal_nltk_tagger)
-    if error:
-        return 0
-
-
-
-    # 3
-    model_details = {
-       'type': 'manual',
-       'description': "For new words"
-    }
-
-    bitianist_manual_tagger = generate_tagger_dictionary(
-        'bitianist-manual-tagger',
-        show_name='برچسب‌زن دستی بیتیانیست',
-        owner='bitianist',
-        tag_set='bitianist-tag-set',
-        is_automatic=False,
-        model_details=model_details
-    )
-
-    response, error = post(taggers_url, bitianist_manual_tagger)
+    response, error = post(taggers_url, bitianist_seq2seq_tagger)
     if error:
         return 0
 
@@ -794,15 +791,15 @@ def main():
     try:
         # import_tag_sets()
         # import_validators()
-        # import_normalizers()
-        # import_taggers()
+        import_normalizers()
+        import_taggers()
 
         
         # import_bijankhan_data()
         # import_text_equivalents()
         # import_word_equivalents()
 
-        import_bitianist_text_tag('8f40d06e-aa29-46ed-8aed-82c942598be6')
+        # import_bitianist_text_tag('8f40d06e-aa29-46ed-8aed-82c942598be6')
         # import_bitianist_evaluate_text_tag()
 
         # import_tags()

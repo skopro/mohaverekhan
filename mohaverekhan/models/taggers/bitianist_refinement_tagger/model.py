@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import os
+import time
 import logging
 import nltk
 from nltk.tag import brill, brill_trainer 
@@ -9,13 +10,13 @@ from django.db.models import Count, Q
 from mohaverekhan.models import Tagger, Text, TextTag, TagSet
 from mohaverekhan import cache
 
-logger = None
 
-
-class BitianistInformalNLTKTagger(Tagger):
+class BitianistRefinementTagger(Tagger):
     
     class Meta:
         proxy = True
+    
+    logger = logging.getLogger(__name__)
     
     """
     Emoji => X
@@ -46,37 +47,37 @@ class BitianistInformalNLTKTagger(Tagger):
     bitianist_text_tag_index = -1
 
     def __init__(self, *args, **kwargs):
-        super(BitianistInformalNLTKTagger, self).__init__(*args, **kwargs)
+        super(BitianistRefinementTagger, self).__init__(*args, **kwargs)
         if os.path.isfile(self.main_tagger_path):
             self.load_trained_main_tagger()
 
     def save_trained_main_tagger(self):
-        logger.info(f'>> Trying to save main tagger in "{self.main_tagger_path}"')
+        self.logger.info(f'>> Trying to save main tagger in "{self.main_tagger_path}"')
         output = open(self.main_tagger_path, 'wb')
         dump(self.main_tagger, output, -1)
         output.close()
 
     def load_trained_main_tagger(self):
-        logger.info(f'>> Trying to load main tagger from "{self.main_tagger_path}"')
+        self.logger.info(f'>> Trying to load main tagger from "{self.main_tagger_path}"')
         input = open(self.main_tagger_path, 'rb')
         self.main_tagger = load(input)
         input.close()
 
     def separate_train_and_test_data(self, data):
-        logger.info('>> Separate train and test data')
-        logger.info(f'len(data) : {len(data)}')
+        self.logger.info('>> Separate train and test data')
+        self.logger.info(f'len(data) : {len(data)}')
         size = int(len(data) * 0.9)
         self.train_data = data[:size]
         self.test_data = data[size:]
-        logger.info(f'len(train_data) : {len(self.train_data)}')
-        logger.info(f'len(test_data) : {len(self.test_data)}')
+        self.logger.info(f'len(train_data) : {len(self.train_data)}')
+        self.logger.info(f'len(test_data) : {len(self.test_data)}')
         
     def create_main_tagger(self):
-        logger.info('>> Create main tagger')
+        self.logger.info('>> Create main tagger')
         default_tagger = nltk.DefaultTagger('N')
         # default_tagger = nltk.DefaultTagger('R')
         suffix_tagger = nltk.AffixTagger(self.train_data, backoff=default_tagger, affix_length=-3, min_stem_length=2, verbose=True)
-        logger.info(f'> suffix_tagger : \n{suffix_tagger.unicode_repr()}\n')
+        self.logger.info(f'> suffix_tagger : \n{suffix_tagger.unicode_repr()}\n')
         affix_tagger = nltk.AffixTagger(self.train_data, backoff=suffix_tagger, affix_length=5, min_stem_length=1, verbose=True)
         regexp_tagger = nltk.RegexpTagger(self.word_patterns, backoff=affix_tagger)
         unigram_tagger = nltk.UnigramTagger(self.train_data, backoff=regexp_tagger, verbose=True)
@@ -88,41 +89,31 @@ class BitianistInformalNLTKTagger(Tagger):
         brill_trainer_result = brill_trainer.BrillTaggerTrainer( 
                 trigram_tagger, templates, deterministic=True) 
         brill_tagger = brill_trainer_result.train(self.train_data, max_rules=300, min_score=30)
-        logger.info(f'>brill_tagger.print_template_statistics() => in console :(')
+        self.logger.info(f'>brill_tagger.print_template_statistics() => in console :(')
         brill_tagger.print_template_statistics()
         rules = '\n'.join([rule.__str__() for rule in brill_tagger.rules()])
-        logger.info(f'>brill_tagger.rules() : \n{rules}')
+        self.logger.info(f'>brill_tagger.rules() : \n{rules}')
         self.main_tagger = brill_tagger
 
         self.accuracy = self.main_tagger.evaluate(self.test_data)
-        logger.info(f'>> Main tagger evaluate accuracy : {self.accuracy}')
+        self.logger.info(f'>> Main tagger evaluate accuracy : {self.accuracy}')
 
 
-    temp_text, normalizer = None, None
-    def refine_training_token(self, token_content):
-        self.temp_text.content = token_content
-        self.normalizer.uniform_signs(self.temp_text)
-        self.normalizer.remove_some_characters(self.temp_text)
-        self.temp_text.content = self.temp_text.content.strip()
-        self.temp_text.content = self.temp_text.content.replace(' ', '‌')
-        token_content = self.temp_text.content
-        return token_content
-
+    normalizer = None
     def train(self):
         bijankhan_tag_set = TagSet.objects.get(name='bijankhan-tag-set')
         # text_tokens_list = TextTag.objects.filter(tagger__tag_set=bijankhan_tag_set).values_list('tagged_tokens', flat=True)
-        logger.info(f'> self.tag_set : {self.tag_set}')
+        self.logger.info(f'> self.tag_set : {self.tag_set}')
         text_tokens_list = TextTag.objects.filter(
             Q(is_valid=True) &
             (Q(tagger__tag_set=self.tag_set) | Q(tagger__tag_set=bijankhan_tag_set))
         ).order_by('-tagger').values_list('tagged_tokens', flat=True)
-        logger.info(f'> text_tokens_list.count() : {text_tokens_list.count()}')
+        self.logger.info(f'> text_tokens_list.count() : {text_tokens_list.count()}')
         if text_tokens_list.count() == 0:
-            logger.error(f'> text_tokens_list count == 0 !!!')
+            self.logger.error(f'> text_tokens_list count == 0 !!!')
             return
 
-        self.normalizer = cache.normalizers['bitianist-informal-refinement-normalizer']
-        self.temp_text = Text()
+        self.normalizer = cache.normalizers['bitianist-basic-normalizer']
         tagged_sentences = []
         tagged_sentence = []
         token_content = ''
@@ -130,15 +121,18 @@ class BitianistInformalNLTKTagger(Tagger):
         self.bitianist_text_tag_index = -1
         for index, text_tokens in enumerate(text_tokens_list):
             for token in text_tokens:
-                token_content = self.refine_training_token(token['token'])
+                token_content = self.normalizer.normalize(token['token']).replace(' ', '‌')
                 if token_content == '٪':
                     if token['tag']['name'] == 'O':
                         self.bitianist_text_tag_index = index
                     token['tag']['name'] = 'O'
 
+                if token_content in ('.', '…'):
+                    token['tag']['name'] = 'O'
+                    
                 tagged_sentence.append((token_content, token['tag']['name']))
                 # if self.bitianist_text_tag_index == -1 and token_content in specials:
-                #     logger.info(f"> He see that {token_content} {token['tag']['name']}")
+                #     self.logger.info(f"> He see that {token_content} {token['tag']['name']}")
                 #     self.bitianist_text_tag_index = 
                 
 
@@ -146,9 +140,9 @@ class BitianistInformalNLTKTagger(Tagger):
                     tagged_sentences.append(tagged_sentence)
                     tagged_sentence = []
 
-        logger.info(f'> self.bitianist_text_tag_index : {self.bitianist_text_tag_index}')
-        logger.info(f'> tagged_sentences[0] : \n\n{tagged_sentences[0]}\n\n')
-        logger.info(f'> tagged_sentences[-1] : \n\n{tagged_sentences[-1]}\n\n')
+        self.logger.info(f'> self.bitianist_text_tag_index : {self.bitianist_text_tag_index}')
+        self.logger.info(f'> tagged_sentences[0] : \n\n{tagged_sentences[0]}\n\n')
+        self.logger.info(f'> tagged_sentences[-1] : \n\n{tagged_sentences[-1]}\n\n')
         self.separate_train_and_test_data(tagged_sentences)
         self.create_main_tagger()
         self.save_trained_main_tagger()
@@ -157,15 +151,15 @@ class BitianistInformalNLTKTagger(Tagger):
         self.save()
 
     
-    def tag(self, text):
-        text_normal = cache.normalizers['bitianist-informal-refinement-normalizer']\
-                            .normalize(text)
-        text_tag, created = TextTag.objects.get_or_create(
-            tagger=self,
-            text=text_normal,
-        )
-        # token_contents = [token['token'] for token in text_tag.tokens]
-        token_contents = text_normal.content.replace('\n', ' \\n ').split(' ')
+    def tag(self, text_content):
+        beg_ts = time.time()
+        self.logger.info(f'>>> bitianist_refinement_tagger : \n{text_content}')
+
+        text_content = cache.normalizers['bitianist-refinement-normalizer']\
+                        .normalize(text_content)
+        self.logger.info(f'>>> bitianist_refinement_normalizer: \n{text_content}')
+
+        token_contents = text_content.replace('\n', ' \\n ').split(' ')
         if not self.main_tagger:
             if os.path.isfile(self.main_tagger_path):
                 self.load_trained_main_tagger()
@@ -173,27 +167,15 @@ class BitianistInformalNLTKTagger(Tagger):
                 raise Exception()
         
         tagged_tokens = self.main_tagger.tag(token_contents)
-        tagged_token_json = {}
-        text_tag.tagged_tokens = []
-        for tagged_token in tagged_tokens:
-            tagged_token_json = {}
-            tagged_token_json['token'] = tagged_token[0]
-            tagged_token_json['tag'] = {'name': tagged_token[1]}
-            logger.info(f'tagged_token_json : {tagged_token_json}')
-            text_tag.tagged_tokens.append(tagged_token_json)
-        # for i in range(len(text_tag.tokens)):
-        #     text_tag.tokens[i]['tag'] = {'name': tagged_tokens[i][1]}
-        text_tag.save()
-        logger.info(f'text tags : {text_tag.__unicode__()}')
-        return text_tag
-
-def init():
-    global logger
-    logger = logging.getLogger(__name__)
+        
+        end_ts = time.time()
+        self.logger.info(f"> (Time)({end_ts - beg_ts:.6f})")
+        self.logger.info(f'>>> Result bitianist_refinement_tagger : \n{tagged_tokens}')
+        return tagged_tokens
 
     # def get_or_create_sentences(self, text):
     #     if text.sentences.exists():
-    #         logger.debug(f'> sentence was exists')
+    #         self.logger.debug(f'> sentence was exists')
     #         return False
     #     text_content = sentence_splitter_pattern.sub(r' \1\2 newline', text.content) # hazm
     #     sentence_contents = [sentence_content.replace('\n', ' ').strip() \
@@ -201,7 +183,7 @@ def init():
     #     order = 0
     #     for sentence_content in sentence_contents:
     #         Sentence.objects.create(content=sentence_content, text=text, order=order)
-    #         logger.debug(f'> new sentence : {sentence_content}')
+    #         self.logger.debug(f'> new sentence : {sentence_content}')
     #         order += 1
     #     return True
 
@@ -225,7 +207,7 @@ def init():
     #             }
     #             tagged_sentence.tokens.append(token_dictionary)
     #         tagged_sentence.save()
-    #         logger.info(f'{tagged_sentence.__unicode__()}')
+    #         self.logger.info(f'{tagged_sentence.__unicode__()}')
     #     return text
         # for sentence in text.sentences:
         #     self.tag_sentence(sentence)
@@ -246,13 +228,13 @@ def init():
         #             'name': tag
         #         }
         #     } for token, tag in sentence_tokens]
-        # logger.info(f'sentence_tokens : \n\n{sentence_tokens}\n')
+        # self.logger.info(f'sentence_tokens : \n\n{sentence_tokens}\n')
 
         # obj, created = TaggedSentence.objects.update_or_create(
         #     tagger=self, sentence=sentence,
         #     defaults={'tokens': sentence_tokens},
         # )
-        # logger.debug(f"> created : {created}")
+        # self.logger.debug(f"> created : {created}")
 
         # TaggedSentence.objects.create(
         #     tagger=self,

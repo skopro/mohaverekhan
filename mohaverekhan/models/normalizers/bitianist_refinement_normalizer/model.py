@@ -1,135 +1,57 @@
 import time
 import logging
 import re
-from mohaverekhan.models import Normalizer, Text, TextNormal
+from mohaverekhan.models import Normalizer
 from mohaverekhan import cache
 
-logger = None
-
-
-class BitianistInformalRefinementNormalizer(Normalizer):
+class BitianistRefinementNormalizer(Normalizer):
     
     class Meta:
         proxy = True
 
-    translation_characters = (
-        (r'0', r'۰', '', 'hazm', 'true'),
-        (r'1', r'۱', '', 'hazm', 'true'),
-        (r'2', r'۲', '', 'hazm', 'true'),
-        (r'3', r'۳', '', 'hazm', 'true'),
-        (r'4', r'۴', '', 'hazm', 'true'),
-        (r'5', r'۵', '', 'hazm', 'true'),
-        (r'6', r'۶', '', 'hazm', 'true'),
-        (r'7', r'۷', '', 'hazm', 'true'),
-        (r'8', r'۸', '', 'hazm', 'true'),
-        (r'9', r'۹', '', 'hazm', 'true'),
-
-        (r'٠', r'۰', '', 'bitianist', 'true'),
-        (r'١', r'۱', '', 'bitianist', 'true'),
-        (r'٢', r'۲', '', 'bitianist', 'true'),
-        (r'٣', r'۳', '', 'bitianist', 'true'),
-        (r'٤', r'۴', '', 'bitianist', 'true'),
-        (r'٥', r'۵', '', 'bitianist', 'true'),
-        (r'٦', r'۶', '', 'bitianist', 'true'),
-        (r'٧', r'۷', '', 'bitianist', 'true'),
-        (r'٨', r'۸', '', 'bitianist', 'true'),
-        (r'٩', r'۹', '', 'bitianist', 'true'),
-
-        (r' ', r' ', 'space character 160 -> 32', 'hazm', 'true'),
-        (r'ك', r'ک', '', 'hazm', 'true'),
-        (r'ي', r'ی', '', 'hazm', 'true'),
-        (r'ئ', r'ی', '', 'hazm', 'true'),
-        (r'ؤ', r'و', '', 'hazm', 'true'),
-        # (r'آ', r'ا', '', 'bitianist', 'true'),
-        (r'إ', r'ا', '', 'bitianist', 'true'),
-        (r'أ', r'ا', '', 'bitianist', 'true'),
-        (r'ة', r'ه', '', 'bitianist', 'true'),
-        # (r'هٔ', r'ه', '', 'hazm', 'true'),
-        (r'“', r'"', '', 'hazm', 'true'),
-        (r'”', r'"', '', 'hazm', 'true'),
-        (r'%', r'٪', '', 'bitianist', 'true'),
-        (r'?', r'؟', '', 'bitianist', 'true'),
-        
-    )
-
-    translation_characters = {tc[0]:tc[1] for tc in translation_characters}
-
-    remove_character_patterns = (
-        (r'[\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652]', r'', 'remove FATHATAN, DAMMATAN, KASRATAN, FATHA, DAMMA, KASRA, SHADDA, SUKUN', 0, 'hazm', 'true'),
-        (r'[ـ\r]', r'', r'remove keshide, \r', 0, 'hazm', 'true'),
-        (r'ٔ', r'', r'remove  ٔ ', 0, 'bitianist', 'true'),
-
-    )
-    remove_character_patterns = [(rc[0], rc[1]) for rc in remove_character_patterns]
-    remove_character_patterns = cache.compile_patterns(remove_character_patterns)
+    logger = logging.getLogger(__name__)
 
     refinement_patterns = (
-        (r'([^\.]|^)(\.\.\.)([^\.]|$)', r'\1…\3', 'replace 3 dots with …', 0, 'bitianist', 'true'),
-        (rf'([{cache.punctuations}])\1+', r'\1', 'remove cache.punctuations repetitions', 0, 'bitianist', 'true'),
-        (r'"([^\n"]+)"', r'«\1»', 'replace quotation with gyoome', 0, 'hazm', 'true'),
-        # (r'(-?[0-9۰۱۲۳۴۵۶۷۸۹]+([.,][0-9۰۱۲۳۴۵۶۷۸۹]+)?)', r' \1 ', 'number', 0, 'bitianist', 'true'),
         (rf'([{cache.emojies}]+)(?=[{cache.persians}{cache.punctuations}])', r'\1 ', '', 0, 'bitianist', 'true'),
-        (rf'({cache.link})(?=[{cache.persians}{cache.punctuations}{cache.emojies}])', r'\1 ', '', 0, 'bitianist', 'true'),
         (rf'({cache.email})(?=[{cache.persians}{cache.punctuations}{cache.emojies}])', r'\1 ', '', 0, 'bitianist', 'true'),
+        (rf'({cache.link})(?=[{cache.persians}{cache.punctuations}{cache.emojies}])', r'\1 ', '', 0, 'bitianist', 'true'),
         (rf'({cache.id})(?=[{cache.persians}{cache.emojies}])', r'\1 ', '', 0, 'bitianist', 'true'),
         (rf'({cache.tag})(?=[{cache.persians}{cache.punctuations}{cache.emojies}])', r'\1 ', '', 0, 'bitianist', 'true'),
         (rf'({cache.num})(?=[{cache.persians}{cache.num_punctuations}{cache.emojies}])', r'\1 ', '', 0, 'bitianist', 'true'),
         (rf'({cache.numf})(?=[{cache.persians}{cache.num_punctuations}{cache.emojies}])', r'\1 ', '', 0, 'bitianist', 'true'),
-        # (rf'({cache.link}|{cache.emojies}|{cache.email}|{cache.id}|{cache.tag})(?=[{cache.persians}{cache.punctuations}])', r'\1 ', '', 0, 'bitianist', 'true'),
         (rf'(?<=[{cache.persians}{cache.punctuations}])([{cache.emojies}]+)', r' \1', '', 0, 'bitianist', 'true'),
-        (rf'(?<=[{cache.persians}{cache.punctuations}{cache.emojies}])({cache.link})', r' \1', '', 0, 'bitianist', 'true'),
         (rf'(?<=[{cache.persians}{cache.punctuations}{cache.emojies}])({cache.email})', r' \1', '', 0, 'bitianist', 'true'),
+        (rf'(?<=[{cache.persians}{cache.punctuations}{cache.emojies}])({cache.link})', r' \1', '', 0, 'bitianist', 'true'),
         (rf'(?<=[{cache.persians}{cache.punctuations}{cache.emojies}])({cache.id})', r' \1', '', 0, 'bitianist', 'true'),
         (rf'(?<=[{cache.persians}{cache.punctuations}{cache.emojies}])({cache.tag})', r' \1', '', 0, 'bitianist', 'true'),
         (rf'(?<=[{cache.persians}{cache.num_punctuations}{cache.emojies}])({cache.num})', r' \1', '', 0, 'bitianist', 'true'),
         (rf'(?<=[{cache.persians}{cache.num_punctuations}{cache.emojies}])({cache.numf})', r' \1', '', 0, 'bitianist', 'true'),
-        # (rf'(?<=[{cache.persians}{cache.punctuations}])({cache.link}|{cache.emoji}|{cache.email}|{cache.id}|{cache.tag})', r' \1', '', 0, 'bitianist', 'true'),
-        # (rf'(?<=[^a-zA-Z{cache.numbers}])([{cache.punctuations}])(?=[^a-zA-Z]|$)', r' \1 ', 'add extra space before and after of cache.punctuations', 0, 'bitianist', 'true'),
         (rf' ([{cache.punctuations}{cache.typographies}])(?=[{cache.punctuations}{cache.typographies}]+)', r' \1 ', 'add extra space before and after of cache.punctuations', 0, 'bitianist', 'true'),
-        # (rf'([{cache.punctuations}{cache.typographies}])(?=[{cache.punctuations}{cache.typographies}])', r'\1 ', 'add extra space before and after of cache.punctuations', 0, 'bitianist', 'true'),
         (rf'(?<=[{cache.punctuations}{cache.typographies}])([{cache.punctuations}{cache.typographies}]) ', r' \1 ', 'add extra space before and after of cache.punctuations', 0, 'bitianist', 'true'),
         (rf'([{cache.punctuations}{cache.numbers}])(?=[{cache.persians}])', r'\1 ', 'add extra space before and after of cache.punctuations', 0, 'bitianist', 'true'),
         (rf'(?<=[{cache.persians}])([{cache.punctuations}{cache.numbers}])', r' \1', 'add extra space before and after of cache.punctuations', 0, 'bitianist', 'true'),
 
-        # (rf'([^a-zA-Z {cache.numbers}]+)([{cache.numbers}]+)|([{cache.numbers}]+)([^a-zA-Z {cache.numbers}]+)', r'\1 \2\3 \4', '', 0, 'bitianist', 'true'),
-        # (rf'([{cache.persians}]+)([{cache.numbers}]+|[{cache.punctuations}]+|cache.link_pattern)|([{cache.numbers}]+)([{cache.persians}]+)', r'\1 \2\3 \4', '', 0, 'bitianist', 'true'),
-        (r'\n+', r'\n', 'remove extra newlines', 0, 'bitianist', 'true'),
         (r'\n', r' newline ', 'replace \n to newline for changing back', 0, 'bitianist', 'true'),
-        (r' +', r' ', 'remove extra spaces', 0, 'hazm', 'true'),
-
         (r'([^ ]ه) ی ', r'\1‌ی ', 'between ی and ه - replace space with non-joiner ', 0, 'hazm', 'true'),
         (r'(^| )(ن?می) ', r'\1\2‌', 'after می،نمی - replace space with non-joiner ', 0, 'hazm', 'true'),
         (rf'(?<=[^\n\d {cache.punctuations}]{{2}}) (تر(ین?)?|گری?|های?)(?=[ \n{cache.punctuations}]|$)', r'‌\1', 'before تر, تری, ترین, گر, گری, ها, های - replace space with non-joiner', 0, 'hazm', 'true'),
-        # (rf'(?<=[^\n\d {cache.punctuations}]{{2}})(تر(ین?)?|گری?|های?)(?=[ \n{cache.punctuations}]|$)', r'‌\1', 'before تر, تری, ترین, گر, گری, ها, های - replace empty with non-joiner', 0, 'bitianist', 'true'),
         (rf'([^ ]ه) (ا(م|یم|ش|ند|ی|ید|ت))(?=[ \n{cache.punctuations}]|$)', r'\1‌\2', 'before ام, ایم, اش, اند, ای, اید, ات - replace space with non-joiner', 0, 'hazm', 'true'),  
-
-        # (rf'([^{repetition_characters}])\1{{1,}}', r'\1', 'remove repetitions except ی و', 0, 'bitianist', 'true'),
-        # (r'', r'', '', 0, 'hazm', 'true'),
+        (r' +', r' ', 'remove extra spaces', 0, 'hazm', 'true'),
+        # (r'', r'', '', 0, 'bitianist', 'true'),
     )
     refinement_patterns = [(rp[0], rp[1]) for rp in refinement_patterns]
     refinement_patterns = cache.compile_patterns(refinement_patterns)
 
-    def split_into_token_contents(self, text, delimiters='[ ]+'):
-        return re.split(delimiters, text.content)
+    def split_into_token_contents(self, text_content, delimiters='[ ]+'):
+        return re.split(delimiters, text_content)
 
 
-    def uniform_signs(self, text):
-        text.content = text.content.translate(text.content.maketrans(self.translation_characters))
-        text.content = text.content.strip(' ')
-        # logger.info(f'> After uniform_signs : \n{text.content}')
-
-    def remove_some_characters(self, text):
-        for pattern, replacement in self.remove_character_patterns:
-            text.content = pattern.sub(replacement, text.content)
-            # logger.info(f'> after {pattern} -> {replacement} : \n{text.content}')
-        text.content = text.content.strip(' ')
-
-    def refine_text(self, text):
+    def refine_text(self, text_content):
         for pattern, replacement in self.refinement_patterns:
-            text.content = pattern.sub(replacement, text.content)
-            # logger.info(f'> after {pattern} -> {replacement} : \n{text.content}')
-        text.content = text.content.strip(' ')
-
+            text_content = pattern.sub(replacement, text_content)
+            # self.logger.info(f'> after {pattern} -> {replacement} : \n{text_content}')
+        text_content = text_content.strip(' ')
+        return text_content
 
     repetition_pattern = re.compile(r"([^ب])\1{1,}") # ببندم=بند
     # repetition_pattern = re.compile(r"([^A-Za-z])\1{1,}")
@@ -139,18 +61,18 @@ class BitianistInformalRefinementNormalizer(Normalizer):
             return token_content
 
         matches_count = len(self.repetition_pattern.findall(token_content))
-        logger.info(f'> matches_count : {matches_count}')
+        self.logger.info(f'> matches_count : {matches_count}')
         if matches_count != 1:
             it = re.finditer(self.repetition_pattern, token_content)
 
             for match in it:
                 fixed_token_content = token_content.replace(match.group(0), match.group(0)[0])
-                logger.info(f'> 1 : {fixed_token_content}')
+                self.logger.info(f'> 1 : {fixed_token_content}')
                 fixed_token_content = self.fix_repetition_token(fixed_token_content)
-                logger.info(f'> 2 : {fixed_token_content}')
+                self.logger.info(f'> 2 : {fixed_token_content}')
                 is_valid, fixed_token_content = cache.is_token_valid(fixed_token_content)
                 if is_valid:
-                    logger.info(f'> Found repetition token recursive {token_content} -> {fixed_token_content}')
+                    self.logger.info(f'> Found repetition token recursive {token_content} -> {fixed_token_content}')
                     return fixed_token_content
         else:
             fixed_token_content = token_content
@@ -158,7 +80,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                 fixed_token_content = self.repetition_pattern.sub(r'\1\1', token_content) #شش
                 is_valid, fixed_token_content = cache.is_token_valid(fixed_token_content)
                 if is_valid:
-                    logger.info(f'> found repetition token {token_content} -> {fixed_token_content}')
+                    self.logger.info(f'> found repetition token {token_content} -> {fixed_token_content}')
                     return fixed_token_content
 
                 fixed_token_content = self.repetition_pattern.sub(r'\1', token_content)
@@ -166,7 +88,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                     return 'کننده'
                 is_valid, fixed_token_content = cache.is_token_valid(fixed_token_content)
                 if is_valid:
-                    logger.info(f'> Found repetition token {token_content} -> {fixed_token_content}')
+                    self.logger.info(f'> Found repetition token {token_content} -> {fixed_token_content}')
                     return fixed_token_content
                 
                 stripped_token_content, stripped = '', ''
@@ -174,12 +96,12 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                     # عاااالیه
                     stripped_token_content = token_content[0:-i]
                     stripped = token_content[-i:]
-                    logger.info(f'> Fix_repetition_token token_content[0:-{i}] : {stripped_token_content}')
+                    self.logger.info(f'> Fix_repetition_token token_content[0:-{i}] : {stripped_token_content}')
                     fixed_token_content = self.repetition_pattern.sub(r'\1\1', stripped_token_content)
                     is_valid, fixed_token_content = cache.is_token_valid(fixed_token_content)
                     if is_valid:
                         fixed_token_content += stripped
-                        logger.info(f'> Found repetition token {token_content} -> {fixed_token_content}')
+                        self.logger.info(f'> Found repetition token {token_content} -> {fixed_token_content}')
                         return fixed_token_content
 
                     if i >= 4:
@@ -187,7 +109,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                         repeated_parts = list(re.finditer(self.repetition_pattern, stripped_token_content))
                         if repeated_parts:
                             repeated_part = repeated_parts[0].group(0)
-                        logger.info(f'> Repeated_part : {repeated_part}')
+                        self.logger.info(f'> Repeated_part : {repeated_part}')
                         if len(repeated_part) == 2:
                             continue
 
@@ -195,7 +117,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                     is_valid, fixed_token_content = cache.is_token_valid(fixed_token_content)
                     if is_valid:
                         fixed_token_content += stripped
-                        logger.info(f'> Found repetition token {token_content} -> {fixed_token_content}')
+                        self.logger.info(f'> Found repetition token {token_content} -> {fixed_token_content}')
                         return fixed_token_content
                 
                 fixed_token_content = token_content
@@ -203,9 +125,8 @@ class BitianistInformalRefinementNormalizer(Normalizer):
             return fixed_token_content
         return token_content
 
-    def fix_repetition_tokens(self, text):
-        logger.info(f'>> fix_repetition_tokens')
-        token_contents = self.split_into_token_contents(text)
+    def fix_repetition_tokens(self, text_content):
+        token_contents = self.split_into_token_contents(text_content)
         fixed_text_content = ''
         fixed_token_content = ''
         for token_content in token_contents:
@@ -215,18 +136,16 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                 fixed_token_content = self.fix_repetition_token(fixed_token_content)
             
             fixed_text_content += fixed_token_content.strip(' ') + " "
-        text.content = fixed_text_content[:-1]
-        text.content = text.content.strip(' ')
+        fixed_text_content = fixed_text_content[:-1]
+        fixed_text_content = fixed_text_content.strip(' ')
+        return fixed_text_content
 
     
 
     move_limit = 7
-    def join_multipart_tokens(self, text):
-        logger.debug(f'>> join_multipart_tokens')
-        logger.debug(f'{text.content}')
-
-        token_contents = self.split_into_token_contents(text)
-        logger.debug(f'token_contents : {token_contents}')
+    def join_multipart_tokens(self, text_content):
+        token_contents = self.split_into_token_contents(text_content)
+        self.logger.debug(f'token_contents : {token_contents}')
         fixed_text_content = ''
         fixed_token_content = ''
         tokens_length = len(token_contents)
@@ -234,20 +153,20 @@ class BitianistInformalRefinementNormalizer(Normalizer):
         i = 0
         while i < tokens_length:
             move_count = min(tokens_length - (i+1), self.move_limit)
-            logger.debug(f'> i : {i} | move_count : {move_count}')
+            self.logger.debug(f'> i : {i} | move_count : {move_count}')
 
             # end
             if move_count == 0:
-                logger.debug(f'> Join the last one : {token_contents[i]}')
+                self.logger.debug(f'> Join the last one : {token_contents[i]}')
                 fixed_text_content += token_contents[i]
                 break
 
             # try to join
             for move_count in reversed(range(0, move_count+2)):
                 # end when move_count = 0 return the word without any join
-                # logger.info(f'token_contents[{i}:{i+move_count+1}] : {token_contents[i:i+move_count+1]}')
+                # self.logger.info(f'token_contents[{i}:{i+move_count+1}] : {token_contents[i:i+move_count+1]}')
                 fixed_token_content = '‌'.join(token_contents[i:i+move_count+1])
-                # logger.info(f'> move_count in reversed fixed_token_content : {fixed_token_content}')
+                # self.logger.info(f'> move_count in reversed fixed_token_content : {fixed_token_content}')
                 is_valid, fixed_token_content = cache.is_token_valid(fixed_token_content)
                 if(
                     (
@@ -257,8 +176,8 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                     ) or
                     move_count == 0
                 ):
-                    logger.debug(f'> Fixed nj [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
-                    # logger.debug(f'> Found => move_count : {move_count} | fixed_token_content : {fixed_token_content}')
+                    self.logger.debug(f'> Fixed nj [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
+                    # self.logger.debug(f'> Found => move_count : {move_count} | fixed_token_content : {fixed_token_content}')
                     i = i + move_count + 1
                     fixed_text_content += fixed_token_content + ' '
                     break
@@ -267,30 +186,30 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                 #باید جدول توکن ها درست کنم که براساس تگ تصمیم بگیرم بچسبونم یا نه
                 # fixed_token_content = ''.join(token_contents[i:i+move_count+1])
                 # if fixed_token_content in cache.all_token_tags or move_count == 0:
-                #     logger.debug(f'> empty [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
-                #     # logger.debug(f'> Found => move_count : {move_count} | fixed_token_content : {fixed_token_content}')
+                #     self.logger.debug(f'> empty [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
+                #     # self.logger.debug(f'> Found => move_count : {move_count} | fixed_token_content : {fixed_token_content}')
                 #     i = i + move_count + 1
                 #     fixed_text_content += fixed_token_content + ' '
                 #     break
 
-        text.content = fixed_text_content.strip(' ')
-        logger.debug(f'{text.content}')
+        fixed_text_content = fixed_text_content.strip(' ')
+        return fixed_text_content
 
 
     def get_token_parts_list(self, token_content, part_count):
         token_size = len(token_content)
-        # logger.info(f'> Splitting {token_content} {token_size}')
+        # self.logger.info(f'> Splitting {token_content} {token_size}')
         part1, part2 = '', ''
         token_parts_list = []
         if part_count == 1:
             return [[token_content]]
 
-        # logger.info(f'token_size - part_count : {token_size} - {part_count} + 1 + 1 = {token_size - part_count + 1 + 1}')
+        # self.logger.info(f'token_size - part_count : {token_size} - {part_count} + 1 + 1 = {token_size - part_count + 1 + 1}')
         # for i in range(1, token_size - part_count + 1 + 1):
         for i in reversed(range(1, token_size - part_count + 1 + 1)):
             part1 = token_content[:i]
             part2 = token_content[i:]
-            # logger.info(f'> token_content[:{i}] {part1}')
+            # self.logger.info(f'> token_content[:{i}] {part1}')
             for part2_token_parts in self.get_token_parts_list(part2, part_count-1):
                 token_parts_list.append([part1] + part2_token_parts)
         return token_parts_list
@@ -302,57 +221,20 @@ class BitianistInformalRefinementNormalizer(Normalizer):
         
         is_valid, fixed_token_content = cache.is_token_valid(token_content)
         if is_valid:
-            logger.info(f'> {fixed_token_content} is valid')
+            self.logger.info(f'> {fixed_token_content} is valid')
             return fixed_token_content
         
-        # if token_content[-1:] == 'ش': # کتابش سیب‌زمینیش
-        #     if token_content[:-1] in cache.all_token_tags:
-        #         return token_content[:-1] + ' ش'
-
-        # if token_content[-2:] == 'شو': # دیگشو کتابشو
-        #     if token_content[:-2] + 'ه' in cache.all_token_tags:
-        #         return token_content[:-2] + 'ه' + ' ش' + ' رو'
-        #     if token_content[:-2] in cache.all_token_tags:
-        #         return token_content[:-2] + ' ش' + ' رو'
-        
-        # if token_content[-4:] == 'شونه': # دیگشونه مناسبشونه
-        #     if token_content[:-4] + 'ه' in cache.all_token_tags:
-        #         return token_content[:-4] + 'ه' + ' شون' + ' است'
-        #     if token_content[:-4] in cache.all_token_tags:
-        #         return token_content[:-4] + ' شون' + ' است'
-        
-        # if token_content[-2:] == 'اش': # مشتریاش کتاباش
-        #     if token_content[:-2] in cache.all_token_tags:
-        #         if token_content[-3] in ('ه', 'ی'):
-        #             return token_content[:-2] + '‌' + 'ها' + ' یش'
-        #         else:
-        #             return token_content[:-2] + 'ها' + ' یش'
-        
-        # if token_content[-3:] == 'هاش': # مشتریهاش میوههاش کتابهاش
-        #     if token_content[:-3] in cache.all_token_tags:
-        #         if token_content[-4] in ('ه', 'ی'):
-        #             return token_content[:-3] + '‌' + 'ها' + ' یش'
-        #         else:
-        #             return token_content[:-3] + 'ها' + ' یش'
-
-        # logger.info(f'> What {token_content} {token_content[-6:]} {token_content[-5:]} {token_content[-5:] == "ه ایه"}')
-        # if token_content[-5:] == 'ه ایه': # فوق‌العاده ایه
-        #     is_valid, fixed_token_content = cache.is_token_valid(token_content[:-4])
-        #     if is_valid:
-        #         logger.info(f'> {fixed_token_content} fixed یه')
-        #         return fixed_token_content + '‌' + 'ایه'
-
         if token_content[-2:] == 'یه' and token_content[-3:] != 'ایه' : # شلوغیه
             is_valid, fixed_token_content = cache.is_token_valid(token_content[:-1])
             if is_valid:
-                logger.info(f'> {fixed_token_content} fixed یه')
+                self.logger.info(f'> {fixed_token_content} fixed یه')
                 return fixed_token_content
         
         # for i in range(1, min(len(token_content), 6)):
         if token_content[-2:] == 'ست': # منطقست
             is_valid, fixed_token_content = cache.is_token_valid(token_content[:-2] + 'ه')
             if is_valid:
-                logger.info(f'> {fixed_token_content} fixed است')
+                self.logger.info(f'> {fixed_token_content} fixed است')
                 return fixed_token_content + ' است'
             # if token_content[:-2] + 'ه' in cache.all_token_tags:
                 # return token_content[:-2] + 'ه' + ' است'
@@ -368,32 +250,16 @@ class BitianistInformalRefinementNormalizer(Normalizer):
         #             ('U' in cache.all_token_tags[part1] and 'L' in cache.all_token_tags[part2])
         #             ):
         #             sp_joined = f'{part1} {part2}'
-        #             logger.debug(f'> Found sp_joined : {sp_joined}')
+        #             self.logger.debug(f'> Found sp_joined : {sp_joined}')
         #             return sp_joined
         
 
-        logger.info(f'>> get_token_parts')
-
-        # for i in range(2, 5):
-        #     logger.info(f'> {i} : ')
-        #     is_valid = True
-        #     for token_parts in self.get_token_parts_list(token_content, i):
-        #         is_valid = True
-        #         for token_part in token_parts:
-        #             if (
-        #                 token_part not in cache.all_token_tags or 
-        #                 len(token_part) < 3
-        #             ):
-        #                 is_valid = False
-        #                 break
-        #         if is_valid:
-        #             logger.info(f'> Found {token_parts}')
-        #             return ' '.join(token_parts)
+        self.logger.info(f'>> get_token_parts')
 
         # for i in reversed(range(2, 5)):
         probebly_match = None
         for i in range(2, 5):
-            logger.info(f'> {i} : ')
+            self.logger.info(f'> {i} : ')
             is_valid = True
             for token_parts in self.get_token_parts_list(token_content, i):
                 # C sequence 
@@ -417,24 +283,24 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                 ):
                     token_parts[0] = token_parts[0] + 'ه'
                 reversed_token_parts = list(reversed(token_parts))
-                logger.info(f'> reversed({token_parts}) : {reversed_token_parts}')
+                self.logger.info(f'> reversed({token_parts}) : {reversed_token_parts}')
                 for index, token_part in enumerate(reversed_token_parts):
                     is_valid, fixed_token_part = cache.is_token_valid(token_part)
                     if is_valid:
                         token_part = fixed_token_part
                         reversed_token_parts[index] = token_part
                         token_parts = list(reversed(reversed_token_parts))
-                        logger.info(f'> Refined {token_parts} : {token_part} is valid')
+                        self.logger.info(f'> Refined {token_parts} : {token_part} is valid')
                     else:
-                        logger.info(f'> Rejected {token_parts} : {token_part} not in tokens')
+                        self.logger.info(f'> Rejected {token_parts} : {token_part} not in tokens')
                         is_valid = False
                         # if i==2 and index == len(reversed_token_parts) - 1:
                         #     probebly_match = ' '.join(token_parts)
-                        #     logger.info(f'> probebly_match saved {probebly_match}')
+                        #     self.logger.info(f'> probebly_match saved {probebly_match}')
                         break
 
                         # if index == 0 and 'C' not in cache.all_token_tags[token_part]: # should start with C
-                        #     logger.info(f'> Rejected {token_parts} : {token_part} not started with C')
+                        #     self.logger.info(f'> Rejected {token_parts} : {token_part} not started with C')
                         #     is_valid = False
                         #     break
                     if not end_c_sequence and 'C' not in cache.all_token_tags[token_part]:
@@ -451,24 +317,24 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                                 token_part = token_part + 'ه'
                                 reversed_token_parts[index] = token_part
                                 token_parts = list(reversed(reversed_token_parts))
-                                logger.info(f'> Refine {token_parts} : {token_part} added "ه"')
+                                self.logger.info(f'> Refine {token_parts} : {token_part} added "ه"')
                             elif reversed_token_parts[index-1] == 'ا' and cache.is_token_valid(token_part + 'ا')[0]: #token_part + 'ا' in cache.all_token_tags:
-                                logger.info(f'> Rejected {token_parts} : {token_part} found plural {token_part + "ا"}')
+                                self.logger.info(f'> Rejected {token_parts} : {token_part} found plural {token_part + "ا"}')
                                 is_valid = False
                                 break
                             elif token_part[-1] == 'ش' and cache.is_token_valid(token_part[:-1])[0]: # token_part[:-1] in cache.all_token_tags: # یبارشو مشتریش
                             # if token_part[:-1] in cache.all_token_tags and 'R' not in cache.all_token_tags[token_part[:-1]]:
-                                logger.info(f'> Rejected {token_parts} : {token_part} found {token_part} + «ش»')
+                                self.logger.info(f'> Rejected {token_parts} : {token_part} found {token_part} + «ش»')
                                 is_valid = False
                                 break
                             elif token_parts[index-1][0] == 'ی' and 'V' not in cache.all_token_tags[token_part]:
-                                logger.info(f'> Rejected {token_parts} : {token_part} ی should be with verb')
+                                self.logger.info(f'> Rejected {token_parts} : {token_part} ی should be with verb')
                                 is_valid = False
                                 break
 
                         
                     if end_c_sequence:
-                        logger.info(f'cache.all_token_tags[{token_part}] : {cache.all_token_tags[token_part]}')
+                        self.logger.info(f'cache.all_token_tags[{token_part}] : {cache.all_token_tags[token_part]}')
                         # درمیاره درم یار ه
                         if(
                             len(token_part) >= 4
@@ -486,7 +352,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                                 list(cache.all_token_tags[token_part].keys()) == ['C']
                             )
                         ):
-                            logger.info(f'> Rejected {token_parts} : {token_part} length 1 or R or C')
+                            self.logger.info(f'> Rejected {token_parts} : {token_part} length 1 or R or C')
                             is_valid = False
                             break
                         
@@ -502,7 +368,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                                     # token_part = 'یه'
                                 # reversed_token_parts[index] = token_part
                                 # token_parts = list(reversed(reversed_token_parts))
-                                # logger.info(f'> Refine ی token_parts : {token_parts} | reversed :{reversed_token_parts}')
+                                # self.logger.info(f'> Refine ی token_parts : {token_parts} | reversed :{reversed_token_parts}')
                                 if (
                                     'U' not in cache.all_token_tags[token_part] and
                                     'T' not in cache.all_token_tags[token_part] and
@@ -510,7 +376,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                                     'A' not in cache.all_token_tags[token_part]
 
                                 ):
-                                    logger.info(f'> Rejected {token_parts} : {token_part} not valid for len - 1')
+                                    self.logger.info(f'> Rejected {token_parts} : {token_part} not valid for len - 1')
                                     is_valid = False
                                     break
                             if index == len(reversed_token_parts) - 2: 
@@ -519,7 +385,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                                     'E' not in cache.all_token_tags[token_part] and
                                     len(token_part) != 3
                                 ):
-                                    logger.info(f'> Rejected {token_parts} : {token_part} not valid for len - 2')
+                                    self.logger.info(f'> Rejected {token_parts} : {token_part} not valid for len - 2')
                                     is_valid = False
                                     break
                         else:
@@ -531,36 +397,24 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                         #     )):
                         # دیگشو
                         if ( index != 0 and index != 1 and len(token_part) == 1) or token_part in ('ز', 'ر'):
-                            logger.info(f'> Rejected {token_parts} : {token_part} 1 length or ز or ر')
-                            # logger.info(f'> Rejected {token_part} : {cache.all_token_tags[token_part]}')
+                            self.logger.info(f'> Rejected {token_parts} : {token_part} 1 length or ز or ر')
+                            # self.logger.info(f'> Rejected {token_part} : {cache.all_token_tags[token_part]}')
                             is_valid = False
                             break
                     
                 if is_valid and end_c_sequence:
-                    logger.info(f'> Found {token_parts} {[cache.all_token_tags[token_part] for token_part in token_parts]}')
+                    self.logger.info(f'> Found {token_parts} {[cache.all_token_tags[token_part] for token_part in token_parts]}')
                     return ' '.join(token_parts)
 
 
-        
-
-        # logger.info('\n'.join([ token_parts.__str__() for token_parts in self.get_token_parts_list(token_content, 2) ]))
-        # logger.info(f'> 3 : ')
-        # logger.info('\n'.join([ token_parts.__str__() for token_parts in self.get_token_parts_list(token_content, 3) ]))
-        # logger.info('\n'.join([ token_part.__str__() for token_part in self.get_token_parts(token_content, 3) ]))
-
-
-        # logger.debug(f"> Can't fix {token_content}")
         if probebly_match:
-            logger.info(f'> probebly_match return {probebly_match}')
+            self.logger.info(f'> probebly_match return {probebly_match}')
             return probebly_match
         return token_content
 
-    def fix_wrong_joined_undefined_tokens(self, text):
-        logger.debug(f'>> fix_wrong_joined_undefined_tokens')
-        logger.debug(f'{text.content}')
-
-        token_contents = self.split_into_token_contents(text)
-        logger.debug(f'> token_contents : {token_contents}')
+    def fix_wrong_joined_undefined_tokens(self, text_content):
+        token_contents = self.split_into_token_contents(text_content)
+        self.logger.debug(f'> token_contents : {token_contents}')
         fixed_text_content = ''
         fixed_token_content = ''
 
@@ -568,7 +422,7 @@ class BitianistInformalRefinementNormalizer(Normalizer):
             fixed_token_content = token_content.strip(' ')
             is_valid, fixed_token_content = cache.is_token_valid(fixed_token_content)
             if is_valid:
-                logger.info(f'> cache.all_token_tags[{fixed_token_content}].keys() : {cache.all_token_tags[fixed_token_content].keys()} {list(cache.all_token_tags[fixed_token_content].keys()) == ["R"]}')
+                self.logger.info(f'> cache.all_token_tags[{fixed_token_content}].keys() : {cache.all_token_tags[fixed_token_content].keys()} {list(cache.all_token_tags[fixed_token_content].keys()) == ["R"]}')
 
             is_valid, fixed_token_content = cache.is_token_valid(fixed_token_content)
             if(
@@ -580,37 +434,43 @@ class BitianistInformalRefinementNormalizer(Normalizer):
                 )
                 
             ):
-                logger.debug(f'> {fixed_token_content} not in token set or R!')
+                self.logger.debug(f'> {fixed_token_content} not in token set or R!')
                 fixed_token_content = self.fix_wrong_joined_undefined_token(fixed_token_content)
             
             fixed_text_content += fixed_token_content.strip(' ') + " "
-        text.content = fixed_text_content[:-1]
-        text.content = text.content.strip(' ')
+        fixed_text_content = fixed_text_content[:-1].strip(' ')
+        return fixed_text_content
 
-    def normalize(self, text):
-        logger.info(f'>> RefinementRuleBasedNormalizer : \n{text}')
-        text_normal, created = TextNormal.objects.get_or_create(
-            text=text, 
-            normalizer=self
-            )
-        text_normal.content = text.content.strip(' ')
+    def normalize(self, text_content):
         beg_ts = time.time()
-        self.uniform_signs(text_normal)
-        self.remove_some_characters(text_normal)
-        self.refine_text(text_normal)
-        self.join_multipart_tokens(text_normal) # آرام کننده
-        self.fix_repetition_tokens(text_normal)
-        self.join_multipart_tokens(text_normal) # فرههههههههنگ سرا
-        self.fix_wrong_joined_undefined_tokens(text_normal) # آرامکننده کتابمن 
-        self.join_multipart_tokens(text_normal) # آرام کنندهخوبی
-        text_normal.content = text_normal.content.replace(' newline ', '\n').strip(' ')
+        self.logger.info(f'>>> bitianist-refinement-normalizer : \n{text_content}')
+
+        text_content = cache.normalizers['bitianist-basic-normalizer']\
+                        .normalize(text_content)
+        self.logger.info(f'>> bitianist-basic-normalizer : \n{text_content}')
+        
+        text_content = text_content.strip(' ')
+
+        text_content = self.refine_text(text_content)
+        self.logger.info(f'>> refine_text : \n{text_content}')
+
+        text_content = self.join_multipart_tokens(text_content) # آرام کننده
+        self.logger.info(f'>> join_multipart_tokens1 : \n{text_content}')
+
+        text_content = self.fix_repetition_tokens(text_content)
+        self.logger.info(f'>> fix_repetition_tokens : \n{text_content}')
+
+        text_content = self.join_multipart_tokens(text_content) # فرههههههههنگ سرا
+        self.logger.info(f'>> join_multipart_tokens2 : \n{text_content}')
+
+        text_content = self.fix_wrong_joined_undefined_tokens(text_content) # آرامکننده کتابمن 
+        self.logger.info(f'>> fix_wrong_joined_undefined_tokens : \n{text_content}')
+
+        text_content = self.join_multipart_tokens(text_content) # آرام کنندهخوبی
+        self.logger.info(f'>> join_multipart_tokens3 : \n{text_content}')
+
+        text_content = text_content.replace(' newline ', '\n').strip(' ')
         end_ts = time.time()
-        logger.info(f"> (Time)({end_ts - beg_ts:.6f})")
-        text_normal.save()
-        logger.info(f'> Result : \n{text_normal.content}')
-        return text_normal
-
-
-def init():
-    global logger
-    logger = logging.getLogger(__name__)
+        self.logger.info(f"> (Time)({end_ts - beg_ts:.6f})")
+        self.logger.info(f'>>> Result bitianist-refinement-normalizer : \n{text_content}')
+        return text_content

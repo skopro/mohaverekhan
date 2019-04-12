@@ -12,13 +12,16 @@ import pandas as pd
 import nltk
 
 # from ..tools import utils
-from mohaverekhan import utils
+# from mohaverekhan import utils
 
-# logger = None
+logger = logging.getLogger(__name__)
 
-logger = utils.get_logger(logger_name='data_setup')
-CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
-logger.info(f'CURRENT_DIR : {CURRENT_DIR}')
+# logger = utils.get_logger(logger_name='data_setup')
+current_dir = os.path.abspath(os.path.dirname(__file__))
+
+from mohaverekhan.models import Normalizer, Text, TextNormal, Word, WordNormal
+from mohaverekhan import cache
+
 
 EN_WHITELIST = '۰۱۲۳۴۵۶۷۸۹0123456789اآب‌پتثجچحخدذرزژسشصضطظعغفقکگلمنوهی ' # space is included in whitelist
 EN_BLACKLIST = '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~\''
@@ -26,9 +29,9 @@ EN_BLACKLIST = '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~\''
 SRC_DIR = '/home/bitianist/Dropbox/bachelor_project/data/final'
 
 limit = {
-        'maxinf' : 50,
+        'maxinf' : 500,
         'mininf' : 1,
-        'maxf' : 50,
+        'maxf' : 500,
         'minf' : 1
         }
 
@@ -41,23 +44,23 @@ def ddefault():
     return 1
 
 
-'''
- split sentences in one line
-  into multiple lines
-    return [list of lines]
+# '''
+#  split sentences in one line
+#   into multiple lines
+#     return [list of lines]
 
-'''
-def split_line(line):
-    return line.split('.')
+# '''
+# def split_line(line):
+#     return line.split('.')
 
 
-'''
- remove anything that isn't in the vocabulary
-    return str(pure ta/en)
+# '''
+#  remove anything that isn't in the vocabulary
+#     return str(pure ta/en)
 
-'''
-def filter_characters(line, whitelist):
-    return ''.join([ ch if ch in whitelist else ' ' for ch in line.__str__() ])
+# '''
+# def filter_characters(line, whitelist):
+#     return ''.join([ ch if ch in whitelist else ' ' for ch in line.__str__() ])
 
 
 '''
@@ -102,82 +105,6 @@ def filter_length(informals, formals):
     logger.info(f'filtered_informals has {len(filtered_informals)} items')
     logger.info(f'filtered_formals has {len(filtered_formals)} items')
     return filtered_informals, filtered_formals
-
-import re
-
-def fix_data(informals, formals):
-    fixed_informals, fixed_formals, low_words, low_words_sentences = [], [], [], []
-    nl = '\n'
-    for sentence in informals + formals:
-        for word in sentence.split(' '):
-            word = word.strip()
-            if len(word) <= 3:
-                if word not in low_words and word.strip() is not '':
-                    low_words.append(word)
-                    low_words_sentences.append(f'[{word}] in [{sentence}]')
-                
-    logger.info(f"\n\nlow_words :\n{nl.join(low_words_sentences)}\n\n-------------------------------------------------\n\n")
-    
-    corrections = { 
-        'هارو': 'ها رو',
-        'هامون': 'هایمان',
-        'ده است': 'ده‌است',
-        ' می ': ' می‌',
-        ' نمی ': ' نمی‌',
-        ' ها ': '‌ها ',
-        ' های ': '‌های ',
-        ' هایمان ': '‌هایمان ',
-        ' ام ': '‌ام ',
-        'ه ی ': 'ه‌ی ',
-        ' ایم ': '‌ایم ',
-        ' مان ': '‌مان ',
-    }
-
-    regex_corrections = {
-        r' های$': '‌های',
-        r'^می ': 'می‌',
-        r'^نمی ': 'نمی‌',
-        r' ها$': '‌ها',
-        r' ام$': '‌ام',
-        r' هایمان$': '‌هایمان',
-        r' ایم$': '‌ایم',
-        r' مان$': '‌مان',
-    }
-
-    for text in informals:
-        for key, value in corrections.items():
-            text = text.replace(key, value)
-        for key,value in regex_corrections.items():
-            text = re.sub(key, value, text)
-        fixed_informals.append(text)
-
-    for text in formals:
-        for key, value in corrections.items():
-            text = text.replace(key, value)
-        for key,value in regex_corrections.items():
-            text = re.sub(key, value, text)
-        fixed_formals.append(text)
-
-    tokens = []
-    for sentence in fixed_informals + fixed_formals:
-        for token in sentence.split(' '):
-            token = token.strip()
-            if token not in tokens:
-                tokens.append(token)
-            for key in corrections:
-                key = key.strip()
-                if key == token:
-                    logger.warn(f'wrong : [{key}] exists in [{sentence}]')
-
-
-    logger.info(f'len(tokens) : {len(tokens)}')
-    logger.info(f'tokens : \n{tokens}')
-    for key in corrections:
-        key = key.strip()
-        if key in tokens:
-            logger.warn(f'wrong : [{key}] exists in tokens')
-                
-    return fixed_informals, fixed_formals
 
 
 '''
@@ -224,73 +151,86 @@ def pad_seq(seq, lookup, maxlen):
 
     
 
-def read_from_excel():
-    logger.info('>> Read from excel')
-    informals, formals = [], []
-    target_informal_word, target_formal_word = '', ''
-
-    # Add sentence equivalents
-    excel_path = os.path.join(SRC_DIR, 'sentence_equivalents.xlsx')
-    sheet_name = 'sentence_equivalents'
-    df = pd.read_excel(excel_path, sheet_name=sheet_name)
-    logger.info(f'Column headings: {df.columns}')
-    counter = 0
-    for i in df.index:
-        target_informal_word = df['عبارت غیر رسمی'][i].__str__().strip()
-        target_formal_word = df['عبارت رسمی'][i].__str__().strip()
-        if target_informal_word == 'nan':
-            break
-        informals.append(target_informal_word)
-        formals.append(target_formal_word)
-        counter += 1 
-    logger.info(f' > {counter} sentences added.')
-
-
-    # Add word equivalents
-    excel_path = os.path.join(SRC_DIR, 'word_equivalents.xlsx')
-    sheet_name = 'word_equivalents'
-    df = pd.read_excel(excel_path, sheet_name='word_equivalents')
-    logger.info(f'Column headings: {df.columns}')
-    counter = 0
-    for i in df.index:
-        target_informal_word = df['کلمه غیر رسمی'][i].__str__().strip()
-        target_formal_word = df['کلمه رسمی'][i].__str__().strip()
-        if target_formal_word == 'nan':
-            break
-        if target_formal_word in formals:
-            logger.info(f'word {target_formal_word} is duplicate in row {i}')
-            continue
-        informals.append(target_informal_word)
-        formals.append(target_formal_word)
-        counter += 1 
-    logger.info(f' > {counter} words added.')
-
-    logger.info(f'len(informals) : {len(informals)}')
-    logger.info(f'len(formals) : {len(formals)}')
-    logger.info(f' > {len(informals)} data (texts + words) exist for training.')
-    return informals, formals
-
-
 def log_sample(index, src, dest):
     logger.info(f'src[{index if index >= 0 else len(src) + index - 1}] : {src[index]}')
     logger.info(f'dest[{index if index >= 0 else len(dest) + index - 1}] : {dest[index]}')
 
+def get_text_normals():
+    informals, formals = [], []
+    informal_text, formal_text = None, None
+    informal_text_normal, formal_text_normal = None, None
+    normalizer = cache.normalizers['bitianist-informal-replacement-normalizer']
+
+    text_normals = TextNormal.objects.filter(
+        is_valid=True
+    )
+
+    for text_normal in text_normals:
+        informal_text = text_normal
+        formal_text = text_normal.text
+
+        informal_text_normal = normalizer.normalize(informal_text)
+        formal_text_normal = normalizer.normalize(formal_text)
+
+        informals.append(informal_text_normal.content)
+        formals.append(formal_text_normal.content)
+
+    logger.info(f'> len(informals) : {len(informals)}')
+    logger.info(f'> len(formals) : {len(formals)}')
+    logger.info(f'> {len(informals)} text normals exist for training.')
+    return informals, formals
+
+def get_word_normals():
+    informals, formals = [], []
+    informal_word, formal_word = None, None
+    informal_word_normal, formal_word_normal = None, None
+    normalizer = cache.normalizers['bitianist-informal-replacement-normalizer']
+
+    word_normals = WordNormal.objects.filter(
+        is_valid=True
+    )
+
+    for word_normal in word_normals:
+        informal_word = word_normal
+        formal_word = word_normal.word
+
+        informal_word_normal = normalizer.normalize(informal_word)
+        formal_word_normal = normalizer.normalize(formal_word)
+
+        informals.append(informal_word_normal.content)
+        formals.append(formal_word_normal.content)
+
+    logger.info(f'> len(informals) : {len(informals)}')
+    logger.info(f'> len(formals) : {len(formals)}')
+    logger.info(f'> {len(informals)} word normals exist for training.')
+    return informals, formals
+
 def get_data():
-    pass
+    logger.info(f'>> Getting data...')
+    informals, formals = [], []
+    
+    text_informals, text_formals = get_text_normals()
+    word_informals, word_formals = get_word_normals()
+
+    informals = text_informals + word_informals
+    formals = text_formals + word_formals
+
+    logger.info(f'> len(informals) : {len(informals)}')
+    logger.info(f'> len(formals) : {len(formals)}')
+    logger.info(f'> {len(informals)} text + word normals exist for training.')
+    return informals, formals
+    
 
 def process_data():
     try:
-        informals, formals = read_from_excel()
+        # informals, formals = read_from_excel()
+        informals, formals = get_data()
 
         log_sample(20, informals, formals)
         log_sample(100, informals, formals)
         log_sample(-20, informals, formals)
         log_sample(-100, informals, formals)
 
-        # filter out unnecessary characters
-        logger.info('>> Filter characters')
-        informals = [ filter_characters(informal, EN_WHITELIST) for informal in informals ]
-        formals = [ filter_characters(formal, EN_WHITELIST) for formal in formals ]
         logger.info(f'informals[36] : {informals[36]}')
         logger.info(f'formals[36] : {formals[36]}')
 
@@ -303,9 +243,9 @@ def process_data():
         log_sample(-30, informals, formals)
         log_sample(-130, informals, formals)
 
-        # data fixing
-        logger.info('>> Fix data')
-        informals, formals = fix_data(informals, formals)
+        # # data fixing
+        # logger.info('>> Fix data')
+        # informals, formals = fix_data(informals, formals)
 
         # convert list of [lines of text] into list of [list of words ]
         logger.info('>> Tokenized (Segment lines into words)')
@@ -335,8 +275,8 @@ def process_data():
 
         logger.info(' >> Save numpy arrays to disk')
         # save them
-        np.save(os.path.join(CURRENT_DIR, 'idx_inf.npy'), idx_inf)
-        np.save(os.path.join(CURRENT_DIR, 'idx_f.npy'), idx_f)
+        np.save(os.path.join(current_dir, 'idx_inf.npy'), idx_inf)
+        np.save(os.path.join(current_dir, 'idx_f.npy'), idx_f)
 
         # let us now save the necessary dictionaries
         metadata = {
@@ -350,29 +290,12 @@ def process_data():
         logger.info(f"len(metadata['w2idx'] : {len(metadata['w2idx'])}")
 
         # write to disk : data control dictionaries
-        with open(os.path.join(CURRENT_DIR, 'metadata.pkl'), 'wb') as f:
+        with open(os.path.join(current_dir, 'metadata.pkl'), 'wb') as f:
             pickle.dump(metadata, f)
 
         return
     except Exception as e:
         logger.error(f'error : {e}')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -459,10 +382,130 @@ def decode(sequence, lookup, separator=''): # 0 used for padding, is ignored
     return separator.join([ lookup[element] for element in sequence if element ])
 
 
+# def init():
+#     global logger
+#     logger = logging.getLogger(__name__)
 
-if __name__ == '__main__':
-    process_data()
 
-def init():
-    global logger
-    logger = logging.getLogger(__name__)
+
+# import re
+
+# def fix_data(informals, formals):
+#     fixed_informals, fixed_formals, low_words, low_words_sentences = [], [], [], []
+#     nl = '\n'
+#     for sentence in informals + formals:
+#         for word in sentence.split(' '):
+#             word = word.strip()
+#             if len(word) <= 3:
+#                 if word not in low_words and word.strip() is not '':
+#                     low_words.append(word)
+#                     low_words_sentences.append(f'[{word}] in [{sentence}]')
+                
+#     logger.info(f"\n\nlow_words :\n{nl.join(low_words_sentences)}\n\n-------------------------------------------------\n\n")
+    
+#     corrections = { 
+#         'هارو': 'ها رو',
+#         'هامون': 'هایمان',
+#         'ده است': 'ده‌است',
+#         ' می ': ' می‌',
+#         ' نمی ': ' نمی‌',
+#         ' ها ': '‌ها ',
+#         ' های ': '‌های ',
+#         ' هایمان ': '‌هایمان ',
+#         ' ام ': '‌ام ',
+#         'ه ی ': 'ه‌ی ',
+#         ' ایم ': '‌ایم ',
+#         ' مان ': '‌مان ',
+#     }
+
+#     regex_corrections = {
+#         r' های$': '‌های',
+#         r'^می ': 'می‌',
+#         r'^نمی ': 'نمی‌',
+#         r' ها$': '‌ها',
+#         r' ام$': '‌ام',
+#         r' هایمان$': '‌هایمان',
+#         r' ایم$': '‌ایم',
+#         r' مان$': '‌مان',
+#     }
+
+#     for text in informals:
+#         for key, value in corrections.items():
+#             text = text.replace(key, value)
+#         for key,value in regex_corrections.items():
+#             text = re.sub(key, value, text)
+#         fixed_informals.append(text)
+
+#     for text in formals:
+#         for key, value in corrections.items():
+#             text = text.replace(key, value)
+#         for key,value in regex_corrections.items():
+#             text = re.sub(key, value, text)
+#         fixed_formals.append(text)
+
+#     tokens = []
+#     for sentence in fixed_informals + fixed_formals:
+#         for token in sentence.split(' '):
+#             token = token.strip()
+#             if token not in tokens:
+#                 tokens.append(token)
+#             for key in corrections:
+#                 key = key.strip()
+#                 if key == token:
+#                     logger.warn(f'wrong : [{key}] exists in [{sentence}]')
+
+
+#     logger.info(f'len(tokens) : {len(tokens)}')
+#     logger.info(f'tokens : \n{tokens}')
+#     for key in corrections:
+#         key = key.strip()
+#         if key in tokens:
+#             logger.warn(f'wrong : [{key}] exists in tokens')
+                
+#     return fixed_informals, fixed_formals
+
+    # def read_from_excel():
+#     logger.info('>> Read from excel')
+#     informals, formals = [], []
+#     target_informal_word, target_formal_word = '', ''
+
+#     # Add sentence equivalents
+#     excel_path = os.path.join(SRC_DIR, 'sentence_equivalents.xlsx')
+#     sheet_name = 'sentence_equivalents'
+#     df = pd.read_excel(excel_path, sheet_name=sheet_name)
+#     logger.info(f'Column headings: {df.columns}')
+#     counter = 0
+#     for i in df.index:
+#         target_informal_word = df['عبارت غیر رسمی'][i].__str__().strip()
+#         target_formal_word = df['عبارت رسمی'][i].__str__().strip()
+#         if target_informal_word == 'nan':
+#             break
+#         informals.append(target_informal_word)
+#         formals.append(target_formal_word)
+#         counter += 1 
+#     logger.info(f' > {counter} sentences added.')
+
+
+#     # Add word equivalents
+#     excel_path = os.path.join(SRC_DIR, 'word_equivalents.xlsx')
+#     sheet_name = 'word_equivalents'
+#     df = pd.read_excel(excel_path, sheet_name='word_equivalents')
+#     logger.info(f'Column headings: {df.columns}')
+#     counter = 0
+#     for i in df.index:
+#         target_informal_word = df['کلمه غیر رسمی'][i].__str__().strip()
+#         target_formal_word = df['کلمه رسمی'][i].__str__().strip()
+#         if target_formal_word == 'nan':
+#             break
+#         if target_formal_word in formals:
+#             logger.info(f'word {target_formal_word} is duplicate in row {i}')
+#             continue
+#         informals.append(target_informal_word)
+#         formals.append(target_formal_word)
+#         counter += 1 
+#     logger.info(f' > {counter} words added.')
+
+#     logger.info(f'len(informals) : {len(informals)}')
+#     logger.info(f'len(formals) : {len(formals)}')
+#     logger.info(f' > {len(informals)} data (texts + words) exist for training.')
+#     return informals, formals

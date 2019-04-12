@@ -9,30 +9,13 @@ class MohaverekhanConfig(AppConfig):
     def ready(self):
         
 
-        from mohaverekhan import utils, cache
-        utils.init()
-
-        from mohaverekhan import models
-        models.base_models.init()
-        
-        
-        models.normalizers.bitianist_informal_refinement_normalizer.model.init()
-        models.normalizers.bitianist_informal_replacement_normalizer.model.init()
-        models.normalizers.bitianist_informal_seq2seq_normalizer.model.init()
-
-        models.taggers.bitianist_informal_nltk_tagger.model.init()
-
+        from mohaverekhan import cache
         cache.init()
 
+        # from mohaverekhan.models.
 
         from mohaverekhan import serializers, views
         serializers.init()
         views.init()
 
-
-
-        # normalizer.init()
-        # sentence_splitter.init()
-        
-        # from mohaverekhan.machine_learning_models.nltk_taggers import model as nltk_taggers_model
-        # nltk_taggers_model.init()
+        # models.normalizers.bitianist_seq2seq_normalizer.model.init()

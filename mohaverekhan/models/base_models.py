@@ -1,5 +1,6 @@
 import uuid
 import json
+import re
 from collections import OrderedDict
 import logging
 from django.contrib.postgres.fields import JSONField, ArrayField
@@ -10,10 +11,6 @@ from django import forms
 # from mohaverekhan.operators.normalizers.seq2seq import model as seq2seq_model
 from colorfield.fields import ColorField
 from django.db.models import Count, Q
-import time
-import datetime
-import random
-import re
 from nltk.metrics import accuracy
 
 from mohaverekhan import cache
@@ -55,6 +52,7 @@ class UTF8JSONField(JSONField):
 # باید فاصله تو توکن ها رو تبدیل به نیم فاصله کنم تو ایمورت داده ها
 
 class Word(models.Model):
+    logger = logging.getLogger(__name__)
     created = models.DateTimeField(auto_now_add=True)
     content = models.CharField(max_length=200)
     normalizers = models.ManyToManyField('Normalizer', through='WordNormal', related_name='words', 
@@ -69,6 +67,7 @@ class Word(models.Model):
         return f'{self.content[:120]}{" ..." if len(self.content) > 120 else ""}'
 
 class WordNormal(models.Model):
+    logger = logging.getLogger(__name__)
     created = models.DateTimeField(auto_now_add=True)
     content = models.CharField(max_length=200)
     normalizer = models.ForeignKey('Normalizer', on_delete=models.CASCADE, related_name='word_normals', related_query_name='word_normal')
@@ -95,6 +94,7 @@ class WordNormal(models.Model):
         return f'{self.content[:120]}{" ..." if len(self.content) > 120 else ""}'
 
 class Text(models.Model):
+    logger = logging.getLogger(__name__)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
@@ -119,6 +119,7 @@ class Text(models.Model):
         return self.text_normals.count()
 
 class TextNormal(Text):
+    logger = logging.getLogger(__name__)
     normalizer = models.ForeignKey('Normalizer', on_delete=models.CASCADE, related_name='text_normals', related_query_name='text_normal')
     text = models.ForeignKey('Text', on_delete=models.CASCADE, related_name='text_normals', related_query_name='text_normal')
     is_valid = models.BooleanField(default=None, blank=True, null=True)
@@ -148,6 +149,7 @@ class TextNormal(Text):
         super(TextNormal, self).save(*args, **kwargs)
 
 class TextTag(models.Model):
+    logger = logging.getLogger(__name__)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created = models.DateTimeField(auto_now_add=True)
     tagger = models.ForeignKey('Tagger', on_delete=models.CASCADE, related_name='text_tags', related_query_name='text_tag')
@@ -226,8 +228,8 @@ class TextTag(models.Model):
 
                 if self.is_valid:
                     referenced_token, created = Token.objects.get_or_create(content=tagged_token['token'])
-                    # logger.info(f'> referenced_token : {referenced_token.id} {referenced_token}')
-                    # logger.info(f'> referenced_tag : {referenced_tag.id} {referenced_tag}')
+                    # self.logger.info(f'> referenced_token : {referenced_token.id} {referenced_token}')
+                    # self.logger.info(f'> referenced_tag : {referenced_tag.id} {referenced_tag}')
                     referenced_token_tag, created = TokenTag.objects.get_or_create(
                         token=referenced_token,
                         tag=referenced_tag
@@ -263,7 +265,7 @@ class TextTag(models.Model):
         true_tags_string = self.tags_string.replace('\n', ' ').strip().split()
         asses = zip(predicted_tags_string, true_tags_string)
         newline = '\n'
-        logger.info(f'asses : \n{newline.join([ass.__str__() for ass in asses])}\n')
+        self.logger.info(f'asses : \n{newline.join([ass.__str__() for ass in asses])}\n')
         predicted_text_tag.accuracy = accuracy(true_tags_string, predicted_tags_string) * 100
         predicted_text_tag.true_text_tag = self
         predicted_text_tag.save()
@@ -286,6 +288,7 @@ class TextTag(models.Model):
 #     return {'name':'unk', 'persian':'نامشخص', 'color':'#FFFFFF', 'examples':[]}
 
 class TagSet(models.Model):
+    logger = logging.getLogger(__name__)
     created = models.DateTimeField(auto_now_add=True)
     name = models.SlugField(default='unknown-tag-set', unique=True)
     last_update = models.DateTimeField(auto_now=True)
@@ -323,6 +326,7 @@ class TagSet(models.Model):
         ordering = ('-created',)
 
 class Token(models.Model):
+    logger = logging.getLogger(__name__)
     created = models.DateTimeField(auto_now_add=True)
     content = models.CharField(max_length=200, unique=True)
     tags = models.ManyToManyField('Tag', through='TokenTag', related_name='tokens', 
@@ -341,6 +345,7 @@ class Token(models.Model):
         return self.content
 
 class Tag(models.Model):
+    logger = logging.getLogger(__name__)
     created = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=15)
     persian = models.CharField(max_length=30)
@@ -364,7 +369,7 @@ class Tag(models.Model):
     #     # text_tag_tokens_list = TextTag.objects.filter(tagger__tag_set=self.tag_set, is_valid=True, \
     #     #     tokens__contains=search_token).values_list('tagged_tokens', flat=True)
 
-    #     # logger.debug(f'> {self.name} text_tag_tokens_list.count() : {text_tag_tokens_list.count()} {type(text_tag_tokens_list)}')
+    #     # self.logger.debug(f'> {self.name} text_tag_tokens_list.count() : {text_tag_tokens_list.count()} {type(text_tag_tokens_list)}')
 
     #     # if not text_tag_tokens_list or text_tag_tokens_list.count() == 0:
     #     #     self.examples = list(examples)
@@ -373,9 +378,9 @@ class Tag(models.Model):
         
     #     # text_tag_tokens_list = random.sample(text_tag_tokens_list, min(len(text_tag_tokens_list), 40))
         
-    #     logger.debug(f'> {self.name} len(text_tag_tokens_list) : {len(text_tag_tokens_list)} {type(text_tag_tokens_list)}')
+    #     self.logger.debug(f'> {self.name} len(text_tag_tokens_list) : {len(text_tag_tokens_list)} {type(text_tag_tokens_list)}')
     #     for text_tag_tagged_tokens in text_tag_tagged_tokens_list:
-    #         # logger.debug(f'> text_tag_tagged_tokens[0] != self.tag_set.name => {text_tag_tagged_tokens[0]} != {self.tag_set.name} => {text_tag_tagged_tokens[0] != self.tag_set.name}')
+    #         # self.logger.debug(f'> text_tag_tagged_tokens[0] != self.tag_set.name => {text_tag_tagged_tokens[0]} != {self.tag_set.name} => {text_tag_tagged_tokens[0] != self.tag_set.name}')
     #         if text_tag_tagged_tokens[0] != self.tag_set.name:
     #             continue
     #         for text_tag_tagged_token in text_tag_tagged_tokens[1]:
@@ -398,6 +403,7 @@ class Tag(models.Model):
     #         self.save(update_fields=['examples']) 
 
 class TokenTag(models.Model):
+    logger = logging.getLogger(__name__)
     created = models.DateTimeField(auto_now_add=True)
     token = models.ForeignKey('Token', on_delete=models.CASCADE, related_name='token_tags', related_query_name='token_tag')
     tag = models.ForeignKey('Tag', on_delete=models.CASCADE, related_name='token_tags', related_query_name='token_tag')
@@ -427,6 +433,7 @@ class TokenTag(models.Model):
 
 
 class Validator(models.Model):
+    logger = logging.getLogger(__name__)
     name = models.SlugField(default='unknown-validator', unique=True)
     show_name = models.CharField(max_length=200, default='اعتبارسنج نامشخص')
     created = models.DateTimeField(auto_now_add=True)
@@ -458,6 +465,7 @@ class Validator(models.Model):
 
 
 class Normalizer(models.Model):
+    logger = logging.getLogger(__name__)
     name = models.SlugField(default='unknown-normalizer', unique=True)
     show_name = models.CharField(max_length=200, default='نرمال‌کننده نامشخص')
     created = models.DateTimeField(auto_now_add=True)
@@ -500,10 +508,11 @@ class Normalizer(models.Model):
             normalizer=self, text=text,
             defaults={'content':text_normal_content},
         )
-        logger.debug(f"> created : {created}")
+        self.logger.debug(f"> created : {created}")
         return text_normal
 
 class Tagger(models.Model):
+    logger = logging.getLogger(__name__)
     name = models.SlugField(default='unknown-tagger', unique=True)
     show_name = models.CharField(max_length=200, default='برچسب‌زن نامشخص')
     created = models.DateTimeField(auto_now_add=True)
@@ -533,7 +542,7 @@ class Tagger(models.Model):
     def train(self):
         pass
         # num_epochs = 150
-        # logger.info(f'Model is going to train for {num_epochs} epochs.')
+        # self.logger.info(f'Model is going to train for {num_epochs} epochs.')
         # seq2seq_model.train(False, num_epochs=num_epochs)
 
     def tag(self, text):
@@ -542,10 +551,10 @@ class Tagger(models.Model):
 
     def infpost(self):
         try:
-            logger.info(f'> Informal : {self.content}')
+            self.logger.info(f'> Informal : {self.content}')
             sentence_contents, token_tags = nltk_taggers_model.tag_text(self.content)
-            logger.info(f'> sentence_contents : {sentence_contents}')
-            logger.info(f'> token_tags : {token_tags}')
+            self.logger.info(f'> sentence_contents : {sentence_contents}')
+            self.logger.info(f'> token_tags : {token_tags}')
             sentences, tokens = [], []
             current_sentence, current_tag, current_token = None, None, None
             for i, sentence_content in enumerate(sentence_contents):
@@ -558,27 +567,27 @@ class Tagger(models.Model):
                     print(f'> token_tag[0] : {token_tag[0]}')
                     print(f'> token_tag[1] : {token_tag[1]}')
                     current_tag = Tag.objects.get(name=token_tag[1])
-                    logger.info(f'> current_tag : {current_tag}')
+                    self.logger.info(f'> current_tag : {current_tag}')
                     current_token = Token(content=token_tag[0], tag=current_tag)
                     current_token.save()
                     tokens.append(current_token)
-                    logger.info(f'> current_token : {current_token}')
+                    self.logger.info(f'> current_token : {current_token}')
 
                 current_sentence.tokens = tokens
                 current_sentence.save()
-                logger.info(f'> current_sentence.tokens : {current_sentence.tokens}')
+                self.logger.info(f'> current_sentence.tokens : {current_sentence.tokens}')
                 sentences.append(current_sentence)
 
             self.sentences = sentences
-            logger.info(f'> self.sentences : {self.sentences}')
+            self.logger.info(f'> self.sentences : {self.sentences}')
             Text.objects.update_or_create(
                 content=self.content, 
                 defaults={'sentences': self.sentences},
                 )
             # self.save()
-            logger.info(f'> Text : {self}')
+            self.logger.info(f'> Text : {self}')
         except Exception as ex:
-            logger.exception(ex)
+            self.logger.exception(ex)
 
 
 
@@ -636,37 +645,32 @@ class Tagger(models.Model):
     #         '''
 
 
-
-def init():
-    global logger
-    logger = logging.getLogger(__name__)
-
     # text_tags = TextTag.objects.all()
     # for text_tag in text_tags:
-    #     logger.info(f'> Saving text_tag {text_tag.id}')
+    #     self.logger.info(f'> Saving text_tag {text_tag.id}')
     #     text_tag.save()
 
 
-    # logger.info(f'> count of normal text list : {TextNormal.objects.count()}')
-    # logger.info(f'> count of text list : {Text.objects.count()}')
+    # self.logger.info(f'> count of normal text list : {TextNormal.objects.count()}')
+    # self.logger.info(f'> count of text list : {Text.objects.count()}')
 
     # same_text_count = TextNormal.objects.order_by('text_id').distinct('text').count()
-    # logger.info(f'> same_text_count : {same_text_count}')
-    # logger.info(f'> same_text_count : {same_text_count.count()}')
+    # self.logger.info(f'> same_text_count : {same_text_count}')
+    # self.logger.info(f'> same_text_count : {same_text_count.count()}')
 
     # same_text = Text.objects.values('text_normal')
     # same_text = same_text.annotate(same_text_count=Count('text_normal'))
     # same_text = Text.objects.annotate(Count('text_normal'))
     # same_text = same_text.filter(text_normal__count__gt=1)
-    # logger.info(f'> same_text : {same_text.values("id", "content")}')
+    # self.logger.info(f'> same_text : {same_text.values("id", "content")}')
     
     # empty_text = TextNormal.objects.filter(text__exact=None)
-    # logger.info(f'> empty_text : {empty_text}')
+    # self.logger.info(f'> empty_text : {empty_text}')
     
     # text = Text.objects.get(id='eb3bc179-7a8c-4a5e-b6bc-9556983fd45c')
-    # logger.info(f'> text : {text}') 
+    # self.logger.info(f'> text : {text}') 
     # for sentence in text.sentences.all():
-    #     logger.info(f'> sentence : {sentence.content}') 
+    #     self.logger.info(f'> sentence : {sentence.content}') 
 
 
 
