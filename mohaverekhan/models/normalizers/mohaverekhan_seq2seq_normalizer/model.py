@@ -6,7 +6,7 @@ References
 ----------
 http://suriyadeepan.github.io/2016-12-31-practical-seq2seq/
 """
-import time
+import time 
 import logging
 import os
 
@@ -25,7 +25,7 @@ from mohaverekhan.models import Normalizer, Text, TextNormal
 from mohaverekhan import cache
 
 
-class BitianistSeq2SeqNormalizer(Normalizer):
+class MohaverekhanSeq2SeqNormalizer(Normalizer):
 
     class Meta:
         proxy = True
@@ -37,70 +37,11 @@ class BitianistSeq2SeqNormalizer(Normalizer):
     model_path = os.path.join(current_dir, 'model.npz')
 
     sess_config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
-    # if os.path.isfile(model_path):
-        # train()
-
-    """
-    Creates the LSTM Model
-    """
-    def create_model(self, encode_seqs, decode_seqs, src_vocab_size, emb_dim, is_train=True, reuse=False):
-        with tf.variable_scope("model", reuse=reuse):
-            # for chatbot, you can use the same embedding layer,
-            # for translation, you may want to use 2 seperated embedding layers
-            with tf.variable_scope("embedding") as vs:
-                net_encode = EmbeddingInputlayer(
-                    inputs = encode_seqs,
-                    
-                    vocabulary_size = src_vocab_size,
-                    embedding_size = emb_dim,
-                    name = 'seq_embedding')
-                vs.reuse_variables()
-                net_decode = EmbeddingInputlayer(
-                    inputs = decode_seqs,
-                    vocabulary_size = src_vocab_size,
-                    embedding_size = emb_dim,
-                    name = 'seq_embedding')
-                
-            x = retrieve_seq_length_op2(encode_seqs)
-            y = retrieve_seq_length_op2(decode_seqs)
-            self.logger.info(f'x : {x}')
-            self.logger.info(f'y : {y}')
-            net_rnn = Seq2Seq(net_encode, net_decode,
-                    cell_fn = tf.nn.rnn_cell.LSTMCell,
-                    n_hidden = emb_dim,
-                    # initializer = tf.random_uniform_initializer(0, 1),
-                    initializer = tf.random_uniform_initializer(-0.1, 0.1),
-                    encode_sequence_length = retrieve_seq_length_op2(encode_seqs),
-                    decode_sequence_length = retrieve_seq_length_op2(decode_seqs),
-                    initial_state_encode = None,
-                    dropout = (0.5 if is_train else None),
-                    n_layer = 3,
-                    return_seq_2d = True,
-                    name = 'seq2seq')
-
-            net_out = DenseLayer(net_rnn, n_units=src_vocab_size, act=tf.identity, name='output')
-        return net_out, net_rnn
-
-    """
-    Initial Setup
-    """
-    def initial_setup(self):
-        data_corpus_path = f'{self.current_dir}/'
-        self.logger.info(f'data_corpus_path : {data_corpus_path}')
-        metadata, idx_inf, idx_f = data.load_data(PATH=data_corpus_path)
-        (trainX, trainY), (testX, testY), (validX, validY) = data.split_dataset(idx_inf, idx_f)
-        trainX = tl.prepro.remove_pad_sequences(trainX.tolist())
-        trainY = tl.prepro.remove_pad_sequences(trainY.tolist())
-        testX = tl.prepro.remove_pad_sequences(testX.tolist())
-        testY = tl.prepro.remove_pad_sequences(testY.tolist())
-        validX = tl.prepro.remove_pad_sequences(validX.tolist())
-        validY = tl.prepro.remove_pad_sequences(validY.tolist())
-        self.logger.info('initial setup completed.')
-        return metadata, trainX, trainY, testX, testY, validX, validY
-
-
-    def process_data(self):
-        data.process_data()
+    def __init__(self, *args, **kwargs):
+        super(MohaverekhanSeq2SeqNormalizer, self).__init__(*args, **kwargs)
+        # if os.path.isfile(self.model_path):
+        #     self.train(True)
+    
 
     """
     Training model
@@ -111,8 +52,7 @@ class BitianistSeq2SeqNormalizer(Normalizer):
     num_epochs : Number of epochs for training
     learning_rate : Learning rate to use when training model
     """
-    def train(self, inference_mode=True, batch_size=256, num_epochs=60, learning_rate=0.001):
-        global inference, cleanup
+    def train(self, inference_mode=False, batch_size=128, num_epochs=15, learning_rate=0.001):
         if self.cleanup is not None:
             self.cleanup()
 
@@ -239,7 +179,7 @@ class BitianistSeq2SeqNormalizer(Normalizer):
             w = idx2word[w_id]
             # Decode and feed state iteratively
             sentence = [w]
-            for _ in range(len(seed_id) + 30): # max sentence length
+            for _ in range(len(seed_id) + 10): # max sentence length
                 o, state = sess.run([y, net_rnn.final_state_decode],
                                 {net_rnn.initial_state_decode: state,
                                 decode_seqs2: [[w_id]]})
@@ -266,7 +206,11 @@ class BitianistSeq2SeqNormalizer(Normalizer):
         seeds = ["بریم خونه",
                     "اونا میان",
                     "غذاش خیلی عالیه",
-                    "نون"]
+                    "نون",
+                    "بازم ازش خرید میکنم، بهتریییییییییییییییییین منطقست.",
+                    "چرا جدیدا اخر همه فیلما بی نتیجه تموم میشه الان تهش چی شد",
+                    "اين دستگاه جزء اولين و شايد تنها سريه که تا الان از نسل چهارم سي پي يوهاي اينتل استفاده ميکنه"
+                    ]
         for epoch in range(num_epochs):
             trainX, trainY = shuffle(trainX, trainY, random_state=0)
             total_loss, n_iter = 0, 0
@@ -298,10 +242,11 @@ class BitianistSeq2SeqNormalizer(Normalizer):
             # inference after every epoch
             for seed in seeds:
                 self.logger.info(f'Query > {seed}')
-                for _ in range(5):
-                    sentence = self.inference(seed)
-                    self.logger.info(f' >  {sentence}')
+                # for _ in range(3):
+                sentence = self.inference(seed)
+                self.logger.info(f' >  {sentence}')
             
+            self.logger.info(f'> seq2seq model saved.')
             # saving the model
             tl.files.save_npz(net.all_params, name=self.model_path, sess=sess)
 
@@ -311,10 +256,10 @@ class BitianistSeq2SeqNormalizer(Normalizer):
 
     def normalize(self, text_content):
         beg_ts = time.time()
-        self.logger.info(f'>>> bitianist-seq2seq-normalizer : \n{text_content}')
-        text_content = cache.normalizers['bitianist-replacement-normalizer']\
+        self.logger.info(f'>>> mohaverekhan-seq2seq-normalizer : \n{text_content}')
+        text_content = cache.normalizers['mohaverekhan-replacement-normalizer']\
                             .normalize(text_content)
-        self.logger.info(f'>> bitianist-replacement-normalizer : \n{text_content}')
+        self.logger.info(f'>> mohaverekhan-replacement-normalizer : \n{text_content}')
 
         text_content = self.inference(text_content)    
         end_ts = time.time()
@@ -322,4 +267,66 @@ class BitianistSeq2SeqNormalizer(Normalizer):
         self.logger.info(f'> Result : \n{text_content}')
         return text_content
         
-    
+    """
+    Creates the LSTM Model
+    """
+    def create_model(self, encode_seqs, decode_seqs, src_vocab_size, emb_dim, is_train=True, reuse=False):
+        with tf.variable_scope("model", reuse=reuse):
+            # for chatbot, you can use the same embedding layer,
+            # for translation, you may want to use 2 seperated embedding layers
+            with tf.variable_scope("embedding") as vs:
+                net_encode = EmbeddingInputlayer(
+                    inputs = encode_seqs,
+                    
+                    vocabulary_size = src_vocab_size,
+                    embedding_size = emb_dim,
+                    name = 'seq_embedding')
+                vs.reuse_variables()
+                net_decode = EmbeddingInputlayer(
+                    inputs = decode_seqs,
+                    vocabulary_size = src_vocab_size,
+                    embedding_size = emb_dim,
+                    name = 'seq_embedding')
+                
+            x = retrieve_seq_length_op2(encode_seqs)
+            y = retrieve_seq_length_op2(decode_seqs)
+            self.logger.info(f'x : {x}')
+            self.logger.info(f'y : {y}')
+            net_rnn = Seq2Seq(net_encode, net_decode,
+                    cell_fn = tf.nn.rnn_cell.LSTMCell,
+                    n_hidden = emb_dim,
+                    # initializer = tf.random_uniform_initializer(0, 1),
+                    initializer = tf.random_uniform_initializer(-0.1, 0.1),
+                    encode_sequence_length = retrieve_seq_length_op2(encode_seqs),
+                    decode_sequence_length = retrieve_seq_length_op2(decode_seqs),
+                    initial_state_encode = None,
+                    dropout = (0.5 if is_train else None),
+                    n_layer = 3,
+                    return_seq_2d = True,
+                    name = 'seq2seq')
+
+            net_out = DenseLayer(net_rnn, n_units=src_vocab_size, act=tf.identity, name='output')
+        return net_out, net_rnn
+
+    """
+    Initial Setup
+    """
+    def initial_setup(self):
+        data_corpus_path = f'{self.current_dir}/'
+        self.logger.info(f'data_corpus_path : {data_corpus_path}')
+        metadata, idx_inf, idx_f = data.load_data(PATH=data_corpus_path)
+        (trainX, trainY), (testX, testY), (validX, validY) = data.split_dataset(idx_inf, idx_f)
+        trainX = tl.prepro.remove_pad_sequences(trainX.tolist())
+        trainY = tl.prepro.remove_pad_sequences(trainY.tolist())
+        testX = tl.prepro.remove_pad_sequences(testX.tolist())
+        testY = tl.prepro.remove_pad_sequences(testY.tolist())
+        validX = tl.prepro.remove_pad_sequences(validX.tolist())
+        validY = tl.prepro.remove_pad_sequences(validY.tolist())
+        self.logger.info('initial setup completed.')
+        return metadata, trainX, trainY, testX, testY, validX, validY
+
+
+    def process_data(self):
+        data.process_data()
+
+ 

@@ -116,15 +116,15 @@ class TokenTagViewSet(viewsets.ModelViewSet):
         if token_tag:
             token_tag.number_of_repetitions=token_tag_update[3]
             token_tag.save(update_fields=['number_of_repetitions']) 
-        else:
-            token, created = Token.objects.get_or_create(content=token_tag_update[0])
-            tag = Tag.objects.get(name=token_tag_update[1], tag_set__name=token_tag_update[2])
+        # else:
+        #     token, created = Token.objects.get_or_create(content=token_tag_update[0])
+        #     tag = Tag.objects.get(name=token_tag_update[1], tag_set__name=token_tag_update[2])
             
-            TokenTag.objects.create(
-                token=token,
-                tag=tag,
-                number_of_repetitions=token_tag_update[3]
-            )
+        #     TokenTag.objects.create(
+        #         token=token,
+        #         tag=tag,
+        #         number_of_repetitions=token_tag_update[3]
+        #     )
         
 
 
@@ -139,6 +139,8 @@ class TokenTagViewSet(viewsets.ModelViewSet):
         self.i = 0
         token_tag_update_list = []
         for tag_set_name, token_tags in cache.tag_set_token_tags.items():
+            if tag_set_name == 'bijankhan-tag-set':
+                continue
             logger.info(f'>>> Updating tag set {tag_set_name}')
             for token_content, tags in token_tags.items():
                 for tag_name, tag_count in tags.items():
@@ -229,6 +231,20 @@ class NormalizerViewSet(viewsets.ModelViewSet):
     filterset_fields = ('is_automatic',)
 
     # , renderer_classes=[renderers.JSONRenderer,]
+
+    @action(detail=True, methods=['get',], url_name='process-data', url_path='process-data')
+    @csrf_exempt
+    def process_data(self, request, name=None):
+        normalizer = cache.normalizers.get(name, None)
+        if not normalizer:
+            raise NotFound(detail="Error 404, normalizer not found", code=404)
+        normalizer.model_details['state'] = 'process_data'
+        normalizer.save(update_fields=['model_details'])
+        thread = threading.Thread(target=normalizer.process_data)
+        logger.debug(f'> Start process_data normalizer {name} in parallel ...')
+        thread.start()
+        serializer = NormalizerSerializer(normalizer)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['get',], url_name='train')
     @csrf_exempt

@@ -1,0 +1,91 @@
+TEMPLATE STATISTICS (TRAIN)  11 templates, 45 rules)
+TRAIN (1695094 tokens) initial 23154 0.9863 final: 18649 0.9890 
+#ID | Score (train) |  #Rules     | Template
+--------------------------------------------
+022 |  2070   0.459 |   8   0.178 | Template(Pos([1]))
+012 |  1161   0.258 |  16   0.356 | Template(Word([0]),Pos([1]))
+014 |   362   0.080 |   5   0.111 | Template(Word([0]))
+003 |   299   0.066 |   7   0.156 | Template(Word([0]),Word([1]))
+017 |   224   0.050 |   1   0.022 | Template(Word([1]))
+002 |   140   0.031 |   3   0.067 | Template(Word([0]),Word([-1]))
+004 |    98   0.022 |   1   0.022 | Template(Word([0]),Word([2]))
+031 |    40   0.009 |   1   0.022 | Template(Pos([1]),Word([0]),Word([-1]))
+013 |    40   0.009 |   1   0.022 | Template(Word([0]),Pos([-1]))
+006 |    38   0.008 |   1   0.022 | Template(Word([1, 2]))
+010 |    33   0.007 |   1   0.022 | Template(Word([0]),Pos([2]))
+
+UNUSED TEMPLATES (26)
+000 Template(Word([0]),Word([1]),Word([2]))
+001 Template(Word([-1]),Word([0]),Word([1]))
+005 Template(Word([0]),Word([-2]))
+007 Template(Word([-2, -1]))
+008 Template(Word([1, 2, 3]))
+009 Template(Word([-3, -2, -1]))
+011 Template(Word([0]),Pos([-2]))
+015 Template(Word([-2]))
+016 Template(Word([2]))
+018 Template(Word([-1]))
+019 Template(Pos([-1]),Pos([1]))
+020 Template(Pos([1]),Pos([2]))
+021 Template(Pos([-1]),Pos([-2]))
+023 Template(Pos([-1]))
+024 Template(Pos([-2]))
+025 Template(Pos([2]))
+026 Template(Pos([1, 2, 3]))
+027 Template(Pos([1, 2]))
+028 Template(Pos([-3, -2, -1]))
+029 Template(Pos([-2, -1]))
+030 Template(Pos([1]),Word([0]),Word([1]))
+032 Template(Pos([-1]),Word([-1]),Word([0]))
+033 Template(Pos([-1]),Word([0]),Word([1]))
+034 Template(Pos([-2]),Pos([-1]))
+035 Template(Pos([1]),Pos([2]))
+036 Template(Pos([1]),Pos([2]),Word([1]))
+
+[ INFO ][ 2019-04-14 22:15:23,429 ][ 26786 139686772451072 ][ model 103 ][ >brill_tagger.rules() : 
+T->Z if Pos:V@[1]
+T->Z if Pos:J@[1]
+T->Z if Word:را@[1]
+Z->D if Word:چه@[0]
+E->N if Word:وارد@[0] & Pos:V@[1]
+T->Z if Word:این@[0] & Pos:E@[1]
+T->Z if Pos:O@[1]
+N->L if Word:تن@[0] & Pos:N@[1]
+Z->T if Word:آن@[0] & Word:را@[2]
+E->N if Word:روی@[0] & Pos:V@[1]
+L->Z if Word:چنین@[0] & Pos:V@[1]
+T->Z if Word:همه@[0] & Pos:E@[1]
+T->U if Word:یکی@[0] & Pos:N@[1]
+Z->U if Word:یکی@[0]
+T->Z if Pos:A@[1]
+T->U if Word:یکی@[0] & Pos:Z@[1]
+N->V if Word:داد@[0] & Word:روی@[-1]
+E->N if Word:روی@[0] & Word:داد@[1]
+N->E if Word:وارد@[0] & Pos:N@[1]
+N->L if Word:کیلوگرم@[0] & Pos:N@[1]
+L->N if Pos:J@[1]
+Z->T if Word:این@[0] & Pos:N@[1]
+Z->T if Word:آن@[0] & Word:زمان@[1]
+V->N if Word:ساخته@[0] & Pos:N@[1]
+Z->T if Word:آن@[0] & Word:کشور@[1]
+L->N if Pos:E@[1]
+T->U if Word:یکی@[0] & Pos:U@[1]
+N->J if Word:که@[0]
+J->N if Word:که@[0] & Word:هر@[-1]
+V->N if Word:پرداخت@[0] & Pos:V@[1]
+N->C if Word:ست@[0] & Pos:T@[-1]
+T->Z if Pos:C@[1]
+Z->T if Pos:N@[1] & Word:آن@[0] & Word:که@[-1]
+Z->T if Word:بزرگوار@[1,2]
+Z->T if Word:آن@[0] & Word:حضرت@[1]
+Z->A if Word:تمام@[0]
+Z->T if Word:آن@[0] & Word:جا@[1]
+Z->T if Word:هر@[0]
+N->C if Word:دین@[0] & Word:ب@[-1]
+N->C if Word:ب@[0] & Pos:C@[1]
+T->Z if Pos:J@[1]
+L->N if Word:تن@[0] & Pos:V@[2]
+A->T if Word:بسیاری@[0] & Word:از@[1]
+T->J if Word:چه@[0] & Pos:E@[1]
+Z->T if Word:آن@[0] & Word:روز@[1] ]
+[ INFO ][ 2019-04-14 22:15:26,238 ][ 26786 139686772451072 ][ model 107 ][ >> Main tagger evaluate accuracy : 0.9785209015966807 ]

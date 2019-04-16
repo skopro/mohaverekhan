@@ -11,7 +11,7 @@ from mohaverekhan.models import Tagger, Text, TextTag, TagSet
 from mohaverekhan import cache
 
 
-class BitianistRefinementTagger(Tagger):
+class MohaverekhanCorrectionTagger(Tagger):
     
     class Meta:
         proxy = True
@@ -25,17 +25,24 @@ class BitianistRefinementTagger(Tagger):
     Email => M
     Tag => G
     """
+    
     word_patterns = [
-        (r'^\\n$', 'O'), #bitianist
+        (rf'^بی[{cache.persians}]+$|^بی‌[{cache.persians}]+$', 'A'),
+        (rf'^.*(می{cache.nj})|(نمی).*$', 'V'), #می‌دونه نمیتونه
+        (rf'^.*(ون).*$', 'N'), #میدون میدونه میتونه
+        (rf'^.*(یم)|(ید)|(ند)$', 'V'),
+        (rf'^.*(می)|(خواه).*$', 'V'), #می
+        (r'^\\n$', 'O'), #mohaverekhan
         (rf'^({cache.num})|(cache.numf)$', 'U'),
         (rf'^[{cache.punctuations}{cache.typographies}]+$', 'O'),
-        (rf'^بی‌[{cache.persians}]+$|^بی [{cache.persians}]+$', 'A'),
+        # (rf'^.*(ی)$', 'A'), # اقتصادی آمریکایی اجرایی
+        # (rf'^.*(ه)$', 'A'), # خوبه عالیه خارجه
         (rf'^[{cache.emojies}]+$', 'X'), #hazm emoticons - symbols & pictographs - pushpin & round pushpin
         (rf'^({cache.id})$', 'S'), #hazm
         (rf'^({cache.link})$', 'K'), #hazm forgot "="? lol
         (rf'^({cache.email})$', 'M'), #hazm
         (rf'^({cache.tag})$', 'G'), #hazm
-        (r'^[a-zA-Z]+$', 'R'), #bitianist
+        # (r'^[a-zA-Z]+$', 'R'), #mohaverekhan
     ]
 
     current_path = os.path.abspath(os.path.dirname(__file__))
@@ -44,10 +51,10 @@ class BitianistRefinementTagger(Tagger):
     main_tagger = None
     accuracy = 0
     train_data, test_data = [], []
-    bitianist_text_tag_index = -1
+    mohaverekhan_text_tag_index = -1
 
     def __init__(self, *args, **kwargs):
-        super(BitianistRefinementTagger, self).__init__(*args, **kwargs)
+        super(MohaverekhanCorrectionTagger, self).__init__(*args, **kwargs)
         if os.path.isfile(self.main_tagger_path):
             self.load_trained_main_tagger()
 
@@ -77,13 +84,18 @@ class BitianistRefinementTagger(Tagger):
         default_tagger = nltk.DefaultTagger('N')
         # default_tagger = nltk.DefaultTagger('R')
         suffix_tagger = nltk.AffixTagger(self.train_data, backoff=default_tagger, affix_length=-3, min_stem_length=2, verbose=True)
-        self.logger.info(f'> suffix_tagger : \n{suffix_tagger.unicode_repr()}\n')
+        # suffix_tagger = nltk.AffixTagger(self.train_data, affix_length=-3, min_stem_length=2, verbose=True)
+        # self.logger.info(f'> suffix_tagger : \n{suffix_tagger.unicode_repr()}\n')
         affix_tagger = nltk.AffixTagger(self.train_data, backoff=suffix_tagger, affix_length=5, min_stem_length=1, verbose=True)
+        # affix_tagger = nltk.AffixTagger(self.train_data, affix_length=5, min_stem_length=1, verbose=True)
         regexp_tagger = nltk.RegexpTagger(self.word_patterns, backoff=affix_tagger)
+        # regexp_tagger = nltk.RegexpTagger(self.word_patterns)
         unigram_tagger = nltk.UnigramTagger(self.train_data, backoff=regexp_tagger, verbose=True)
+        # unigram_tagger = nltk.UnigramTagger(self.train_data, verbose=True)
         bigram_tagger = nltk.BigramTagger(self.train_data, backoff=unigram_tagger, verbose=True)
+        # bigram_tagger = nltk.BigramTagger(self.train_data, verbose=True)
         trigram_tagger = nltk.TrigramTagger(self.train_data, backoff=bigram_tagger, verbose=True)
-        # main_tagger = trigram_tagger
+        # self.main_tagger = trigram_tagger
 
         templates = brill.fntbl37()
         brill_trainer_result = brill_trainer.BrillTaggerTrainer( 
@@ -113,34 +125,34 @@ class BitianistRefinementTagger(Tagger):
             self.logger.error(f'> text_tokens_list count == 0 !!!')
             return
 
-        self.normalizer = cache.normalizers['bitianist-basic-normalizer']
+        self.normalizer = cache.normalizers['mohaverekhan-basic-normalizer']
         tagged_sentences = []
         tagged_sentence = []
         token_content = ''
         specials = r'شلوغی فرهنگ‌سرا آیدی انقدر اوورد اووردن منو میدون خونه جوون زمونه نون مسلمون کتابخونه دندون نشون پاستا پنه تاچ تنظیمات می‌تونید سی‌پی‌یو‌ سی‌پی‌یو‌‌ها گرافیک اومدن می‌خان واس ٪ kb m kg g cm mm'.split()
-        self.bitianist_text_tag_index = -1
+        self.mohaverekhan_text_tag_index = -1
         for index, text_tokens in enumerate(text_tokens_list):
             for token in text_tokens:
                 token_content = self.normalizer.normalize(token['token']).replace(' ', '‌')
                 if token_content == '٪':
                     if token['tag']['name'] == 'O':
-                        self.bitianist_text_tag_index = index
+                        self.mohaverekhan_text_tag_index = index
                     token['tag']['name'] = 'O'
 
                 if token_content in ('.', '…'):
                     token['tag']['name'] = 'O'
                     
                 tagged_sentence.append((token_content, token['tag']['name']))
-                # if self.bitianist_text_tag_index == -1 and token_content in specials:
+                # if self.mohaverekhan_text_tag_index == -1 and token_content in specials:
                 #     self.logger.info(f"> He see that {token_content} {token['tag']['name']}")
-                #     self.bitianist_text_tag_index = 
+                #     self.mohaverekhan_text_tag_index = 
                 
 
                 if token_content in ('.', '!', '?', '؟'):
                     tagged_sentences.append(tagged_sentence)
                     tagged_sentence = []
 
-        self.logger.info(f'> self.bitianist_text_tag_index : {self.bitianist_text_tag_index}')
+        self.logger.info(f'> self.mohaverekhan_text_tag_index : {self.mohaverekhan_text_tag_index}')
         self.logger.info(f'> tagged_sentences[0] : \n\n{tagged_sentences[0]}\n\n')
         self.logger.info(f'> tagged_sentences[-1] : \n\n{tagged_sentences[-1]}\n\n')
         self.separate_train_and_test_data(tagged_sentences)
@@ -153,11 +165,11 @@ class BitianistRefinementTagger(Tagger):
     
     def tag(self, text_content):
         beg_ts = time.time()
-        self.logger.info(f'>>> bitianist_refinement_tagger : \n{text_content}')
+        self.logger.info(f'>>> mohaverekhan_correction_tagger : \n{text_content}')
 
-        text_content = cache.normalizers['bitianist-refinement-normalizer']\
+        text_content = cache.normalizers['mohaverekhan-correction-normalizer']\
                         .normalize(text_content)
-        self.logger.info(f'>>> bitianist_refinement_normalizer: \n{text_content}')
+        self.logger.info(f'>>> mohaverekhan_correction_normalizer: \n{text_content}')
 
         token_contents = text_content.replace('\n', ' \\n ').split(' ')
         if not self.main_tagger:
@@ -170,7 +182,7 @@ class BitianistRefinementTagger(Tagger):
         
         end_ts = time.time()
         self.logger.info(f"> (Time)({end_ts - beg_ts:.6f})")
-        self.logger.info(f'>>> Result bitianist_refinement_tagger : \n{tagged_tokens}')
+        self.logger.info(f'>>> Result mohaverekhan_correction_tagger : \n{tagged_tokens}')
         return tagged_tokens
 
     # def get_or_create_sentences(self, text):

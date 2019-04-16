@@ -233,27 +233,27 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        # 'console': {
-        #     # exact format is not important, this is the minimum information
-        #     'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-        # },
+        'main': {
+            # exact format is not important, this is the minimum information
+            'format': '[ %(levelname)s ][ %(asctime)s ][ %(process)d %(thread)d ][ %(module)s %(lineno)d ][ %(message)s ]',
+        },
     },
     'handlers': {
         'root': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': os.path.join(BASE_LOG_PATH, 'root.log'),
-            # 'formatter': 'console',
+            'formatter': 'main',
         },
         'mohaverekhan': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': os.path.join(BASE_LOG_PATH, 'mohaverekhan.log'),
-            # 'formatter': 'console',
+            'formatter': 'main',
         },
         'console': {
             'class': 'logging.StreamHandler',
-            # 'formatter': 'console',
+            'formatter': 'main',
         },
     },
     'root': {

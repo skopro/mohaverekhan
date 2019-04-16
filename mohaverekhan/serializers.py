@@ -140,7 +140,7 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ('id', 'name', 'persian', 
-            'color', 'created', 'number_of_tokens',
+            'color', 'created', 'number_of_tokens', 'percentage',
             'tag_set', )
         # read_only_fields = (,
         #             )
@@ -166,7 +166,8 @@ class TextTagInTextSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TextTag
-        fields = ('id', 'created', 'tagger', 'accuracy', 'true_text_tag',
+        fields = ('id', 'created', 'tagger', 'number_of_tagged_tokens', 
+            'accuracy', 'true_text_tag',
             'is_valid', 'validator', 'tagged_tokens', 'tagged_tokens_html')
         read_only_fields = ('is_valid',)    
 
@@ -235,7 +236,7 @@ class TextTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = TextTag
         fields = ('id', 'created', 
-            'tagger', 'text', 'accuracy', 'true_text_tag', 
+            'tagger', 'text', 'number_of_tagged_tokens', 'accuracy', 'true_text_tag', 
             'is_valid', 'validator', 'tagged_tokens', 
             'tagged_tokens_html', 'tags_string')
         read_only_fields = ('is_valid', 'accuracy', 'true_text_tag')

@@ -6,16 +6,16 @@ from .base_models import (
     Tagger, Validator,
     UTF8JSONField, UTF8JSONFormField,
 )
-from .normalizers.bitianist_basic_normalizer.model \
-    import BitianistBasicNormalizer
-from .normalizers.bitianist_refinement_normalizer.model \
-    import BitianistRefinementNormalizer
-from .normalizers.bitianist_replacement_normalizer.model \
-    import BitianistReplacementNormalizer
-from .normalizers.bitianist_seq2seq_normalizer.model \
-    import BitianistSeq2SeqNormalizer
+from .normalizers.mohaverekhan_basic_normalizer.model \
+    import MohaverekhanBasicNormalizer
+from .normalizers.mohaverekhan_correction_normalizer.model \
+    import MohaverekhanCorrectionNormalizer
+from .normalizers.mohaverekhan_replacement_normalizer.model \
+    import MohaverekhanReplacementNormalizer
+from .normalizers.mohaverekhan_seq2seq_normalizer.model \
+    import MohaverekhanSeq2SeqNormalizer
 
-from .taggers.bitianist_refinement_tagger.model \
-    import BitianistRefinementTagger
-from .taggers.bitianist_seq2seq_tagger.model \
-    import BitianistSeq2SeqTagger
+from .taggers.mohaverekhan_correction_tagger.model \
+    import MohaverekhanCorrectionTagger
+from .taggers.mohaverekhan_seq2seq_tagger.model \
+    import MohaverekhanSeq2SeqTagger

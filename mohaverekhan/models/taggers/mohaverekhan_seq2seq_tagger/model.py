@@ -11,7 +11,7 @@ from mohaverekhan.models import Tagger, Text, TextTag, TagSet
 from mohaverekhan import cache
 
 
-class BitianistSeq2SeqTagger(Tagger):
+class MohaverekhanSeq2SeqTagger(Tagger):
     
     class Meta:
         proxy = True
@@ -26,16 +26,19 @@ class BitianistSeq2SeqTagger(Tagger):
     Tag => G
     """
     word_patterns = [
-        (r'^\\n$', 'O'), #bitianist
+        (rf'^بی[{cache.persians}]+$|^بی‌[{cache.persians}]+$', 'A'),
+        (rf'^.*(ون).*$', 'N'),
+        (rf'^.*(یم)|(ید)|(ند)$', 'V'),
+        (rf'^.*(می)|(خواه).*$', 'V'),
+        (r'^\\n$', 'O'), #mohaverekhan
         (rf'^({cache.num})|(cache.numf)$', 'U'),
         (rf'^[{cache.punctuations}{cache.typographies}]+$', 'O'),
-        (rf'^بی‌[{cache.persians}]+$|^بی [{cache.persians}]+$', 'A'),
         (rf'^([{cache.emojies}]+)|(EMOJI)$', 'X'), #hazm emoticons - symbols & pictographs - pushpin & round pushpin
         (rf'^({cache.id})|(ID)$', 'S'), #hazm
         (rf'^({cache.link})|(LINK)$', 'K'), #hazm forgot "="? lol
         (rf'^({cache.email})|(EMAIL)$', 'M'), #hazm
         (rf'^({cache.tag})|(TAG)$', 'G'), #hazm
-        (r'^[a-zA-Z]+$', 'R'), #bitianist
+        (r'^[a-zA-Z]+$', 'R'), #mohaverekhan
     ]
 
     current_path = os.path.abspath(os.path.dirname(__file__))
@@ -44,10 +47,10 @@ class BitianistSeq2SeqTagger(Tagger):
     main_tagger = None
     accuracy = 0
     train_data, test_data = [], []
-    bitianist_text_tag_index = -1
+    mohaverekhan_text_tag_index = -1
 
     def __init__(self, *args, **kwargs):
-        super(BitianistSeq2SeqTagger, self).__init__(*args, **kwargs)
+        super(MohaverekhanSeq2SeqTagger, self).__init__(*args, **kwargs)
         if os.path.isfile(self.main_tagger_path):
             self.load_trained_main_tagger()
 
@@ -113,34 +116,34 @@ class BitianistSeq2SeqTagger(Tagger):
             self.logger.error(f'> text_tokens_list count == 0 !!!')
             return
 
-        self.normalizer = cache.normalizers['bitianist-basic-normalizer']
+        self.normalizer = cache.normalizers['mohaverekhan-basic-normalizer']
         tagged_sentences = []
         tagged_sentence = []
         token_content = ''
         specials = r'شلوغی فرهنگ‌سرا آیدی انقدر اوورد اووردن منو میدون خونه جوون زمونه نون مسلمون کتابخونه دندون نشون پاستا پنه تاچ تنظیمات می‌تونید سی‌پی‌یو‌ سی‌پی‌یو‌‌ها گرافیک اومدن می‌خان واس ٪ kb m kg g cm mm'.split()
-        self.bitianist_text_tag_index = -1
+        self.mohaverekhan_text_tag_index = -1
         for index, text_tokens in enumerate(text_tokens_list):
             for token in text_tokens:
                 token_content = self.normalizer.normalize(token['token']).replace(' ', '‌')
                 if token_content == '٪':
                     if token['tag']['name'] == 'O':
-                        self.bitianist_text_tag_index = index
+                        self.mohaverekhan_text_tag_index = index
                     token['tag']['name'] = 'O'
 
                 if token_content in ('.', '…'):
                     token['tag']['name'] = 'O'
                     
                 tagged_sentence.append((token_content, token['tag']['name']))
-                # if self.bitianist_text_tag_index == -1 and token_content in specials:
+                # if self.mohaverekhan_text_tag_index == -1 and token_content in specials:
                 #     self.logger.info(f"> He see that {token_content} {token['tag']['name']}")
-                #     self.bitianist_text_tag_index = 
+                #     self.mohaverekhan_text_tag_index = 
                 
 
                 if token_content in ('.', '!', '?', '؟'):
                     tagged_sentences.append(tagged_sentence)
                     tagged_sentence = []
 
-        self.logger.info(f'> self.bitianist_text_tag_index : {self.bitianist_text_tag_index}')
+        self.logger.info(f'> self.mohaverekhan_text_tag_index : {self.mohaverekhan_text_tag_index}')
         self.logger.info(f'> tagged_sentences[0] : \n\n{tagged_sentences[0]}\n\n')
         self.logger.info(f'> tagged_sentences[-1] : \n\n{tagged_sentences[-1]}\n\n')
         self.separate_train_and_test_data(tagged_sentences)
@@ -153,11 +156,11 @@ class BitianistSeq2SeqTagger(Tagger):
     
     def tag(self, text_content):
         beg_ts = time.time()
-        self.logger.info(f'>>> bitianist_seq2seq_tagger : \n{text_content}')
+        self.logger.info(f'>>> mohaverekhan_seq2seq_tagger : \n{text_content}')
 
-        text_content = cache.normalizers['bitianist-seq2seq-normalizer']\
+        text_content = cache.normalizers['mohaverekhan-seq2seq-normalizer']\
                         .normalize(text_content)
-        self.logger.info(f'>>> bitianist_seq2seq_normalizer: \n{text_content}')
+        self.logger.info(f'>>> mohaverekhan_seq2seq_normalizer: \n{text_content}')
 
         token_contents = text_content.replace('\n', ' \\n ').split(' ')
         if not self.main_tagger:
@@ -170,7 +173,7 @@ class BitianistSeq2SeqTagger(Tagger):
         
         end_ts = time.time()
         self.logger.info(f"> (Time)({end_ts - beg_ts:.6f})")
-        self.logger.info(f'>>> Result bitianist_seq2seq_tagger : \n{tagged_tokens}')
+        self.logger.info(f'>>> Result mohaverekhan_seq2seq_tagger : \n{tagged_tokens}')
         return tagged_tokens
 
     # def get_or_create_sentences(self, text):

@@ -82,18 +82,19 @@ class WordNormalAdmin(admin.ModelAdmin):
 class TextTagAdmin(admin.ModelAdmin):
     list_per_page = 10
     list_display = ('get_tagged_tokens_html', 'get_text_content', 'is_valid', 
-                    'accuracy', 'get_tagger_name', 
+                    'number_of_tagged_tokens', 'accuracy', 'get_tagger_name', 
                     'get_validator_name', 'get_true_text_tag', 'created')
     search_fields = ['text__content']
     list_filter = ['is_valid', 'tagger__name']
     ordering = ('-created',)
     readonly_fields = ['created', 'id', 'text', 'get_text_content', 
-                'tagged_tokens_html', 'tags_string']
+                'tagged_tokens_html', 'tags_string', 'number_of_tagged_tokens']
 
     fieldsets = (
         (None, {
             'fields': ('id', 'created', 'get_text_content',
-             'tagged_tokens', 'tagged_tokens_html', 'is_valid', 'accuracy', 
+             'tagged_tokens', 'tagged_tokens_html', 'is_valid', 'number_of_tagged_tokens',
+             'accuracy', 
              'tags_string')
         }),
         ('Relations', {
@@ -146,9 +147,10 @@ class TextTagAdmin(admin.ModelAdmin):
 
 class TextTagInTextInline(admin.TabularInline):
     model = TextTag
-    fields = ('id', 'tagged_tokens', 'is_valid', 'accuracy', 'true_text_tag',
+    fields = ('id', 'tagged_tokens', 'is_valid', 'number_of_tagged_tokens', 
+        'accuracy', 'true_text_tag',
         'tagger', 'validator', 'created')
-    readonly_fields = ['created', 'id', 'tagger', 'validator']
+    readonly_fields = ['created', 'id', 'tagger', 'validator', 'number_of_tagged_tokens']
     extra = 0
     max_num = 25
 
@@ -192,7 +194,8 @@ class TextNormalAdmin(admin.ModelAdmin):
     list_filter = ['is_valid', 'normalizer__name', 'validator__name', 
         'normalizers_sequence']
     ordering = ('-created',)
-    readonly_fields = ['created', 'id', 'validator', 'normalizers_sequence']
+    readonly_fields = ['created', 'id', 'validator', 'normalizers_sequence',
+            'total_text_tag_count', 'total_text_normal_count']
 
     fieldsets = (
         (None, {
@@ -260,16 +263,16 @@ class TagAdmin(admin.ModelAdmin):
 
     list_display = ('name', 'persian', 
                 'get_color_html', 'tag_set', 'get_number_of_tokens', 
-                'created')
+                'percentage', 'created')
     ordering = ('-tag_set', '-created')
-    readonly_fields = ['created', 'id', 'number_of_tokens']
+    readonly_fields = ['created', 'id', 'number_of_tokens', 'percentage',]
     list_filter = ['tag_set', 'name', 'persian']
     search_fields = ['persian']
 
     fieldsets = (
         (None, {
             'fields': ('id', 'created', 'name', 
-                'persian', 'color', 'number_of_tokens')
+                'persian', 'color', 'number_of_tokens', 'percentage',)
         }),
         ('Relation', {
             'fields': ('tag_set',),
@@ -361,9 +364,9 @@ class TokenTagAdmin(admin.ModelAdmin):
     list_display = ('get_token_content', 'get_tag_name', 'get_tag_persian', 'get_tag_set_name',
                 'number_of_repetitions', 'created')
     # search_fields = ['=token__content', 'token__content__startswith', 'id']
-    search_fields = ['=token__content', 'token__content__endswith', 'id']
+    # search_fields = ['=token__content', 'token__content__endswith', 'id']
     # search_fields = ['=token__content', 'token__content__endswith', 'token__content__startswith', 'id']
-    # search_fields = ['=token__content', 'id']
+    search_fields = ['=token__content', 'id']
     ordering = ('-number_of_repetitions', '-created')
     list_filter = ['tag__tag_set__name', 'tag__name']
     readonly_fields = ['created', 'id', 'number_of_repetitions']
@@ -422,8 +425,8 @@ class TokenTagAdmin(admin.ModelAdmin):
 class TagInLine(admin.TabularInline):
     model = Tag
     fields = ('name', 'persian', 'color', 'number_of_tokens',
-    'id', 'created')
-    readonly_fields = ['created', 'id']
+    'percentage', 'id', 'created')
+    readonly_fields = ['created', 'id', 'percentage', 'number_of_tokens']
     extra = 0
     max_num = 25
 

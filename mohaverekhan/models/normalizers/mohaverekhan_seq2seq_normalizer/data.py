@@ -29,14 +29,14 @@ EN_BLACKLIST = '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~\''
 SRC_DIR = '/home/bitianist/Dropbox/bachelor_project/data/final'
 
 limit = {
-        'maxinf' : 500,
+        'maxinf' : 100,
         'mininf' : 1,
-        'maxf' : 500,
+        'maxf' : 110,
         'minf' : 1
         }
 
 UNK = 'unk'
-VOCAB_SIZE = 10000
+VOCAB_SIZE = 20000
 
 
 
@@ -152,57 +152,47 @@ def pad_seq(seq, lookup, maxlen):
     
 
 def log_sample(index, src, dest):
-    logger.info(f'src[{index if index >= 0 else len(src) + index - 1}] : {src[index]}')
-    logger.info(f'dest[{index if index >= 0 else len(dest) + index - 1}] : {dest[index]}')
+    logger.info(f'src[{index}] : {src[index]}')
+    logger.info(f'dest[{index}] : {dest[index]}')
 
 def get_text_normals():
     informals, formals = [], []
-    informal_text, formal_text = None, None
-    informal_text_normal, formal_text_normal = None, None
-    normalizer = cache.normalizers['bitianist-informal-replacement-normalizer']
+    normalizer = cache.normalizers['mohaverekhan-replacement-normalizer']
 
-    text_normals = TextNormal.objects.filter(
+    text_equivalents = TextNormal.objects.filter(
         is_valid=True
-    )
+    ).values_list('text__content', 'content')
 
-    for text_normal in text_normals:
-        informal_text = text_normal
-        formal_text = text_normal.text
-
-        informal_text_normal = normalizer.normalize(informal_text)
-        formal_text_normal = normalizer.normalize(formal_text)
-
-        informals.append(informal_text_normal.content)
-        formals.append(formal_text_normal.content)
+    for text_equivalent in text_equivalents:
+        # logger.debug(f'> text_equivalent : {text_equivalent}')
+        informals.append(normalizer.normalize(text_equivalent[0]))
+        formals.append(normalizer.normalize(text_equivalent[1]))
 
     logger.info(f'> len(informals) : {len(informals)}')
     logger.info(f'> len(formals) : {len(formals)}')
     logger.info(f'> {len(informals)} text normals exist for training.')
+    informals.reverse()
+    formals.reverse()
     return informals, formals
 
 def get_word_normals():
     informals, formals = [], []
-    informal_word, formal_word = None, None
-    informal_word_normal, formal_word_normal = None, None
-    normalizer = cache.normalizers['bitianist-informal-replacement-normalizer']
+    normalizer = cache.normalizers['mohaverekhan-replacement-normalizer']
 
-    word_normals = WordNormal.objects.filter(
+    word_equivalents = WordNormal.objects.filter(
         is_valid=True
-    )
+    ).values_list('word__content', 'content')
 
-    for word_normal in word_normals:
-        informal_word = word_normal
-        formal_word = word_normal.word
-
-        informal_word_normal = normalizer.normalize(informal_word)
-        formal_word_normal = normalizer.normalize(formal_word)
-
-        informals.append(informal_word_normal.content)
-        formals.append(formal_word_normal.content)
+    for word_equivalent in word_equivalents:
+        # logger.debug(f'> word_equivalent : {word_equivalent}')
+        informals.append(normalizer.normalize(word_equivalent[0]))
+        formals.append(normalizer.normalize(word_equivalent[1]))
 
     logger.info(f'> len(informals) : {len(informals)}')
     logger.info(f'> len(formals) : {len(formals)}')
     logger.info(f'> {len(informals)} word normals exist for training.')
+    informals.reverse()
+    formals.reverse()
     return informals, formals
 
 def get_data():
@@ -212,8 +202,15 @@ def get_data():
     text_informals, text_formals = get_text_normals()
     word_informals, word_formals = get_word_normals()
 
-    informals = text_informals + word_informals
-    formals = text_formals + word_formals
+    count_dif = len(word_informals) - len(text_informals)
+    informals += word_informals[0:count_dif]
+    formals += word_formals[0:count_dif]
+    word_informals = word_informals[count_dif:]
+    word_formals = word_formals[count_dif:]
+    logger.info(f'> {len(word_informals)} == {len(text_informals)}')
+    for i in range(len(text_informals)):
+        informals += [text_informals[i], word_informals[i]]
+        formals += [text_formals[i], word_formals[i]]
 
     logger.info(f'> len(informals) : {len(informals)}')
     logger.info(f'> len(formals) : {len(formals)}')
@@ -227,12 +224,25 @@ def process_data():
         informals, formals = get_data()
 
         log_sample(20, informals, formals)
-        log_sample(100, informals, formals)
+        log_sample(21, informals, formals)
         log_sample(-20, informals, formals)
-        log_sample(-100, informals, formals)
+        log_sample(-21, informals, formals)
 
-        logger.info(f'informals[36] : {informals[36]}')
-        logger.info(f'formals[36] : {formals[36]}')
+        log_sample(-2, informals, formals)
+        log_sample(-1, informals, formals)
+
+
+        log_sample(-200, informals, formals)
+        log_sample(-201, informals, formals)
+
+        log_sample(-300, informals, formals)
+        log_sample(-301, informals, formals)
+
+
+        logger.info(f'informals[2327] : {informals[2327]}')
+        logger.info(f'formals[2327] : {formals[2327]}')
+        logger.info(f'informals[2328] : {informals[2328]}')
+        logger.info(f'formals[2328] : {formals[2328]}')
 
         # filter out too long or too short sequences
         logger.info('>> Filter length')
@@ -319,7 +329,7 @@ from random import sample
     return tuple( (trainX, trainY), (testX,testY), (validX,validY) )
 
 '''
-def split_dataset(x, y, ratio = [0.7, 0.15, 0.15] ):
+def split_dataset(x, y, ratio = [0.84, 0.08, 0.08] ):
     # number of examples
     data_len = len(x)
     lens = [ int(data_len*item) for item in ratio ]

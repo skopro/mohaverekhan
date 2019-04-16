@@ -81,9 +81,9 @@ class WordNormal(models.Model):
         ordering = ('-created',)
 
     def check_validation(self):
-        if self.normalizer.name == 'bitianist-manual-normalizer':
+        if self.normalizer.name == 'mohaverekhan-manual-normalizer':
             self.is_valid = True
-            self.validator = cache.validators['bitianist-validator']
+            self.validator = cache.validators['mohaverekhan-validator']
             
 
     def save(self, *args, **kwargs):
@@ -131,9 +131,9 @@ class TextNormal(Text):
         ordering = ('-created',)
 
     def check_validation(self):
-        if self.normalizer.name == 'bitianist-manual-normalizer':
+        if self.normalizer.name == 'mohaverekhan-manual-normalizer':
             self.is_valid = True
-            self.validator = cache.validators['bitianist-validator']
+            self.validator = cache.validators['mohaverekhan-validator']
 
     def check_normalizers_sequence(self):
         if self.text.normalizers_sequence:
@@ -168,6 +168,9 @@ class TextTag(models.Model):
         verbose_name_plural = 'Text Tags'
         ordering = ('-created',)
 
+    @property
+    def number_of_tagged_tokens(self):
+        return len(self.tagged_tokens)
     
     @property
     def tags_string(self):
@@ -206,9 +209,9 @@ class TextTag(models.Model):
 
     def check_validation(self):
         if self.tagger is not None and self.tagger.name in ('bijankhan-manual-tagger', 
-                                                'bitianist-manual-tagger'):
+                                                'mohaverekhan-manual-tagger'):
             self.is_valid = True
-            self.validator = cache.validators['bitianist-validator']
+            self.validator = cache.validators['mohaverekhan-validator']
             # self.accuracy = 100
 
     def set_tag_details(self):
@@ -396,6 +399,11 @@ class Tag(models.Model):
     def number_of_tokens(self):
         return self.tokens.count()
 
+    @property
+    def percentage(self):
+        all_tags = Tag.objects.filter(tag_set=self.tag_set)
+        all_tokens_count = sum([tag.tokens.count() for tag in all_tags])
+        return round((self.tokens.count() / all_tokens_count) * 100, 3)
     # def add_to_examples(self, token_content):
     #     if (token_content not in self.examples 
     #             and len(self.examples) < 15 ):
@@ -716,7 +724,7 @@ class Tagger(models.Model):
 #         self.is_valid = False
 #         if self.normalizer:
 #                 self.is_valid = True
-#                 self.validator = cache.validators['bitianist-validator']
+#                 self.validator = cache.validators['mohaverekhan-validator']
 #         super(NormalSentence, self).save(*args, **kwargs)
 
 

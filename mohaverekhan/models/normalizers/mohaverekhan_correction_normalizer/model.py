@@ -4,50 +4,58 @@ import re
 from mohaverekhan.models import Normalizer
 from mohaverekhan import cache
 
-class BitianistRefinementNormalizer(Normalizer):
+class MohaverekhanCorrectionNormalizer(Normalizer):
     
     class Meta:
         proxy = True
 
     logger = logging.getLogger(__name__)
 
-    refinement_patterns = (
-        (rf'([{cache.emojies}]+)(?=[{cache.persians}{cache.punctuations}])', r'\1 ', '', 0, 'bitianist', 'true'),
-        (rf'({cache.email})(?=[{cache.persians}{cache.punctuations}{cache.emojies}])', r'\1 ', '', 0, 'bitianist', 'true'),
-        (rf'({cache.link})(?=[{cache.persians}{cache.punctuations}{cache.emojies}])', r'\1 ', '', 0, 'bitianist', 'true'),
-        (rf'({cache.id})(?=[{cache.persians}{cache.emojies}])', r'\1 ', '', 0, 'bitianist', 'true'),
-        (rf'({cache.tag})(?=[{cache.persians}{cache.punctuations}{cache.emojies}])', r'\1 ', '', 0, 'bitianist', 'true'),
-        (rf'({cache.num})(?=[{cache.persians}{cache.num_punctuations}{cache.emojies}])', r'\1 ', '', 0, 'bitianist', 'true'),
-        (rf'({cache.numf})(?=[{cache.persians}{cache.num_punctuations}{cache.emojies}])', r'\1 ', '', 0, 'bitianist', 'true'),
-        (rf'(?<=[{cache.persians}{cache.punctuations}])([{cache.emojies}]+)', r' \1', '', 0, 'bitianist', 'true'),
-        (rf'(?<=[{cache.persians}{cache.punctuations}{cache.emojies}])({cache.email})', r' \1', '', 0, 'bitianist', 'true'),
-        (rf'(?<=[{cache.persians}{cache.punctuations}{cache.emojies}])({cache.link})', r' \1', '', 0, 'bitianist', 'true'),
-        (rf'(?<=[{cache.persians}{cache.punctuations}{cache.emojies}])({cache.id})', r' \1', '', 0, 'bitianist', 'true'),
-        (rf'(?<=[{cache.persians}{cache.punctuations}{cache.emojies}])({cache.tag})', r' \1', '', 0, 'bitianist', 'true'),
-        (rf'(?<=[{cache.persians}{cache.num_punctuations}{cache.emojies}])({cache.num})', r' \1', '', 0, 'bitianist', 'true'),
-        (rf'(?<=[{cache.persians}{cache.num_punctuations}{cache.emojies}])({cache.numf})', r' \1', '', 0, 'bitianist', 'true'),
-        (rf' ([{cache.punctuations}{cache.typographies}])(?=[{cache.punctuations}{cache.typographies}]+)', r' \1 ', 'add extra space before and after of cache.punctuations', 0, 'bitianist', 'true'),
-        (rf'(?<=[{cache.punctuations}{cache.typographies}])([{cache.punctuations}{cache.typographies}]) ', r' \1 ', 'add extra space before and after of cache.punctuations', 0, 'bitianist', 'true'),
-        (rf'([{cache.punctuations}{cache.numbers}])(?=[{cache.persians}])', r'\1 ', 'add extra space before and after of cache.punctuations', 0, 'bitianist', 'true'),
-        (rf'(?<=[{cache.persians}])([{cache.punctuations}{cache.numbers}])', r' \1', 'add extra space before and after of cache.punctuations', 0, 'bitianist', 'true'),
+    correction_patterns = (
+        (rf'(.*)', r'  \1  ', '', 0, 'mohaverekhan', 'true'),
+        (rf'([{cache.emojies}]+)(?=[{cache.persians}{cache.punctuations}])', r'\1 ', '', 0, 'mohaverekhan', 'true'),
+        (rf'({cache.email})(?=[{cache.persians}{cache.punctuations}{cache.emojies}])', r'\1 ', '', 0, 'mohaverekhan', 'true'),
+        (rf'({cache.link})(?=[{cache.persians}{cache.punctuations}{cache.emojies}])', r'\1 ', '', 0, 'mohaverekhan', 'true'),
+        (rf'({cache.id})(?=[{cache.persians}{cache.emojies}])', r'\1 ', '', 0, 'mohaverekhan', 'true'),
+        (rf'({cache.tag})(?=[{cache.persians}{cache.punctuations}{cache.emojies}])', r'\1 ', '', 0, 'mohaverekhan', 'true'),
+        (rf'({cache.num})(?=[{cache.persians}{cache.num_punctuations}{cache.emojies}])', r'\1 ', '', 0, 'mohaverekhan', 'true'),
+        (rf'({cache.numf})(?=[{cache.persians}{cache.num_punctuations}{cache.emojies}])', r'\1 ', '', 0, 'mohaverekhan', 'true'),
+        (rf'(?<=[{cache.persians}{cache.punctuations}])([{cache.emojies}]+)', r' \1', '', 0, 'mohaverekhan', 'true'),
+        (rf'(?<=[{cache.persians}{cache.punctuations}{cache.emojies}])({cache.email})', r' \1', '', 0, 'mohaverekhan', 'true'),
+        (rf'(?<=[{cache.persians}{cache.punctuations}{cache.emojies}])({cache.link})', r' \1', '', 0, 'mohaverekhan', 'true'),
+        (rf'(?<=[{cache.persians}{cache.punctuations}{cache.emojies}])({cache.id})', r' \1', '', 0, 'mohaverekhan', 'true'),
+        (rf'(?<=[{cache.persians}{cache.punctuations}{cache.emojies}])({cache.tag})', r' \1', '', 0, 'mohaverekhan', 'true'),
+        (rf'(?<=[{cache.persians}{cache.num_punctuations}{cache.emojies}])({cache.num})', r' \1', '', 0, 'mohaverekhan', 'true'),
+        (rf'(?<=[{cache.persians}{cache.num_punctuations}{cache.emojies}])({cache.numf})', r' \1', '', 0, 'mohaverekhan', 'true'),
+        (rf' ([{cache.punctuations}{cache.typographies}])(?=[{cache.punctuations}{cache.typographies}]+)', r' \1 ', 'add extra space before and after of cache.punctuations', 0, 'mohaverekhan', 'true'),
+        (rf'(?<=[{cache.punctuations}{cache.typographies}])([{cache.punctuations}{cache.typographies}]) ', r' \1 ', 'add extra space before and after of cache.punctuations', 0, 'mohaverekhan', 'true'),
+        (rf'([{cache.punctuations}{cache.numbers}])(?=[{cache.persians}])', r'\1 ', 'add extra space before and after of cache.punctuations', 0, 'mohaverekhan', 'true'),
+        (rf'(?<=[{cache.persians}])([{cache.punctuations}{cache.numbers}])', r' \1', 'add extra space before and after of cache.punctuations', 0, 'mohaverekhan', 'true'),
 
-        (r'\n', r' newline ', 'replace \n to newline for changing back', 0, 'bitianist', 'true'),
-        (r'([^ ]ه) ی ', r'\1‌ی ', 'between ی and ه - replace space with non-joiner ', 0, 'hazm', 'true'),
+            # ۴.اگه
+            # ۴.۴.
+            # texts/4/asf/2
+        (rf'(?<=[{cache.punctuations}{cache.numbers}{cache.persians} ][{cache.punctuations}{cache.persians} ])([{cache.numbers}])(?=[{cache.persians}{cache.punctuations}][{cache.persians}{cache.punctuations}{cache.numbers} ]|$)', r' \1 ', 'add extra space before and after of cache.punctuations', 0, 'mohaverekhan', 'true'),
+        # (rf'(?<=[{cache.persians}])([{cache.punctuations}{cache.numbers}])', r' \1', 'add extra space before and after of cache.punctuations', 0, 'mohaverekhan', 'true'),
+
+
+        (r'\n', r' newline ', 'replace \n to newline for changing back', 0, 'mohaverekhan', 'true'),
+        # (r'([^ ]ه) ی ', r'\1‌ی ', 'between ی and ه - replace space with non-joiner ', 0, 'hazm', 'true'),
         (r'(^| )(ن?می) ', r'\1\2‌', 'after می،نمی - replace space with non-joiner ', 0, 'hazm', 'true'),
-        (rf'(?<=[^\n\d {cache.punctuations}]{{2}}) (تر(ین?)?|گری?|های?)(?=[ \n{cache.punctuations}]|$)', r'‌\1', 'before تر, تری, ترین, گر, گری, ها, های - replace space with non-joiner', 0, 'hazm', 'true'),
-        (rf'([^ ]ه) (ا(م|یم|ش|ند|ی|ید|ت))(?=[ \n{cache.punctuations}]|$)', r'\1‌\2', 'before ام, ایم, اش, اند, ای, اید, ات - replace space with non-joiner', 0, 'hazm', 'true'),  
+        # (rf'(?<=[^\n\d {cache.punctuations}]{{2}}) (تر(ین?)?|گری?|های?)(?=[ \n{cache.punctuations}]|$)', r'‌\1', 'before تر, تری, ترین, گر, گری, ها, های - replace space with non-joiner', 0, 'hazm', 'true'),
+        # (rf'([^ ]ه) (ا(م|یم|ش|ند|ی|ید|ت))(?=[ \n{cache.punctuations}]|$)', r'\1‌\2', 'before ام, ایم, اش, اند, ای, اید, ات - replace space with non-joiner', 0, 'hazm', 'true'),  
         (r' +', r' ', 'remove extra spaces', 0, 'hazm', 'true'),
-        # (r'', r'', '', 0, 'bitianist', 'true'),
+        # (r'', r'', '', 0, 'mohaverekhan', 'true'),
     )
-    refinement_patterns = [(rp[0], rp[1]) for rp in refinement_patterns]
-    refinement_patterns = cache.compile_patterns(refinement_patterns)
+    correction_patterns = [(rp[0], rp[1]) for rp in correction_patterns]
+    correction_patterns = cache.compile_patterns(correction_patterns)
 
     def split_into_token_contents(self, text_content, delimiters='[ ]+'):
         return re.split(delimiters, text_content)
 
 
     def refine_text(self, text_content):
-        for pattern, replacement in self.refinement_patterns:
+        for pattern, replacement in self.correction_patterns:
             text_content = pattern.sub(replacement, text_content)
             # self.logger.info(f'> after {pattern} -> {replacement} : \n{text_content}')
         text_content = text_content.strip(' ')
@@ -142,12 +150,13 @@ class BitianistRefinementNormalizer(Normalizer):
 
     
 
-    move_limit = 7
+    move_limit = 4
     def join_multipart_tokens(self, text_content):
         token_contents = self.split_into_token_contents(text_content)
         self.logger.debug(f'token_contents : {token_contents}')
         fixed_text_content = ''
-        fixed_token_content = ''
+        fixed_token_content, cutted_fixed_token_content = '', ''
+        cut_count = 0
         tokens_length = len(token_contents)
         
         i = 0
@@ -162,11 +171,11 @@ class BitianistRefinementNormalizer(Normalizer):
                 break
 
             # try to join
-            for move_count in reversed(range(0, move_count+2)):
+            for move_count in reversed(range(0, move_count+1)):
                 # end when move_count = 0 return the word without any join
                 # self.logger.info(f'token_contents[{i}:{i+move_count+1}] : {token_contents[i:i+move_count+1]}')
                 fixed_token_content = '‌'.join(token_contents[i:i+move_count+1])
-                # self.logger.info(f'> move_count in reversed fixed_token_content : {fixed_token_content}')
+                # self.logger.info(f'> {move_count} in reversed fixed_token_content : {fixed_token_content}')
                 is_valid, fixed_token_content = cache.is_token_valid(fixed_token_content)
                 if(
                     (
@@ -182,11 +191,100 @@ class BitianistRefinementNormalizer(Normalizer):
                     fixed_text_content += fixed_token_content + ' '
                     break
 
+
+                # سیستم عاملی - سیستم عاملو - سیستم عاملشو  - کتاب خانه‌ای  - سیستم عاملها  - کتاب خانه‌ها - ان ویدیایی
+                # if len(token_contents[i+move_count]) >= 4:
+                    # success = False
+                for j in range(1, min(4, len(token_contents[i+move_count]) - 2)):
+                    cutted_fixed_token_content = fixed_token_content[:-j]
+                    # self.logger.info(f'> {move_count} in reversed cutted_fixed_token_content {j} : {cutted_fixed_token_content}')
+                    is_valid, cutted_fixed_token_content = cache.is_token_valid(cutted_fixed_token_content)
+                    if(
+                        (
+                            is_valid and
+                            # cutted_fixed_token_content in cache.all_token_tags and 
+                            'R' not in cache.all_token_tags[cutted_fixed_token_content]
+                        ) or
+                        move_count == 0
+                    ):
+                        fixed_token_content = cutted_fixed_token_content + fixed_token_content[-j]
+                        self.logger.debug(f'> Fixed nj2 {j} [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
+                        # self.logger.debug(f'> Found => move_count : {move_count} | fixed_token_content : {fixed_token_content}')
+                        i = i + move_count + 1
+                        fixed_text_content += fixed_token_content + ' '
+                        success = True
+                        break
+                    # if success:
+                    #     break
+
+                # # کتاب خانه‌ای
+                # if fixed_token_content.endswith('ه‌ای'):
+                #     cutted_fixed_token_content = fixed_token_content[:-3]
+                #     # self.logger.info(f'> move_count in reversed cutted_fixed_token_content : {cutted_fixed_token_content}')
+                #     is_valid, cutted_fixed_token_content = cache.is_token_valid(cutted_fixed_token_content)
+                #     if(
+                #         (
+                #             is_valid and
+                #             # cutted_fixed_token_content in cache.all_token_tags and 
+                #             'R' not in cache.all_token_tags[cutted_fixed_token_content]
+                #         ) or
+                #         move_count == 0
+                #     ):
+                #         fixed_token_content = cutted_fixed_token_content + fixed_token_content[-3:]
+                #         self.logger.debug(f'> Fixed nj [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
+                #         # self.logger.debug(f'> Found => move_count : {move_count} | fixed_token_content : {fixed_token_content}')
+                #         i = i + move_count + 1
+                #         fixed_text_content += fixed_token_content + ' '
+                #         break
+
+                #important
+                if token_contents[i+move_count] == 'ها':
+                    fixed_token_content = '‌'.join(token_contents[i:i+move_count]) + 'ها'
+                    is_valid, fixed_token_content = cache.is_token_valid(fixed_token_content)
+                    if(
+                        (
+                            is_valid and
+                            # fixed_token_content in cache.all_token_tags and 
+                            'R' not in cache.all_token_tags[fixed_token_content]
+                        ) 
+                    ):
+                        # self.logger.debug(f'> Fixed nj [i:i+move_count] + "ها" : [{i}:{i+move_count+1}] : {fixed_token_content}')
+                        i = i + move_count + 1
+                        fixed_text_content += fixed_token_content + ' '
+                        break
+
+                if token_contents[i+move_count] == 'های':
+                    fixed_token_content = '‌'.join(token_contents[i:i+move_count]) + 'ها'
+                    is_valid, fixed_token_content = cache.is_token_valid(fixed_token_content)
+                    if(
+                        (
+                            is_valid and
+                            # fixed_token_content in cache.all_token_tags and 
+                            'R' not in cache.all_token_tags[fixed_token_content]
+                        ) 
+                    ):
+                        fixed_token_content += 'ی'
+                        self.logger.debug(f'> Fixed nj [i:i+move_count] + "های" : [{i}:{i+move_count+1}] : {fixed_token_content}')
+                        i = i + move_count + 1
+                        fixed_text_content += fixed_token_content + ' '
+                        break
+
+
                 #دو بار بری رو داشت جمع میکردی دو باربری
                 #باید جدول توکن ها درست کنم که براساس تگ تصمیم بگیرم بچسبونم یا نه
                 # fixed_token_content = ''.join(token_contents[i:i+move_count+1])
-                # if fixed_token_content in cache.all_token_tags or move_count == 0:
-                #     self.logger.debug(f'> empty [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
+                # is_valid, fixed_token_content = cache.is_token_valid(fixed_token_content)
+                # if(
+                #     (
+                #         is_valid and
+                #         # fixed_token_content in cache.all_token_tags and 
+                #         'R' not in cache.all_token_tags[fixed_token_content] and
+                #         token_contents[i+move_count] == 'ها'
+
+                #     ) or
+                #     move_count == 0
+                # ):
+                #     self.logger.debug(f'> Fixed empty [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
                 #     # self.logger.debug(f'> Found => move_count : {move_count} | fixed_token_content : {fixed_token_content}')
                 #     i = i + move_count + 1
                 #     fixed_text_content += fixed_token_content + ' '
@@ -443,11 +541,11 @@ class BitianistRefinementNormalizer(Normalizer):
 
     def normalize(self, text_content):
         beg_ts = time.time()
-        self.logger.info(f'>>> bitianist-refinement-normalizer : \n{text_content}')
+        self.logger.info(f'>>> mohaverekhan-correction-normalizer : \n{text_content}')
 
-        text_content = cache.normalizers['bitianist-basic-normalizer']\
+        text_content = cache.normalizers['mohaverekhan-basic-normalizer']\
                         .normalize(text_content)
-        self.logger.info(f'>> bitianist-basic-normalizer : \n{text_content}')
+        self.logger.info(f'>> mohaverekhan-basic-normalizer : \n{text_content}')
         
         text_content = text_content.strip(' ')
 
@@ -472,5 +570,5 @@ class BitianistRefinementNormalizer(Normalizer):
         text_content = text_content.replace(' newline ', '\n').strip(' ')
         end_ts = time.time()
         self.logger.info(f"> (Time)({end_ts - beg_ts:.6f})")
-        self.logger.info(f'>>> Result bitianist-refinement-normalizer : \n{text_content}')
+        self.logger.info(f'>>> Result mohaverekhan-correction-normalizer : \n{text_content}')
         return text_content

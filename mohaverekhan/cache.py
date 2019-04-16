@@ -3,6 +3,9 @@ import random
 import re
 from django.apps import apps
 import time
+from django.utils import timezone
+import pytz
+from django.db.models import Count
 
 repetition_pattern = re.compile(r"([^A-Za-z])\1{1,}")
 # debug_pattern = re.compile(r'[0-9۰۱۲۳۴۵۶۷۸۹]')
@@ -33,6 +36,7 @@ id = r'@[a-zA-Z_]+'
 num = r'[+-]?[\d۰-۹]+'
 numf = r'[+-]?[\d۰-۹,]+[\.٫,]{1}[\d۰-۹]+'
 tag = r'\#([\S]+)'
+nj = '‌'
 tag_set_token_tags = dict()
 all_token_tags = dict()
 
@@ -42,11 +46,11 @@ def is_token_valid(token_content):
 
     if is_number_pattern.fullmatch(token_content):
         logger.info(f'> Number found and added : {token_content}')
-        tag_set_token_tags['bitianist-tag-set'][token_content] = {'U': 1}
+        tag_set_token_tags['mohaverekhan-tag-set'][token_content] = {'U': 1}
         all_token_tags[token_content] = {'U': 1}
         return True, token_content
 
-    if token_content in all_token_tags:
+    if token_content in all_token_tags and list(all_token_tags[token_content].keys()) != ['R']:
         return True, token_content
 
 
@@ -81,8 +85,20 @@ def cache_token_tags_dic():
     temp_all_token_tags = {}
     temp_repetition_word_set = set()
     token_content, tag_name = '', ''
+    Tag = apps.get_model(app_label='mohaverekhan', model_name='Tag')
+    Token = apps.get_model(app_label='mohaverekhan', model_name='Token')
     TokenTag = apps.get_model(app_label='mohaverekhan', model_name='TokenTag')
     TextTag = apps.get_model(app_label='mohaverekhan', model_name='TextTag')
+    
+    # yesterday = timezone.date.today() - timezone.timedelta(days=1)
+    # yesterday = timezone.now() - timezone.timedelta(days=1)
+    # Tag.objects.filter(created__gt=yesterday).delete()
+    # TokenTag.objects.filter(created__gt=yesterday).delete()
+    # logger.info(f'> today deleted')
+    c = Token.objects.annotate(tags_count=Count('tags')).filter(tags_count__exact=0).delete()
+    logger.info(f'>>>>>>>>>>>>> c : {c}')
+    logger.info(f'> Tag 0 deleted')
+
     text_tag_list = TextTag.objects.filter(is_valid=True).values_list('tagger__tag_set__name', 'tagged_tokens')
     if text_tag_list.count() == 0:
         return
@@ -127,6 +143,7 @@ def cache_token_tags_dic():
     mi_verb_heh = ''
     a_o_token = ''
     ie_token = ''
+    token, tag = None, None
     middle_a_pattern = re.compile(r"^.*[^و]ان.*$") # ببندم=بند
     for tag_set_name, tag_set_token_tags in dict(temp_tag_set_token_tags).items():
         for token_content, tags in dict(tag_set_token_tags).items():
@@ -145,9 +162,19 @@ def cache_token_tags_dic():
                     plural_token_content = token_content + 'ها'
                 # logger.info(f'> plural {plural_token_content}')
                 if plural_token_content not in tag_set_token_tags:
-                    # logger.info(f'> Added plural {plural_token_content} {plural_token_content}ی')
                     temp_tag_set_token_tags[tag_set_name][plural_token_content] = {'N': 1}
                     temp_tag_set_token_tags[tag_set_name][plural_token_content+'ی'] = {'N': 1}
+
+                    # tag = Tag.objects.get(tag_set__name='mohaverekhan-tag-set', name='N')
+
+                    # token, created = Token.objects.get_or_create(content=plural_token_content)
+                    # TokenTag.objects.get_or_create(token=token, tag=tag)
+
+                    # token, created = Token.objects.get_or_create(content=plural_token_content+'ی')
+                    # TokenTag.objects.get_or_create(token=token, tag=tag)
+
+                    # logger.info(f'> Added plural {plural_token_content} {plural_token_content}ی')
+
 
                 if token_content[-1] != 'ا':
                     informal_plural_token_content = token_content + 'ا'
@@ -156,14 +183,28 @@ def cache_token_tags_dic():
                         temp_tag_set_token_tags[tag_set_name][informal_plural_token_content] = {'N': 1}
                         temp_tag_set_token_tags[tag_set_name][informal_plural_token_content+'ی'] = {'N': 1}
 
+                        # tag = Tag.objects.get(tag_set__name='mohaverekhan-tag-set', name='N')
+                        # token, created = Token.objects.get_or_create(content=informal_plural_token_content)
+                        # TokenTag.objects.get_or_create(token=token, tag=tag)
+
+                        # token, created = Token.objects.get_or_create(content=informal_plural_token_content+'ی')
+                        # TokenTag.objects.get_or_create(token=token, tag=tag)
+
+                        # logger.info(f'> Added plural {informal_plural_token_content} {informal_plural_token_content}ی')
+
             if (
                 len(token_content) > 2 and 
                 token_content.endswith('ه‌ای')
             ):
                 ie_token = token_content + 'ه'
-                logger.info(f'> ie_token {token_content} {ie_token}')
+                # logger.info(f'> ie_token {token_content} {ie_token}')
                 if ie_token not in tag_set_token_tags:
                     temp_tag_set_token_tags[tag_set_name][ie_token] = {'A': 1}
+
+                    # tag = Tag.objects.get(tag_set__name='mohaverekhan-tag-set', name='A')
+                    # token, created = Token.objects.get_or_create(content=ie_token)
+                    # TokenTag.objects.get_or_create(token=token, tag=tag)
+                    # logger.info(f'> Added IE {ie_token} {ie_token}')
 
             # if(
             #     len(token_content) > 2 and 
@@ -288,59 +329,59 @@ def cache_token_tags_dic():
     # tokens = TaggedSentence.objects.only('tokens__content').order_by('-tokens__content').distinct('tokens__content')
     # logger.info(f'tokens.count() : {tokens.count()}')
 
-# bitianist_validator = None
+# mohaverekhan_validator = None
 
 
-# def cache_bitianist_validator():
-#     global bitianist_validator
+# def cache_mohaverekhan_validator():
+#     global mohaverekhan_validator
 #     Validator = apps.get_model(app_label='mohaverekhan', model_name='Validator')
-#     bitianist_validator = Validator.objects.filter(name='bitianist-validator').first()
-#     if not bitianist_validator:
-#         logger.error("> There isn't bitianist-validator!")
+#     mohaverekhan_validator = Validator.objects.filter(name='mohaverekhan-validator').first()
+#     if not mohaverekhan_validator:
+#         logger.error("> There isn't mohaverekhan-validator!")
 
 def cache_validators():
     Validator = apps.get_model(app_label='mohaverekhan', model_name='Validator')
 
-    validators['bitianist-validator'] = Validator.objects.filter(
-        name='bitianist-validator').first()
+    validators['mohaverekhan-validator'] = Validator.objects.filter(
+        name='mohaverekhan-validator').first()
 
     logger.info(f'>> Cached validators : {list(validators.keys())}')
 
 def cache_normalizers():
-    BitianistBasicNormalizer = apps.get_model(
-        app_label='mohaverekhan', model_name='BitianistBasicNormalizer')
-    BitianistRefinementNormalizer = apps.get_model(
-        app_label='mohaverekhan', model_name='BitianistRefinementNormalizer')
-    BitianistReplacementNormalizer = apps.get_model(
-        app_label='mohaverekhan', model_name='BitianistReplacementNormalizer')
-    BitianistSeq2SeqNormalizer = apps.get_model(
-        app_label='mohaverekhan', model_name='BitianistSeq2SeqNormalizer')
+    MohaverekhanBasicNormalizer = apps.get_model(
+        app_label='mohaverekhan', model_name='MohaverekhanBasicNormalizer')
+    MohaverekhanCorrectionNormalizer = apps.get_model(
+        app_label='mohaverekhan', model_name='MohaverekhanCorrectionNormalizer')
+    MohaverekhanReplacementNormalizer = apps.get_model(
+        app_label='mohaverekhan', model_name='MohaverekhanReplacementNormalizer')
+    MohaverekhanSeq2SeqNormalizer = apps.get_model(
+        app_label='mohaverekhan', model_name='MohaverekhanSeq2SeqNormalizer')
 
-    normalizers['bitianist-basic-normalizer'] = BitianistBasicNormalizer.objects.filter(
-        name='bitianist-basic-normalizer').first()
+    normalizers['mohaverekhan-basic-normalizer'] = MohaverekhanBasicNormalizer.objects.filter(
+        name='mohaverekhan-basic-normalizer').first()
 
-    normalizers['bitianist-refinement-normalizer'] = BitianistRefinementNormalizer.objects.filter(
-        name='bitianist-refinement-normalizer').first()
+    normalizers['mohaverekhan-correction-normalizer'] = MohaverekhanCorrectionNormalizer.objects.filter(
+        name='mohaverekhan-correction-normalizer').first()
 
-    normalizers['bitianist-replacement-normalizer'] = BitianistReplacementNormalizer.objects.filter(
-        name='bitianist-replacement-normalizer').first()
+    normalizers['mohaverekhan-replacement-normalizer'] = MohaverekhanReplacementNormalizer.objects.filter(
+        name='mohaverekhan-replacement-normalizer').first()
 
-    normalizers['bitianist-seq2seq-normalizer'] = BitianistSeq2SeqNormalizer.objects.filter(
-        name='bitianist-seq2seq-normalizer').first()
+    normalizers['mohaverekhan-seq2seq-normalizer'] = MohaverekhanSeq2SeqNormalizer.objects.filter(
+        name='mohaverekhan-seq2seq-normalizer').first()
     
     logger.info(f'>> Cached normalizers : {list(normalizers.keys())}')
 
 def cache_taggers():
-    BitianistRefinementTagger = apps.get_model(
-        app_label='mohaverekhan', model_name='BitianistRefinementTagger')
-    BitianistSeq2SeqTagger = apps.get_model(
-        app_label='mohaverekhan', model_name='BitianistSeq2SeqTagger')
+    MohaverekhanCorrectionTagger = apps.get_model(
+        app_label='mohaverekhan', model_name='MohaverekhanCorrectionTagger')
+    MohaverekhanSeq2SeqTagger = apps.get_model(
+        app_label='mohaverekhan', model_name='MohaverekhanSeq2SeqTagger')
 
-    taggers['bitianist-refinement-tagger'] = BitianistRefinementTagger.objects.filter(
-        name='bitianist-refinement-tagger').first()
+    taggers['mohaverekhan-correction-tagger'] = MohaverekhanCorrectionTagger.objects.filter(
+        name='mohaverekhan-correction-tagger').first()
 
-    taggers['bitianist-seq2seq-tagger'] = BitianistSeq2SeqTagger.objects.filter(
-        name='bitianist-seq2seq-tagger').first()
+    taggers['mohaverekhan-seq2seq-tagger'] = MohaverekhanSeq2SeqTagger.objects.filter(
+        name='mohaverekhan-seq2seq-tagger').first()
     
     logger.info(f'>> Cached taggers : {list(taggers.keys())}')
 
@@ -349,7 +390,7 @@ def cache_taggers():
 def init():
     global logger
     logger = logging.getLogger(__name__)
-    # cache_bitianist_validator()
+    # cache_mohaverekhan_validator()
     # cache_models()
 
     cache_validators()

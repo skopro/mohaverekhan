@@ -18,4 +18,4 @@ class MohaverekhanConfig(AppConfig):
         serializers.init()
         views.init()
 
-        # models.normalizers.bitianist_seq2seq_normalizer.model.init()
+        # models.normalizers.mohaverekhan_seq2seq_normalizer.model.init()
