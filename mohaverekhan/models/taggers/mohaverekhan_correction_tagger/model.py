@@ -179,7 +179,19 @@ class MohaverekhanCorrectionTagger(Tagger):
                 raise Exception()
         
         tagged_tokens = self.main_tagger.tag(token_contents)
-        
+        token, tag = '', ''
+        most = 0
+        for index, tagged_token in enumerate(tagged_tokens):
+            token, tag = tagged_token
+            if tag == 'R':
+                if list(cache.all_token_tags[token].keys()) != ['R']:
+                    most = 0
+                    for key, value in cache.all_token_tags[token].items():
+                        if key != 'R' and most < value:
+                            most = value
+                            tag = key
+                            tagged_tokens[index] = (token, tag)
+
         end_ts = time.time()
         self.logger.info(f"> (Time)({end_ts - beg_ts:.6f})")
         self.logger.info(f'>>> Result mohaverekhan_correction_tagger : \n{tagged_tokens}')

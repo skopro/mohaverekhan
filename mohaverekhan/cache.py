@@ -42,7 +42,7 @@ all_token_tags = dict()
 
 is_number_pattern = re.compile(rf"^({num})|(numf)$")
 
-def is_token_valid(token_content):
+def is_token_valid(token_content, replace_nj=True):
 
     if is_number_pattern.fullmatch(token_content):
         logger.info(f'> Number found and added : {token_content}')
@@ -54,20 +54,20 @@ def is_token_valid(token_content):
         return True, token_content
 
 
+    if replace_nj:
+        nj_pattern = re.compile(r'‌')
+        if nj_pattern.search(token_content):
+            # logger.debug(f'> nj found in token : {token_content}')
+            token_content_parts = token_content.split('‌')
+            is_valid = True
+            for part in token_content_parts:
+                if len(part) < 3:
+                    is_valid = False
 
-    nj_pattern = re.compile(r'‌')
-    if nj_pattern.search(token_content):
-        # logger.debug(f'> nj found in token : {token_content}')
-        token_content_parts = token_content.split('‌')
-        is_valid = True
-        for part in token_content_parts:
-            if len(part) < 3:
-                is_valid = False
-
-        fixed_token_content = token_content.replace('‌', '')
-        if is_valid and fixed_token_content in all_token_tags:
-            logger.debug(f'> nj replaced with empty : {fixed_token_content}')
-            return True, fixed_token_content
+            fixed_token_content = token_content.replace('‌', '')
+            if is_valid and fixed_token_content in all_token_tags:
+                logger.debug(f'> nj replaced with empty : {fixed_token_content}')
+                return True, fixed_token_content
 
     part1, part2, nj_joined, sp_joined = '', '', '', ''
     for i in range(1, len(token_content)):
@@ -97,7 +97,7 @@ def cache_token_tags_dic():
     # logger.info(f'> today deleted')
     c = Token.objects.annotate(tags_count=Count('tags')).filter(tags_count__exact=0).delete()
     logger.info(f'>>>>>>>>>>>>> c : {c}')
-    logger.info(f'> Tag 0 deleted')
+    logger.info(f'> Tokens with 0 tags deleted')
 
     text_tag_list = TextTag.objects.filter(is_valid=True).values_list('tagger__tag_set__name', 'tagged_tokens')
     if text_tag_list.count() == 0:

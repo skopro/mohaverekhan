@@ -176,7 +176,7 @@ class MohaverekhanCorrectionNormalizer(Normalizer):
                 # self.logger.info(f'token_contents[{i}:{i+move_count+1}] : {token_contents[i:i+move_count+1]}')
                 fixed_token_content = '‌'.join(token_contents[i:i+move_count+1])
                 # self.logger.info(f'> {move_count} in reversed fixed_token_content : {fixed_token_content}')
-                is_valid, fixed_token_content = cache.is_token_valid(fixed_token_content)
+                is_valid, fixed_token_content = cache.is_token_valid(fixed_token_content, replace_nj=False)
                 if(
                     (
                         is_valid and
@@ -193,27 +193,26 @@ class MohaverekhanCorrectionNormalizer(Normalizer):
 
 
                 # سیستم عاملی - سیستم عاملو - سیستم عاملشو  - کتاب خانه‌ای  - سیستم عاملها  - کتاب خانه‌ها - ان ویدیایی
-                # if len(token_contents[i+move_count]) >= 4:
-                    # success = False
-                for j in range(1, min(4, len(token_contents[i+move_count]) - 2)):
-                    cutted_fixed_token_content = fixed_token_content[:-j]
-                    # self.logger.info(f'> {move_count} in reversed cutted_fixed_token_content {j} : {cutted_fixed_token_content}')
-                    is_valid, cutted_fixed_token_content = cache.is_token_valid(cutted_fixed_token_content)
-                    if(
-                        (
-                            is_valid and
-                            # cutted_fixed_token_content in cache.all_token_tags and 
-                            'R' not in cache.all_token_tags[cutted_fixed_token_content]
-                        ) or
-                        move_count == 0
-                    ):
-                        fixed_token_content = cutted_fixed_token_content + fixed_token_content[-j]
-                        self.logger.debug(f'> Fixed nj2 {j} [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
-                        # self.logger.debug(f'> Found => move_count : {move_count} | fixed_token_content : {fixed_token_content}')
-                        i = i + move_count + 1
-                        fixed_text_content += fixed_token_content + ' '
-                        success = True
-                        break
+                if len(token_contents[i+move_count]) >= 4:
+                    for j in range(1, min(4, len(token_contents[i+move_count]) - 2)):
+                        cutted_fixed_token_content = fixed_token_content[:-j]
+                        # self.logger.info(f'> {move_count} in reversed cutted_fixed_token_content {j} : {cutted_fixed_token_content}')
+                        is_valid, cutted_fixed_token_content = cache.is_token_valid(cutted_fixed_token_content, replace_nj=False)
+                        if(
+                            (
+                                is_valid and
+                                # cutted_fixed_token_content in cache.all_token_tags and 
+                                'R' not in cache.all_token_tags[cutted_fixed_token_content]
+                            ) or
+                            move_count == 0
+                        ):
+                            fixed_token_content = cutted_fixed_token_content + fixed_token_content[-j]
+                            self.logger.debug(f'> Fixed nj2 {j} [i:i+move_count+1] : [{i}:{i+move_count+1}] : {fixed_token_content}')
+                            # self.logger.debug(f'> Found => move_count : {move_count} | fixed_token_content : {fixed_token_content}')
+                            i = i + move_count + 1
+                            fixed_text_content += fixed_token_content + ' '
+                            success = True
+                            break
                     # if success:
                     #     break
 

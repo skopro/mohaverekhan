@@ -165,7 +165,7 @@ class MohaverekhanSeq2SeqNormalizer(Normalizer):
         Inference using pre-trained model
         """
         def inference_function(seed):
-            self.logger.info(f' > Inference with {seed}')
+            self.logger.info(f'> {seed}')
             seed_id = [word2idx.get(w, unk_id) for w in seed.split(" ")]
             
             # Encode and get state
@@ -241,10 +241,10 @@ class MohaverekhanSeq2SeqNormalizer(Normalizer):
             
             # inference after every epoch
             for seed in seeds:
-                self.logger.info(f'Query > {seed}')
+                # self.logger.info(f'Query > {seed}')
                 # for _ in range(3):
                 sentence = self.inference(seed)
-                self.logger.info(f' >  {sentence}')
+                self.logger.info(f'> {sentence}')
             
             self.logger.info(f'> seq2seq model saved.')
             # saving the model

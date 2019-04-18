@@ -146,7 +146,7 @@ class TokenTagViewSet(viewsets.ModelViewSet):
                 for tag_name, tag_count in tags.items():
                     token_tag_update_list.append((token_content, tag_name, tag_set_name, tag_count))
         logger.info(f'> len token_tag_update_list : {len(token_tag_update_list)}')
-        Parallel(n_jobs=96, verbose=20, backend='threading')(delayed(self.update_token_tag_rank)(token_tag_update) for token_tag_update in token_tag_update_list)
+        Parallel(n_jobs=16, verbose=20, backend='threading')(delayed(self.update_token_tag_rank)(token_tag_update) for token_tag_update in token_tag_update_list)
         end_ts = time.time()
         logger.info(f"> (Time)(Update repetitions)({end_ts - beg_ts:.6f})")
         
