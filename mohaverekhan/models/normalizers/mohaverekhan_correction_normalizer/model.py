@@ -11,8 +11,9 @@ class MohaverekhanCorrectionNormalizer(Normalizer):
 
     logger = logging.getLogger(__name__)
 
+    ### تو این قسمت یه سری فاصله دهی اولیه انجام میدیم.
     correction_patterns = (
-        (rf'(.*)', r'  \1  ', '', 0, 'mohaverekhan', 'true'),
+        (rf'^(.*)$', r'  \1  ', '', 0, 'mohaverekhan', 'true'),
         (rf'([{cache.emojies}]+)(?=[{cache.persians}{cache.punctuations}])', r'\1 ', '', 0, 'mohaverekhan', 'true'),
         (rf'({cache.email})(?=[{cache.persians}{cache.punctuations}{cache.emojies}])', r'\1 ', '', 0, 'mohaverekhan', 'true'),
         (rf'({cache.link})(?=[{cache.persians}{cache.punctuations}{cache.emojies}])', r'\1 ', '', 0, 'mohaverekhan', 'true'),
@@ -36,15 +37,17 @@ class MohaverekhanCorrectionNormalizer(Normalizer):
             # ۴.۴.
             # texts/4/asf/2
         (rf'(?<=[{cache.punctuations}{cache.numbers}{cache.persians} ][{cache.punctuations}{cache.persians} ])([{cache.numbers}])(?=[{cache.persians}{cache.punctuations}][{cache.persians}{cache.punctuations}{cache.numbers} ]|$)', r' \1 ', 'add extra space before and after of cache.punctuations', 0, 'mohaverekhan', 'true'),
-        # (rf'(?<=[{cache.persians}])([{cache.punctuations}{cache.numbers}])', r' \1', 'add extra space before and after of cache.punctuations', 0, 'mohaverekhan', 'true'),
 
 
         (r'\n', r' newline ', 'replace \n to newline for changing back', 0, 'mohaverekhan', 'true'),
-        # (r'([^ ]ه) ی ', r'\1‌ی ', 'between ی and ه - replace space with non-joiner ', 0, 'hazm', 'true'),
         (r'(^| )(ن?می) ', r'\1\2‌', 'after می،نمی - replace space with non-joiner ', 0, 'hazm', 'true'),
+        (r' +', r' ', 'remove extra spaces', 0, 'hazm', 'true'),
+
+        
+        # (rf'(?<=[{cache.persians}])([{cache.punctuations}{cache.numbers}])', r' \1', 'add extra space before and after of cache.punctuations', 0, 'mohaverekhan', 'true'),
+        # (r'([^ ]ه) ی ', r'\1‌ی ', 'between ی and ه - replace space with non-joiner ', 0, 'hazm', 'true'),
         # (rf'(?<=[^\n\d {cache.punctuations}]{{2}}) (تر(ین?)?|گری?|های?)(?=[ \n{cache.punctuations}]|$)', r'‌\1', 'before تر, تری, ترین, گر, گری, ها, های - replace space with non-joiner', 0, 'hazm', 'true'),
         # (rf'([^ ]ه) (ا(م|یم|ش|ند|ی|ید|ت))(?=[ \n{cache.punctuations}]|$)', r'\1‌\2', 'before ام, ایم, اش, اند, ای, اید, ات - replace space with non-joiner', 0, 'hazm', 'true'),  
-        (r' +', r' ', 'remove extra spaces', 0, 'hazm', 'true'),
         # (r'', r'', '', 0, 'mohaverekhan', 'true'),
     )
     correction_patterns = [(rp[0], rp[1]) for rp in correction_patterns]
@@ -61,6 +64,8 @@ class MohaverekhanCorrectionNormalizer(Normalizer):
         text_content = text_content.strip(' ')
         return text_content
 
+
+    # این قسمت حرف های تکراری زائد حذف میشن
     repetition_pattern = re.compile(r"([^ب])\1{1,}") # ببندم=بند
     # repetition_pattern = re.compile(r"([^A-Za-z])\1{1,}")
 
@@ -85,12 +90,15 @@ class MohaverekhanCorrectionNormalizer(Normalizer):
         else:
             fixed_token_content = token_content
             if self.repetition_pattern.search(fixed_token_content):
-                fixed_token_content = self.repetition_pattern.sub(r'\1\1', token_content) #شش
+
+                # جایگزین کردن کلمه با ۲ تکرار حرف
+                fixed_token_content = self.repetition_pattern.sub(r'\1\1', token_content) #زننده زنده
                 is_valid, fixed_token_content = cache.is_token_valid(fixed_token_content)
                 if is_valid:
                     self.logger.info(f'> found repetition token {token_content} -> {fixed_token_content}')
                     return fixed_token_content
 
+                # جایگزین کردن کلمه با ۱ تکرار حرف
                 fixed_token_content = self.repetition_pattern.sub(r'\1', token_content)
                 if fixed_token_content == 'کنده':
                     return 'کننده'
@@ -99,6 +107,7 @@ class MohaverekhanCorrectionNormalizer(Normalizer):
                     self.logger.info(f'> Found repetition token {token_content} -> {fixed_token_content}')
                     return fixed_token_content
                 
+                # حذف حرفهای آخر کلمه و دوباره بررسی کردن تکرار
                 stripped_token_content, stripped = '', ''
                 for i in range(1, min(len(token_content), 6)):
                     # عاااالیه
