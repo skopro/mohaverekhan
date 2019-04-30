@@ -52,7 +52,7 @@ class MohaverekhanSeq2SeqNormalizer(Normalizer):
     num_epochs : Number of epochs for training
     learning_rate : Learning rate to use when training model
     """
-    def train(self, inference_mode=False, batch_size=128, num_epochs=15, learning_rate=0.001):
+    def train(self, inference_mode=False, batch_size=256, num_epochs=10, learning_rate=0.003):
         if self.cleanup is not None:
             self.cleanup()
 
@@ -212,6 +212,7 @@ class MohaverekhanSeq2SeqNormalizer(Normalizer):
                     "اين دستگاه جزء اولين و شايد تنها سريه که تا الان از نسل چهارم سي پي يوهاي اينتل استفاده ميکنه"
                     ]
         for epoch in range(num_epochs):
+            # try:
             trainX, trainY = shuffle(trainX, trainY, random_state=0)
             total_loss, n_iter = 0, 0
             for X, Y in tqdm(tl.iterate.minibatches(inputs=trainX, targets=trainY, batch_size=batch_size, shuffle=False), 
@@ -249,8 +250,12 @@ class MohaverekhanSeq2SeqNormalizer(Normalizer):
             self.logger.info(f'> seq2seq model saved.')
             # saving the model
             tl.files.save_npz(net.all_params, name=self.model_path, sess=sess)
-
-        # session cleanup
+            # except Exception as e:
+                # self.logger.exception(f'> Exception : {e}')
+                # self.logger.info(f'> Seq2Seq training session destroyed.')
+                # sess.close()
+                # return
+        self.logger.info(f'> Seq2Seq training session destroyed.')
         sess.close()
 
 

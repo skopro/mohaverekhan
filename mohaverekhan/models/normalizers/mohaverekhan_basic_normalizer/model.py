@@ -73,7 +73,7 @@ class MohaverekhanBasicNormalizer(Normalizer):
     def do_basic_patterns(self, text_content):
         for pattern, replacement in self.basic_patterns:
             text_content = pattern.sub(replacement, text_content)
-            # self.logger.info(f'> after {pattern} -> {replacement} : \n{text_content}')
+            # self.logger.info(f'> After {pattern} -> {replacement} : \n{text_content}')
         text_content = text_content.strip(' ')
         return text_content
 

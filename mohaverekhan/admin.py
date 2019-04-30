@@ -108,12 +108,6 @@ class TextTagAdmin(admin.ModelAdmin):
 
     def get_tagged_tokens_html(self, obj):
         return format_html(obj.tagged_tokens_html.replace(r'}', r'}}').replace(r'{', r'{{'))
-        # return format_html(
-        #     '''
-        #     <div style="background-color: #44444e !important;">
-        #         {}
-        #     </div>
-        #     ''', obj.tagged_tokens_html)
     get_tagged_tokens_html.admin_order_field = 'created' 
     get_tagged_tokens_html.short_description = 'Tagged Tokens HTML'
 
@@ -128,7 +122,6 @@ class TextTagAdmin(admin.ModelAdmin):
     def get_text_content(self, obj):
         if not obj.text:
             return None
-        # return obj.text.content
         html = format_html('''
             <div style="direction: rtl !important;text-align: right;padding: 0.2vh 1.0vw 0.2vh 1.0vw;">
                 {}
@@ -171,7 +164,6 @@ class TextAdmin(admin.ModelAdmin):
     list_filter = ['normalizers_sequence',]
     readonly_fields = ['created', 'id', 'normalizers', 'normalizers_sequence',
         'total_text_tag_count', 'total_text_normal_count']
-    # exclude = ('normalizers',)
 
     fieldsets = (
         (None, {
@@ -227,17 +219,9 @@ class TextNormalAdmin(admin.ModelAdmin):
     get_normalizer_name.admin_order_field = 'created' 
     get_normalizer_name.short_description = 'Normalizer Name'
 
-    # def get_text_content(self, obj):
-    #     if not obj.text:
-    #         return None
-    #     return obj.text.content
-    # get_text_content.admin_order_field = 'created' 
-    # get_text_content.short_description = 'Text Content'
-
     def get_text_content(self, obj):
         if not obj.text:
             return None
-        # return obj.text.content
         html = format_html('''
             <div style="direction: rtl !important;text-align: right;padding: 0.2vh 1.0vw 0.2vh 1.0vw;">
                 {}
@@ -303,7 +287,6 @@ class TokenTagInTokenInline(admin.TabularInline):
     def get_token_content(self, obj):
         if not obj.token:
             return None
-        # return obj.token.content
         html = format_html('''
             <div style="direction: rtl !important;text-align: right;padding: 0.2vh 1.0vw 0.2vh 1.0vw;">
                 {}
@@ -316,7 +299,6 @@ class TokenTagInTokenInline(admin.TabularInline):
     def get_tag_name(self, obj):
         if not obj.tag:
             return None
-        # return obj.token.content
         return obj.tag.name
     get_tag_name.admin_order_field = 'created' 
     get_tag_name.short_description = 'Tag Name'
@@ -324,7 +306,6 @@ class TokenTagInTokenInline(admin.TabularInline):
     def get_tag_set_name(self, obj):
         if not obj.tag:
             return None
-        # return obj.token.content
         return obj.tag.tag_set.name
     get_tag_set_name.admin_order_field = 'created' 
     get_tag_set_name.short_description = 'Tag Set Name'
@@ -335,7 +316,6 @@ class TokenAdmin(admin.ModelAdmin):
     ordering = ('-created',)
     list_filter = []
     readonly_fields = ['created', 'id', 'number_of_tags']
-    # exclude = ('normalizers',)
 
     fieldsets = (
         (None, {
@@ -366,11 +346,11 @@ class TokenTagAdmin(admin.ModelAdmin):
     # search_fields = ['=token__content', 'token__content__startswith', 'id']
     # search_fields = ['=token__content', 'token__content__endswith', 'id']
     # search_fields = ['=token__content', 'token__content__endswith', 'token__content__startswith', 'id']
-    search_fields = ['=token__content', 'id']
+    search_fields = ['token__content', 'id']
+    # search_fields = ['=token__content', 'id']
     ordering = ('-number_of_repetitions', '-created')
     list_filter = ['tag__tag_set__name', 'tag__name']
     readonly_fields = ['created', 'id', 'number_of_repetitions']
-    # exclude = ('normalizers',)
 
     fieldsets = (
         (None, {
@@ -383,7 +363,6 @@ class TokenTagAdmin(admin.ModelAdmin):
     def get_token_content(self, obj):
         if not obj.token:
             return None
-        # return obj.token.content
         html = format_html('''
             <div style="direction: rtl !important;text-align: right;padding: 0.2vh 1.0vw 0.2vh 1.0vw;">
                 {}
@@ -396,7 +375,6 @@ class TokenTagAdmin(admin.ModelAdmin):
     def get_tag_name(self, obj):
         if not obj.tag:
             return None
-        # return obj.token.content
         return obj.tag.name
     get_tag_name.admin_order_field = 'created' 
     get_tag_name.short_description = 'Tag Name'
@@ -404,7 +382,6 @@ class TokenTagAdmin(admin.ModelAdmin):
     def get_tag_persian(self, obj):
         if not obj.tag:
             return None
-        # return obj.token.content
         return obj.tag.persian
     get_tag_persian.admin_order_field = 'created' 
     get_tag_persian.short_description = 'Tag Persian'
@@ -412,7 +389,6 @@ class TokenTagAdmin(admin.ModelAdmin):
     def get_tag_set_name(self, obj):
         if not obj.tag:
             return None
-        # return obj.token.content
         return obj.tag.tag_set.name
     get_tag_set_name.admin_order_field = 'created' 
     get_tag_set_name.short_description = 'Tag Set Name'
@@ -580,124 +556,3 @@ admin.site.register(TokenTag, TokenTagAdmin)
 admin.site.register(Normalizer, NormalizerAdmin)
 admin.site.register(Tagger, TaggerAdmin)
 admin.site.register(Validator, ValidatorAdmin)
-
-# admin.site.register(Sentence, SentenceAdmin)
-# admin.site.register(NormalSentence, NormalSentenceAdmin)
-# admin.site.register(TaggedSentence, TaggedSentenceAdmin)
-# admin.site.register(TranslationCharacter, TranslationCharacterAdmin)
-# admin.site.register(RefinementPattern, RefinementPatternsAdmin)
-
-
-
-
-# class TextSentenceInline(admin.TabularInline):
-#     model = Sentence
-#     fields = ('content', 'text', 'order', 'id', 'created')
-#     readonly_fields = ['created', 'id']
-#     extra = 0
-#     max_num = 25
-
-
-# class TranslationCharacterAdmin(admin.ModelAdmin):
-#     list_display = ('source', 'destination', 'description', 'owner', 'is_valid', 'created')
-#     list_filter = ('owner', 'is_valid')
-#     ordering = ('is_valid', 'owner')
-#     readonly_fields = ['created',]
-
-# class RefinementPatternsAdmin(admin.ModelAdmin):
-#     list_display = ('pattern', 'replacement', 'description', 'order', 'owner', 'is_valid', 'created')
-#     list_filter = ('owner', 'is_valid')
-#     ordering = ('order', 'is_valid', 'owner')
-#     readonly_fields = ['created',]
-
-# class SentenceAdmin(admin.ModelAdmin):
-#     list_display = ('content', 'get_text_id', 'normalizers_sequence',
-#                     'created',)
-#     search_fields = ['content', 'id']
-#     ordering = ('-created', 'text__id')
-#     list_filter = ['normalizers_sequence',]
-#     readonly_fields = ['created', 'id', 'normalizers', 'taggers', 'normalizers_sequence']
-#     # exclude = ('taggers',)
-    
-#     fieldsets = (
-#         (None, {
-#             'fields': ('created', 'content', 'taggers', 'normalizers_sequence')
-#         }),
-#         ('Relations', {
-#             'fields': ('text',),
-#         }),
-#     )
-
-#     inlines = [
-#         TaggedSentenceInline,
-#         NormalSentenceInline
-#     ]
-
-#     def get_text_id(self, obj):
-#         if not obj.text:
-#             return None
-#         return obj.text.id
-#     get_text_id.admin_order_field = 'created' 
-#     get_text_id.short_description = 'Text ID'
-
-# class NormalSentenceAdmin(admin.ModelAdmin):
-#     list_display = ('content', 'is_valid', 'normalizers_sequence', 'get_normalizer_name', 
-#             'get_sentence_id', 'get_validator_name', 'created')
-#     search_fields = ['content', 'id']
-#     list_filter = ['is_valid', 'normalizer__name', 'validator__name', 'normalizers_sequence']
-#     ordering = ('-created',)
-#     readonly_fields = ['created', 'id', 'taggers', 'normalizers_sequence']
-
-#     fieldsets = (
-#         (None, {
-#             'fields': ('id', 'created',
-#                 'content', 'is_valid', 'taggers', 'normalizers_sequence')
-#         }),
-#         ('Relations', {
-#             'fields': ('normalizer', 'sentence', 'validator'),
-#         }),
-#     )
-
-#     inlines = [
-#         TaggedSentenceInline
-#     ]
-
-#     def get_validator_name(self, obj):
-#         if not obj.validator:
-#             return None
-#         return obj.validator.name
-#     get_validator_name.admin_order_field = 'created' 
-#     get_validator_name.short_description = 'Validator Name'
-
-#     def get_normalizer_name(self, obj):
-#         if not obj.normalizer:
-#             return None
-#         return obj.normalizer.name
-#     get_normalizer_name.admin_order_field = 'created' 
-#     get_normalizer_name.short_description = 'Normalizer Name'
-
-#     def get_sentence_id(self, obj):
-#         if not obj.sentence:
-#             return None
-#         return obj.sentence.id
-#     get_sentence_id.admin_order_field = 'created' 
-#     get_sentence_id.short_description = 'Sentence ID'
-
-
-
-# class NormalSentenceInline(admin.TabularInline):
-#     model = Sentence.normalizers.through
-#     fk_name = 'sentence'
-#     fields = ('id', 'content', 'is_valid', 'validator',
-#             'sentence', 'normalizer', 'created')
-#     readonly_fields = ['created', 'id', 'validator']
-#     extra = 0
-#     max_num = 25
-
-
-# class TextNormalSentenceInline(admin.TabularInline):
-#     model = Sentence
-#     fields = ('content', 'order', 'id', 'created')
-#     readonly_fields = ['created', 'id']
-#     extra = 0
-#     max_num = 25

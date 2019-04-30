@@ -8,14 +8,9 @@ class MohaverekhanConfig(AppConfig):
 
     def ready(self):
         
-
         from mohaverekhan import cache
         cache.init()
-
-        # from mohaverekhan.models.
 
         from mohaverekhan import serializers, views
         serializers.init()
         views.init()
-
-        # models.normalizers.mohaverekhan_seq2seq_normalizer.model.init()

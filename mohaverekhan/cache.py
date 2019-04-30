@@ -14,9 +14,6 @@ repetition_pattern = re.compile(r"([^A-Za-z])\1{1,}")
 debug_pattern = re.compile(r'^(.)\1{5}$')
 
 logger = None
-# Word, WordNormal, Text, TextNormal = None, None, None, None
-# TextTag, TagSet, Tag, Validator = None, None, None, None
-# Normalizer, Tagger = None, None, None
 normalizers = {}
 validators = {}
 taggers = {}
@@ -42,24 +39,37 @@ all_token_tags = dict()
 
 is_number_pattern = re.compile(rf"^({num})|(numf)$")
 
+
+
+###############################################################################
+# باید بررسی کنیم نشانه‌های مورد نظر در مجموعه داده موجود وجود دارد یا نه
+# ممکن است نشانه به حالت دیگری در مجموعه داده موجود باشد که این حالات استثنا را بررسی می‌کنیم
+# ممکنه نشانه مورد نظر، یک نشانه بی‌نهایت باشد و یک نشانه بی‌نهایت برای ما معتبر هست.
 def is_token_valid(token_content, replace_nj=True):
 
+    # اگر نشانه عدد بود، آن را قبول و برای بهبود سرعت آن را در کش ذخیره می‌کنیم.
     if is_number_pattern.fullmatch(token_content):
         logger.info(f'> Number found and added : {token_content}')
         tag_set_token_tags['mohaverekhan-tag-set'][token_content] = {'U': 1}
         all_token_tags[token_content] = {'U': 1}
         return True, token_content
 
+    # برچسب آر به معنای معتبر بودن نشانه نیست و اگر نشانه فقط برچسب آر داشت آن را معتبر نمی‌خوانیم.
     if token_content in all_token_tags and list(all_token_tags[token_content].keys()) != ['R']:
         return True, token_content
 
-
+    # وقتی نشانه به این‌جا برسد، پس یعنی در مجموعه داده موجود نبوده.
+    # تلاش‌های آخر را می‌کنیم تا ببینیم شاید نیم‌فاصله‌ای رعایت نشده‌است.
+    
+    # اگر در نشانه، نیم‌فاصله‌ای موجود بود، آن را حذف می‌کنیم و سپس معتبر بودن نشانه را بررسی می‌کنیم.
     if replace_nj:
         nj_pattern = re.compile(r'‌')
         if nj_pattern.search(token_content):
             # logger.debug(f'> nj found in token : {token_content}')
             token_content_parts = token_content.split('‌')
             is_valid = True
+
+            # اگر یک قسمت اندازه‌اش کمتر از ۳ بود، پس احتمالا معتبر نیست.
             for part in token_content_parts:
                 if len(part) < 3:
                     is_valid = False
@@ -69,6 +79,8 @@ def is_token_valid(token_content, replace_nj=True):
                 logger.debug(f'> nj replaced with empty : {fixed_token_content}')
                 return True, fixed_token_content
 
+    # باید بررسی کنیم شاید نیم‌فاصله ای در نشانه رعایت نشده باشد.
+    # بین تمام حروف، نیم‌فاصله می‌گذاریم. اگر معتبر بود، پس آن را بازمی‌گردانیم.
     part1, part2, nj_joined, sp_joined = '', '', '', ''
     for i in range(1, len(token_content)):
         part1, part2 = token_content[:i], token_content[i:]
@@ -197,14 +209,9 @@ def cache_token_tags_dic():
                 token_content.endswith('ه‌ای')
             ):
                 ie_token = token_content + 'ه'
-                # logger.info(f'> ie_token {token_content} {ie_token}')
                 if ie_token not in tag_set_token_tags:
                     temp_tag_set_token_tags[tag_set_name][ie_token] = {'A': 1}
 
-                    # tag = Tag.objects.get(tag_set__name='mohaverekhan-tag-set', name='A')
-                    # token, created = Token.objects.get_or_create(content=ie_token)
-                    # TokenTag.objects.get_or_create(token=token, tag=tag)
-                    # logger.info(f'> Added IE {ie_token} {ie_token}')
 
             # if(
             #     len(token_content) > 2 and 
@@ -238,38 +245,6 @@ def cache_token_tags_dic():
     del temp_tag_set_token_tags['bijankhan-tag-set']['دیگهای']
     del temp_tag_set_token_tags['bijankhan-tag-set']['هارو']
 
-    #Remove ه in عالیه درسته کتابه زیاده
-    # old_token_set = set(token_set)
-    # got_tokens = set()
-    # for token in old_token_set: 
-    #     if token not in got_tokens and token[-1] == 'ه' and token[0:-1] in token_set:
-    #         self_score = max([value for key, value in token_tags_dic[token].items()])
-    #         main_token_score = max([value for key, value in token_tags_dic[token[0:-1]].items()])
-    #         # logger.info(f'> {token} {self_score} {main_token_score}')
-    #         if self_score > 20 or main_token_score < 200:
-    #             continue
-    #         got_tokens.add(token)
-    #         logger.info(f'>> D : {token} {token_tags_dic[token]} {token_tags_dic[token[0:-1]]}')
-    #         # token_set.remove(token)
-
-    # removed_tokens = [
-    #     'واحده', 'کتابه', 'عالیه', 'درسته', 'زیاده', 'مثبته',
-    #     'ضروریه', 'منه', 'قابله', 'مثله', 'حرفه', 'مختلفه',
-    #     'اسلامیه', 'اصله', 'مالیه', 'قتله', 'عمله', 'موجبه',
-    #     '', '', '', '', '', '', '', '', 
-    #     '', '', '', '', '', '', '', '',
-    #     '', '', '', '', '', '', '', '',
-    #     '', '', '', '', '', '', '', '',
-    #     '', '', '', '', '', '', '', '',
-    # ]
-    # token_set.remove('واحده')
-    # token_set.remove('کتابه')
-    # token_set.remove('عالیه')
-    # token_set.remove('درسته')
-    # token_set.remove('زیاده')
-
-    # if 'زیاده' in token_set:
-    #     logger.error(f"> Can't remove زیاده کتابه درسته عالیه ...")
     
     logger.info(f'> len(temp_tag_set_token_tags) : {len(temp_tag_set_token_tags)}')
     logger.info(f'>>> Random samples')
@@ -280,29 +255,14 @@ def cache_token_tags_dic():
 
     
     [temp_all_token_tags.update(token_tags) for token_tags in temp_tag_set_token_tags.values()]
-    # logger.info(f'> token_tags_dic samples : {set(random.sample(list(token_tags_dic), 20)) }')
     for token in temp_all_token_tags:
         if repetition_pattern.search(token):
-            temp_repetition_word_set.add(token)
-    # for repetition_word in temp_repetition_word_set:
-    #     # logger.info(f'> repetition_word : {repetition_word}')
-    #     fuck = repetition_pattern.sub(r'\1', repetition_word)
-        
-    #     # logger.info(f'> fuck : {fuck}')
-    #     fuck1 = fuck + 'ه'
-    #     fuck2 = fuck + 'و'
-    #     fuck3 = fuck + 'ی'
-    #     fuck4 = fuck + 'ا'
+            no_repeat = repetition_pattern.sub(r'\1', token)
+            logger.info(f'> ({token}, {no_repeat})')
+            if no_repeat in temp_all_token_tags:
+                temp_repetition_word_set.add(token)
 
-    #     if fuck1 != repetition_word and fuck1 in token_set:
-    #         logger.info(f'> Fuckkkking1 : {repetition_word} - {fuck} - {fuck1}')
-    #     if fuck2 != repetition_word and fuck2 in token_set:
-    #         logger.info(f'> Fuckkkking2 : {repetition_word} - {fuck} - {fuck2}')
-    #     if fuck3 != repetition_word and fuck3 in token_set:
-    #         logger.info(f'> Fuckkkking3 : {repetition_word} - {fuck} - {fuck3}')
-    #     if fuck4 != repetition_word and fuck4 in token_set:
-    #         logger.info(f'> Fuckkkking4 : {repetition_word} - {fuck} - {fuck4}')
-    if len(temp_repetition_word_set) != 0:
+    if temp_repetition_word_set:
         logger.info(f'> len(temp_repetition_word_set) : {len(temp_repetition_word_set)}')
         logger.info(f'> temp_repetition_word_set samples: {set(random.sample(temp_repetition_word_set, min(len(temp_repetition_word_set), 100)))}')
 
@@ -320,24 +280,6 @@ def cache_token_tags_dic():
             'C' not in all_token_tags[token_content]
         ):
             two_length_token_set.add(token_content)
-    logger.info('> Two length tokens')
-    logger.info('\n'.join([f'{token_content} {list(all_token_tags[token_content].keys())}' for token_content in two_length_token_set]))
-    # logger.info(f'> debug_pattern : {debug_pattern}')
-    # for token in token_set:
-    #     if debug_pattern.search(token):
-    #         logger.info(token)
-    # tokens = TaggedSentence.objects.only('tokens__content').order_by('-tokens__content').distinct('tokens__content')
-    # logger.info(f'tokens.count() : {tokens.count()}')
-
-# mohaverekhan_validator = None
-
-
-# def cache_mohaverekhan_validator():
-#     global mohaverekhan_validator
-#     Validator = apps.get_model(app_label='mohaverekhan', model_name='Validator')
-#     mohaverekhan_validator = Validator.objects.filter(name='mohaverekhan-validator').first()
-#     if not mohaverekhan_validator:
-#         logger.error("> There isn't mohaverekhan-validator!")
 
 def cache_validators():
     Validator = apps.get_model(app_label='mohaverekhan', model_name='Validator')
@@ -390,8 +332,6 @@ def cache_taggers():
 def init():
     global logger
     logger = logging.getLogger(__name__)
-    # cache_mohaverekhan_validator()
-    # cache_models()
 
     cache_validators()
     cache_normalizers()

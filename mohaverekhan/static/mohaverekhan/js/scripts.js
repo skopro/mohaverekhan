@@ -54,11 +54,6 @@ validators_url = `${base_api_url}/validators`
 normalizers_url = `${base_api_url}/normalizers`
 taggers_url = `${base_api_url}/taggers`
 
-// sentences_url = `${base_api_url}/sentences`
-// tagged_sentences_url = `${base_api_url}/tagged_sentences`
-// translation_characters_url = `${base_api_url}/rules/translation_characters`
-// refinement_patterns_url = `${base_api_url}/rules/refinement_patterns`
-
 selected_normalizer = "no-normalizer"
 selected_tagger = "no-tagger"
 text_id = "no-id"
@@ -70,9 +65,6 @@ function do_after_success_getting_normalizers(result, status, xhr) {
         normalizer = xhr.responseJSON[i]
         console.log(normalizer.name)
         console.log(normalizer.show_name)
-        // if (normalizer.model_type == "manual")
-            // continue
-        // $( "#normalizers" ).append( `"<option>${normalizer.name}</option>"` );
         $( "#normalizers" ).append($("<option></option>")
                 .attr("value", normalizer.name)
                 .text(normalizer.show_name)); 
@@ -85,16 +77,11 @@ function do_after_success_getting_taggers(result, status, xhr) {
         tagger = xhr.responseJSON[i]
         console.log(tagger.name)
         console.log(tagger.show_name)
-        // if (tagger.model_type == "manual")
-            // continue
-        // $( "#taggers" ).append( `"<option>${tagger.name}</option>"` );
         $( "#taggers" ).append($("<option></option>")
                 .attr("value", tagger.name)
                 .text(tagger.show_name)); 
         
     }
-    // $('#taggers').addClass('selected-button');
-    // $('#taggers').prop('selectedIndex', 1);
     $('.selectpicker').selectpicker('refresh');
 }
 
@@ -113,78 +100,19 @@ $(document).ready(function(){
         beforeSend: function(xhr, settings) {
             if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
                 xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                // xhr.setRequestHeader("X-CSRFToken", csrftoken);
             }
         }
     });
-
-    // $('#normalizers').on('change', function() {
-    //     $(".selected-button").removeClass("selected-button");
-    //     selected_normalizer = $("#normalizers").children("option:selected").val();
-    //     if(selected_normalizer != 'no-normalizer')
-    //         $("#normalizers").addClass("selected-button");
-
-    //     $('#taggers').val('no-tagger')
-
-    //     $('.selectpicker').selectpicker('refresh');
-    // });
-
-    // $('#taggers').on('change', function() {
-    //     $(".selected-button").removeClass("selected-button");
-    //     selected_tagger = $("#taggers").children("option:selected").val();
-    //     if(selected_tagger != 'no-tagger')
-    //         $("#taggers").addClass("selected-button");
-
-    //     $('#normalizers').val('no-normalizer')
-
-    //     $('.selectpicker').selectpicker('refresh');
-    // });
-
 
     function do_after_success_tagging_text(result, status, xhr) {
         tagged_tokens_html = xhr.responseJSON.tagged_tokens_html
         console.log(tagged_tokens_html)
         $("#output-text").html(tagged_tokens_html);
-
-        // html = ''
-        // for(var i in xhr.responseJSON.tokens) {
-        //     token = xhr.responseJSON.tokens[i]
-        //     console.log(`token : ${token}`)
-        //     if(token.content == '\n')
-        //         html += `<br />`
-        //     else
-        //         html += `<div style="color:${token.tag.color};display: inline-block;">${token.content}_${token.tag.name}&nbsp;&nbsp;&nbsp;</div>`
-        //     console.log(html)
-        // }
-        // for (var i in xhr.responseJSON.sentences) {
-        //     sentence = xhr.responseJSON.sentences[i]
-        //     console.log(`sentence : ${sentence.content}`)
-        //     for (var j in sentence.tagged_sentences) {
-        //         tagged_sentence = sentence.tagged_sentences[j]
-        //         if (tagged_sentence.tagger != selected_tagger)
-        //             continue
-        //         for (var k in tagged_sentence.tokens) {
-        //             token = tagged_sentence.tokens[k]
-        //             console.log(`token : ${token}`)
-        //             html += `<div style="color:${token.tag.color};display: inline-block;">${token.content}_${token.tag.name}&nbsp;&nbsp;&nbsp;</div>`
-        //             console.log(html)
-        //         }
-        //         html +=`<br />`
-        //     }
-        // }
-        // console.log(html)
-        // $("#output-text").html(html);
     }
     function do_after_success_normalizing_text(result, status, xhr) {
         text_id = xhr.responseJSON.id
         console.log(`text_id (normal) : ${text_id}`)
-        // if (selected_tagger != "no-tagger") {
-        //     get(`${taggers_url}/${selected_tagger}/tag?text-id=${text_id}`, do_after_success_tagging_text)
-        // }
-        // else {
-            // $("#output-text").html(xhr.responseJSON.content)
         $("#output-text").html(xhr.responseJSON.content.replace(/\n/g, "<br>"))
-        // }
     }
     function normal_after_success_getting_item(result, status, xhr) {
         var text = xhr.responseJSON
@@ -193,7 +121,6 @@ $(document).ready(function(){
         console.log(`text content : ${text}`)
         get(`${normalizers_url}/${selected_normalizer}/normalize?text-id=${text_id}`, do_after_success_normalizing_text)
     }
-
 
     function tag_after_success_getting_item(result, status, xhr) {
         var text = xhr.responseJSON
@@ -244,15 +171,6 @@ $(document).ready(function(){
 
         post(texts_url, data, tag_after_success_getting_item)
     })
-    
-
-    
-
-        // $.when( post(texts_url, data) ).then(function( data, textStatus, jqXHR ) {
-        //     $.when( post(tag_text, data) ).then(function( data, textStatus, jqXHR ) {
-        //         alert( jqXHR.status ); // Alerts 200
-        //       });
-        //   });
 
 });
 

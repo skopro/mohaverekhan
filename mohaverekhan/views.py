@@ -151,17 +151,6 @@ class TokenTagViewSet(viewsets.ModelViewSet):
         logger.info(f"> (Time)(Update repetitions)({end_ts - beg_ts:.6f})")
         
 
-        # for text_tag_tokens in text_tag_tokens_list:
-        #     for text_tag_token in text_tag_tokens:
-        #         if text_tag_token['tag']['name'] == self.name:
-        #             examples.add(text_tag_token['content'])
-        #             if len(examples) >= 40:
-        #                 break
-
-        # tags = Tag.objects.all()
-        # [tag.update_examples() for tag in tags]
-        # Parallel(n_jobs=2, verbose=20, backend='threading')(delayed(tag.update_examples)() for tag in tags)
-
     @action(detail=False, methods=['get',], url_name='update_ranks')
     @csrf_exempt
     def update_ranks(self, request):
@@ -229,8 +218,6 @@ class NormalizerViewSet(viewsets.ModelViewSet):
     lookup_field = 'name'
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('is_automatic',)
-
-    # , renderer_classes=[renderers.JSONRenderer,]
 
     @action(detail=True, methods=['get',], url_name='process-data', url_path='process-data')
     @csrf_exempt
@@ -341,40 +328,6 @@ class TaggerViewSet(viewsets.ModelViewSet):
         serializer = TextTagSerializer(text_tag)
         return Response(serializer.data)
 
-
-
-
-
- # if name == 'refinement-normalizer':
-        #     normalizer = RefinementNormalizer.objects.get(name=name)
-        # elif name == 'replacement-normalizer':
-        #     normalizer = ReplacementNormalizer.objects.get(name=name)
-        # else:
-        #     normalizer = self.get_object()
-# class SentenceViewSet(viewsets.ModelViewSet):
-#     queryset = Sentence.objects.all()
-#     serializer_class = SentenceSerializer
-
-# class NormalSentenceViewSet(viewsets.ModelViewSet):
-#     queryset = NormalSentence.objects.all()
-#     serializer_class = NormalSentenceSerializer
-
-# class TaggedSentenceViewSet(viewsets.ModelViewSet):
-#     queryset = TaggedSentence.objects.all()
-#     serializer_class = TaggedSentenceSerializer
-
-# class TranslationCharacterViewSet(viewsets.ModelViewSet):
-#     queryset = TranslationCharacter.objects.all()
-#     serializer_class = TranslationCharacterSerializer
-
-# class RefinementPatternViewSet(viewsets.ModelViewSet):
-#     queryset = RefinementPattern.objects.all()
-#     serializer_class = RefinementPatternSerializer
-
- # content = {'normal_content': text.normal_content}
-        # content = {'normal_content': text.normal_content}
-
-        # return Response(content)
 
 def init():
     global logger
