@@ -10,6 +10,10 @@ class MohaverekhanBasicNormalizer(Normalizer):
 
     logger = logging.getLogger(__name__)
 
+    ###############################################################################
+    # باید کاراکتر‌ها را یکسان کنیم تا چندین نشانه یکسان با نگارش متفاوت نداشته باشیم.
+    # مثلا فرض کنید در نشانه علیرضا اصلا معلوم نیست از «ی» و یا «ي» استفاده شده‌است.
+
     translation_characters = (
         (r'0', r'۰', '', 'hazm', 'true'),
         (r'1', r'۱', '', 'hazm', 'true'),
@@ -51,24 +55,33 @@ class MohaverekhanBasicNormalizer(Normalizer):
 
     translation_characters = {tc[0]:tc[1] for tc in translation_characters}
 
-    basic_patterns = (
-        (r'[\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652]', r'', 'remove FATHATAN, DAMMATAN, KASRATAN, FATHA, DAMMA, KASRA, SHADDA, SUKUN', 0, 'hazm', 'true'),
-        (r'[ـ\r]', r'', r'remove keshide, \r', 0, 'hazm', 'true'),
-        (r'ٔ', r'', r'remove  ٔ ', 0, 'mohaverekhan', 'true'),
-        (r'([^\.]|^)(\.\.\.)([^\.]|$)', r'\1…\3', 'replace 3 dots with …', 0, 'mohaverekhan', 'true'),
-        (rf'([{cache.punctuations}])\1+', r'\1', 'remove cache.punctuations repetitions', 0, 'mohaverekhan', 'true'),
-        (r'"([^\n"]+)"', r'«\1»', 'replace quotation with gyoome', 0, 'hazm', 'true'),
-        (r'\n+', r'\n', 'remove extra newlines', 0, 'mohaverekhan', 'true'),
-        (r' +', r' ', 'remove extra spaces', 0, 'hazm', 'true'),
-    )
-    basic_patterns = [(p[0], p[1]) for p in basic_patterns]
-    basic_patterns = cache.compile_patterns(basic_patterns)
-
     def uniform_signs(self, text_content):
         text_content = text_content.translate(text_content.maketrans(self.translation_characters))
         text_content = text_content.strip(' ')
         return text_content
-        # self.logger.info(f'> After uniform_signs : \n{text_content}')
+
+    ###############################################################################
+    # یک سری از کاراکتر‌های دیگر باید حذف و یا جایگزین بشن، در این قسمت با رگس آن را انجام می‌دهیم.
+    basic_patterns = (
+        # حذف فتحه و کسره و غیره
+        (r'[\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652]', r'', 'remove FATHATAN, DAMMATAN, KASRATAN, FATHA, DAMMA, KASRA, SHADDA, SUKUN', 0, 'hazm', 'true'),
+        # حذف کشیده
+        (r'[ـ\r]', r'', r'remove keshide, \r', 0, 'hazm', 'true'),
+        # حذف همزه‌ی مستقل بالای حروف
+        (r'ٔ', r'', r'remove  ٔ ', 0, 'mohaverekhan', 'true'),
+        # جایگزین کردن سه نقطه با علامت آن
+        (r'([^\.]|^)(\.\.\.)([^\.]|$)', r'\1…\3', 'replace 3 dots with …', 0, 'mohaverekhan', 'true'),
+        # حذف تکرار علامت سوال و تعجب و نقطه و غیره
+        (rf'([{cache.punctuations}])\1+', r'\1', 'remove cache.punctuations repetitions', 0, 'mohaverekhan', 'true'),
+        # فارسی سازی نقل قول انگلیسی با فارسی
+        (r'"([^\n"]+)"', r'«\1»', 'replace quotation with gyoome', 0, 'hazm', 'true'),
+        # حذف اینتر‌های زائد
+        (r'\n+', r'\n', 'remove extra newlines', 0, 'mohaverekhan', 'true'),
+        # حذف فاصله‌های زائد
+        (r' +', r' ', 'remove extra spaces', 0, 'hazm', 'true'),
+    )
+    basic_patterns = [(p[0], p[1]) for p in basic_patterns]
+    basic_patterns = cache.compile_patterns(basic_patterns)
 
     def do_basic_patterns(self, text_content):
         for pattern, replacement in self.basic_patterns:
@@ -78,6 +91,8 @@ class MohaverekhanBasicNormalizer(Normalizer):
         return text_content
 
     
+    ###############################################################################
+    # تابع شروع کننده این نرمالایزر
     def normalize(self, text_content):
         beg_ts = time.time()
         # self.logger.info(f'>>> mohaverekhan-basic-normalizer : \n{text_content}')

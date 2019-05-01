@@ -40,57 +40,25 @@ all_token_tags = dict()
 is_number_pattern = re.compile(rf"^({num})|(numf)$")
 
 
-
 ###############################################################################
 # باید بررسی کنیم نشانه‌های مورد نظر در مجموعه داده موجود وجود دارد یا نه
-# ممکن است نشانه به حالت دیگری در مجموعه داده موجود باشد که این حالات استثنا را بررسی می‌کنیم
 # ممکنه نشانه مورد نظر، یک نشانه بی‌نهایت باشد و یک نشانه بی‌نهایت برای ما معتبر هست.
-def is_token_valid(token_content, replace_nj=True):
+def is_token_valid(token_content):
 
     # اگر نشانه عدد بود، آن را قبول و برای بهبود سرعت آن را در کش ذخیره می‌کنیم.
     if is_number_pattern.fullmatch(token_content):
         logger.info(f'> Number found and added : {token_content}')
         tag_set_token_tags['mohaverekhan-tag-set'][token_content] = {'U': 1}
         all_token_tags[token_content] = {'U': 1}
-        return True, token_content
+        return True
 
     # برچسب آر به معنای معتبر بودن نشانه نیست و اگر نشانه فقط برچسب آر داشت آن را معتبر نمی‌خوانیم.
     if token_content in all_token_tags and list(all_token_tags[token_content].keys()) != ['R']:
-        return True, token_content
-
-    # وقتی نشانه به این‌جا برسد، پس یعنی در مجموعه داده موجود نبوده.
-    # تلاش‌های آخر را می‌کنیم تا ببینیم شاید نیم‌فاصله‌ای رعایت نشده‌است.
+        return True
     
-    # اگر در نشانه، نیم‌فاصله‌ای موجود بود، آن را حذف می‌کنیم و سپس معتبر بودن نشانه را بررسی می‌کنیم.
-    if replace_nj:
-        nj_pattern = re.compile(r'‌')
-        if nj_pattern.search(token_content):
-            # logger.debug(f'> nj found in token : {token_content}')
-            token_content_parts = token_content.split('‌')
-            is_valid = True
+    return False
 
-            # اگر یک قسمت اندازه‌اش کمتر از ۳ بود، پس احتمالا معتبر نیست.
-            for part in token_content_parts:
-                if len(part) < 3:
-                    is_valid = False
-
-            fixed_token_content = token_content.replace('‌', '')
-            if is_valid and fixed_token_content in all_token_tags:
-                logger.debug(f'> nj replaced with empty : {fixed_token_content}')
-                return True, fixed_token_content
-
-    # باید بررسی کنیم شاید نیم‌فاصله ای در نشانه رعایت نشده باشد.
-    # بین تمام حروف، نیم‌فاصله می‌گذاریم. اگر معتبر بود، پس آن را بازمی‌گردانیم.
-    part1, part2, nj_joined, sp_joined = '', '', '', ''
-    for i in range(1, len(token_content)):
-        part1, part2 = token_content[:i], token_content[i:]
-        nj_joined = f'{part1}‌{part2}'
-        if nj_joined in all_token_tags:
-            logger.debug(f'> Found nj_joined : {nj_joined}')
-            return True, nj_joined
-    
-    return False, token_content
-
+        
 def cache_token_tags_dic():
     global tag_set_token_tags, all_token_tags, repetition_word_set
     temp_tag_set_token_tags = {}
@@ -155,6 +123,7 @@ def cache_token_tags_dic():
     mi_verb_heh = ''
     a_o_token = ''
     ie_token = ''
+    nemi_token = ''
     token, tag = None, None
     middle_a_pattern = re.compile(r"^.*[^و]ان.*$") # ببندم=بند
     for tag_set_name, tag_set_token_tags in dict(temp_tag_set_token_tags).items():
@@ -211,6 +180,14 @@ def cache_token_tags_dic():
                 ie_token = token_content + 'ه'
                 if ie_token not in tag_set_token_tags:
                     temp_tag_set_token_tags[tag_set_name][ie_token] = {'A': 1}
+            
+            if (
+                len(token_content) > 4 and 
+                token_content.startswith('می‌')
+            ):
+                nemi_token = 'ن' + token_content
+                if nemi_token not in tag_set_token_tags:
+                    temp_tag_set_token_tags[tag_set_name][nemi_token] = {'V': 1}
 
 
             # if(
@@ -244,6 +221,7 @@ def cache_token_tags_dic():
     # token_set.remove('دیگهای')
     del temp_tag_set_token_tags['bijankhan-tag-set']['دیگهای']
     del temp_tag_set_token_tags['bijankhan-tag-set']['هارو']
+    del temp_tag_set_token_tags['bijankhan-tag-set']['ار']
 
     
     logger.info(f'> len(temp_tag_set_token_tags) : {len(temp_tag_set_token_tags)}')

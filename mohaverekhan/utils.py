@@ -5,6 +5,7 @@ import time
 
 from pathlib import Path
 
+logger = None
 HOME = str(Path.home())
 LOG_ROOT_DIR = os.path.join(HOME, 'bitianist', 'logs')
 LOG_FORMAT = '[ %(levelname)s ][ %(asctime)s ][ %(process)d %(thread)d ][ %(module)s %(lineno)d ][ %(message)s ]'
@@ -57,4 +58,6 @@ def time_usage(logger):
     return decorator
 
 def init():
-    logger = get_logger(logger_name='utils')
+    global logger
+    logger = logging.getLogger(__name__)
+    # logger = get_logger(logger_name='utils')

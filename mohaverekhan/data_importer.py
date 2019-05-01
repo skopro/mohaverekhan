@@ -723,7 +723,7 @@ def import_mohaverekhan_text_tag(text_tag_id=None):
         generate_tagged_token_dictionary('ه', generate_tag_dictionary(name='C')),
     ]
 
-    text_content += ' شیشلیک حتمنی خوبن عالین ایسوس ببند نبند'
+    text_content += ' شیشلیک حتمنی خوبن عالین ایسوس ببند نبند تونست می‌زنه بزنه می‌میره می‌تونه می‌زنن نمی‌زنن می‌ارزه نمی‌ارزه سامسونگ'
     tagged_tokens += [
         generate_tagged_token_dictionary('شیشلیک', generate_tag_dictionary(name='N')),
         generate_tagged_token_dictionary('حتمنی', generate_tag_dictionary(name='D')),
@@ -732,6 +732,24 @@ def import_mohaverekhan_text_tag(text_tag_id=None):
         generate_tagged_token_dictionary('ایسوس', generate_tag_dictionary(name='N')),
         generate_tagged_token_dictionary('ببند', generate_tag_dictionary(name='V')),
         generate_tagged_token_dictionary('نبند', generate_tag_dictionary(name='V')),
+        generate_tagged_token_dictionary('تونست', generate_tag_dictionary(name='V')),
+        generate_tagged_token_dictionary('می‌زنه', generate_tag_dictionary(name='V')),
+        generate_tagged_token_dictionary('بزنه', generate_tag_dictionary(name='V')),
+        generate_tagged_token_dictionary('می‌میره', generate_tag_dictionary(name='V')),
+        generate_tagged_token_dictionary('می‌تونه', generate_tag_dictionary(name='V')),
+        generate_tagged_token_dictionary('می‌زنن', generate_tag_dictionary(name='V')),
+        generate_tagged_token_dictionary('نمی‌زنن', generate_tag_dictionary(name='V')),
+        generate_tagged_token_dictionary('می‌ارزه', generate_tag_dictionary(name='V')),
+        generate_tagged_token_dictionary('نمی‌ارزه', generate_tag_dictionary(name='V')),
+        generate_tagged_token_dictionary('سامسونگ', generate_tag_dictionary(name='N')),
+    ]
+
+    text_content += ' بمونه نمونه قلیون نخواستن'
+    tagged_tokens += [
+        generate_tagged_token_dictionary('بمونه', generate_tag_dictionary(name='V')),
+        generate_tagged_token_dictionary('نمونه', generate_tag_dictionary(name='V')),
+        generate_tagged_token_dictionary('قلیون', generate_tag_dictionary(name='N')),
+        generate_tagged_token_dictionary('نخواستن', generate_tag_dictionary(name='V')),
     ]
 
 

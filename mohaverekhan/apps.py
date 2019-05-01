@@ -8,7 +8,7 @@ class MohaverekhanConfig(AppConfig):
 
     def ready(self):
         
-        from mohaverekhan import cache
+        from mohaverekhan import cache, utils
         cache.init()
 
         from mohaverekhan import serializers, views

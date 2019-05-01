@@ -346,8 +346,8 @@ class TokenTagAdmin(admin.ModelAdmin):
     # search_fields = ['=token__content', 'token__content__startswith', 'id']
     # search_fields = ['=token__content', 'token__content__endswith', 'id']
     # search_fields = ['=token__content', 'token__content__endswith', 'token__content__startswith', 'id']
-    search_fields = ['token__content', 'id']
-    # search_fields = ['=token__content', 'id']
+    # search_fields = ['token__content', 'id']
+    search_fields = ['=token__content', 'id']
     ordering = ('-number_of_repetitions', '-created')
     list_filter = ['tag__tag_set__name', 'tag__name']
     readonly_fields = ['created', 'id', 'number_of_repetitions']
