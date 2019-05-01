@@ -670,16 +670,16 @@ class MohaverekhanCorrectionNormalizer(Normalizer):
         text_content = self.fix_spaces_in_text(text_content)
         self.logger.info(f'>> fix_spaces_in_text : \n{text_content}')
 
-        text_content = self.join_multipart_tokens(text_content) # آرام کننده
+        text_content = self.join_multipart_tokens(text_content) # آرام کننده | در عین حال | جمع آوری | رسانه ‌ها
         self.logger.info(f'>> join_multipart_tokens1 : \n{text_content}')
 
-        text_content = self.fix_tokens(text_content)
+        text_content = self.fix_tokens(text_content) # fix non-joiner and repetition
         self.logger.info(f'>> fix_tokens : \n{text_content}')
 
         text_content = self.join_multipart_tokens(text_content) # فرههههههههنگ سرا
         self.logger.info(f'>> join_multipart_tokens2 : \n{text_content}')
 
-        text_content = self.fix_wrong_joined_undefined_tokens(text_content) # آرامکننده کتابمن 
+        text_content = self.fix_wrong_joined_undefined_tokens(text_content) # آرام کنندهخوبمن 
         self.logger.info(f'>> fix_wrong_joined_undefined_tokens : \n{text_content}')
 
         text_content = self.join_multipart_tokens(text_content) # آرام کنندهخوبی
